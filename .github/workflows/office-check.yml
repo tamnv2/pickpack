@@ -1,10 +1,5 @@
 name: PickPack Office code readiness
 on:
-  push:
-    branches: [feat/offline-ui-prototype-20261114]
-    paths:
-      - 'prototype/**'
-      - '.github/workflows/office-check.yml'
   pull_request:
     paths:
       - 'prototype/**'
@@ -36,6 +31,8 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Run Chromium business smoke
         run: python tests/browser_smoke.py
+      - name: Validate hosted browser navigation and cross-tab business flows
+        run: python tests/hosted_smoke.py
       - name: Preserve browser evidence on failure
         if: failure()
         uses: actions/upload-artifact@v4
