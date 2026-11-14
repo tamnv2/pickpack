@@ -393,14 +393,15 @@ async function renderFullPortrait(){
    portraitObjectUrl=URL.createObjectURL(blob);portraitObjectId=id;
   }catch{return}
  }
- if(portraitObjectUrl&&root.querySelector('#portrait-original')){
-  target.innerHTML=`<button type="button" class="portrait-open" data-action="zoom-portrait" aria-label="Phóng to ảnh chân dung"><img src="${portraitObjectUrl}" alt="Ảnh chân dung gốc của ${escape(store.people.find(p=>p.id===id)?.name||'nhân sự')}"></button><small>Chạm vào ảnh để xem nguyên bản · Chỉ lưu trên trình duyệt này</small>`;
+ const live=root.querySelector('#portrait-original');
+ if(portraitObjectUrl&&live&&state.drawer===id){
+  live.innerHTML=`<button type="button" class="portrait-open" data-action="zoom-portrait" aria-label="Phóng to ảnh chân dung"><img src="${portraitObjectUrl}" alt="Ảnh chân dung gốc của ${escape(store.people.find(p=>p.id===id)?.name||'nhân sự')}"></button><small>Chạm vào ảnh để xem nguyên bản · Chỉ lưu trên trình duyệt này</small>`;
  }
 }
 function portraitModal(){return `<div class="modal-overlay" data-action="close-modal"><section class="modal portrait-lightbox" role="dialog" aria-modal="true" aria-label="Ảnh chân dung"><button class="icon-button portrait-close" data-action="close-modal" aria-label="Đóng ảnh">×</button><img src="${portraitObjectUrl}" alt="Ảnh chân dung kích thước gốc"></section></div>`}
 function photoEditor(person){
  const x={name:person?.name||'',photo:state.photoDraft||'',initial:person?.initial||''};
- return `<section class="photo-editor"><div id="photo-preview">${avatar(x,true)}</div><div class="photo-editor-info"><strong>Ảnh đại diện</strong><div class="photo-editor-actions"><label class="btn ghost photo-picker">Chụp / Chọn ảnh<input id="staff-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="user"></label><button class="btn ghost" data-action="remove-photo" type="button">Xóa ảnh</button></div><small>JPEG, PNG, WebP · ảnh gốc tối đa 5 MB, lưu cục bộ, không tải lên server</small></div></section>`;
+ return `<section class="photo-editor"><div id="photo-preview">${avatar(x,true)}</div><div class="photo-editor-info"><strong>Ảnh đại diện</strong><div class="photo-editor-actions"><label class="btn ghost photo-picker">Chụp / Chọn ảnh<input id="staff-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="user"></label><button class="btn ghost" data-action="remove-photo" type="button">Xóa ảnh</button></div><small>JPEG, PNG, WebP · tối đa 5 MB · CHỈ dùng ảnh giả lập. Web công khai, không nhập ảnh nhân sự thật.</small></div></section>`;
 }
 async function preparePortrait(file){
  if(!file||!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>5*1024*1024)throw Error('Ảnh không hợp lệ hoặc vượt 5 MB');
