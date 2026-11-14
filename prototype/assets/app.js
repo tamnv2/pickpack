@@ -151,7 +151,7 @@ function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">
 function filtered(){const set=store[state.view]||[];let rows=set.filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);return rows}
 function controls(){
  const statuses=state.view==='people'?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
- return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất CSV</button>${state.view==='shifts'?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}<button class="btn icon-label ${state.layout==='table'?'active':''}" data-action="layout-table" aria-label="Dạng bảng">${icon('list',16)} <span>Bảng</span></button><button class="btn icon-label ${state.layout==='cards'?'active':''}" data-action="layout-cards" aria-label="Dạng thẻ">${icon('grid',16)} <span>Thẻ</span></button></div></div>`;
+ return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${state.view==='shifts'?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}<button class="btn icon-label ${state.layout==='table'?'active':''}" data-action="layout-table" aria-label="Dạng bảng">${icon('list',16)} <span>Bảng</span></button><button class="btn icon-label ${state.layout==='cards'?'active':''}" data-action="layout-cards" aria-label="Dạng thẻ">${icon('grid',16)} <span>Thẻ</span></button></div></div>`;
 }
 function recordActions(r){
  if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button></span>`;
@@ -295,7 +295,56 @@ function saveForm(form){
 }
 function deleteIds(ids){const key=state.view;if(key==='shifts')return;const matches=store[key].filter(r=>ids.includes(r.id));if(!matches.length)return;if(!window.confirm(`Xóa ${matches.length} bản ghi khỏi ${PAGES[key].title}?`))return;store[key]=store[key].filter(r=>!ids.includes(r.id));persist();state.selected.clear();state.drawer='';safeHistory('replaceState',href());state.notice=`Đã xóa ${matches.length} bản ghi`;render()}
 function quickChange(id){const key=state.view;const row=store[key]?.find(x=>x.id===id);if(!row)return;let c={};if(key==='shifts')return;else if(key==='pda'){const borrowed=row.state==='Đang mượn';if(!borrowed&&store.pda.some(x=>x.name===row.name&&x.state==='Đang mượn'&&x.id!==id)){state.notice='Thiết bị đang được mượn, vui lòng trả trước';render();return}const time=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false});c={state:borrowed?'Đã trả':'Đang mượn',return:borrowed?time:'—',borrow:borrowed?row.borrow:time}}else if(key==='minutes')c={state:'Đã xác nhận'};else if(key==='labor')c={state:'Đã xác nhận'};else if(key==='assets')c={state:row.state==='Sẵn sàng'?'Đang sử dụng':'Sẵn sàng'};updateRecord(key,id,c);state.notice=`Đã thay đổi trạng thái ${row.id}`;render()}
-function exportCSV(){const rows=filtered(),fields=columns[state.view];const quote=s=>'"'+String(s??'').replaceAll('"','""')+'"';const csv='\ufeff'+[fields.map(([,label])=>quote(label)).join(','),...rows.map(r=>fields.map(([k])=>quote(r[k])).join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`pickpack-${state.view}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);state.notice=`Đã xuất ${rows.length} bản ghi`;render()}
+function xmlText(v){return String(v??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[ch]))}
+function crc32(bytes){let c=0xFFFFFFFF;for(const byte of bytes){c^=byte;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xEDB88320:0)}return(c^0xFFFFFFFF)>>>0}
+function zipStored(files){
+ const encoder=new TextEncoder(),locals=[],central=[];let position=0,centralSize=0;
+ for(const [name,source] of files){
+  const label=encoder.encode(name),data=encoder.encode(source),sum=crc32(data);
+  const header=new Uint8Array(30+label.length),h=new DataView(header.buffer);
+  h.setUint32(0,0x04034B50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);
+  h.setUint32(14,sum,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);
+  h.setUint16(26,label.length,true);header.set(label,30);
+  locals.push(header,data);
+  const entry=new Uint8Array(46+label.length),v=new DataView(entry.buffer);
+  v.setUint32(0,0x02014B50,true);v.setUint16(4,20,true);v.setUint16(6,20,true);
+  v.setUint16(8,0x0800,true);v.setUint32(16,sum,true);
+  v.setUint32(20,data.length,true);v.setUint32(24,data.length,true);
+  v.setUint16(28,label.length,true);v.setUint32(42,position,true);entry.set(label,46);
+  central.push(entry);centralSize+=entry.length;position+=header.length+data.length;
+ }
+ const end=new Uint8Array(22),view=new DataView(end.buffer);
+ view.setUint32(0,0x06054B50,true);view.setUint16(8,files.length,true);view.setUint16(10,files.length,true);
+ view.setUint32(12,centralSize,true);view.setUint32(16,position,true);
+ return new Blob([...locals,...central,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function excelColumn(n){let label='';for(n+=1;n;n=Math.floor((n-1)/26))label=String.fromCharCode(65+(n-1)%26)+label;return label}
+function makeExcel(rows,fields,title){
+ const columnsXml=fields.map(([,name],i)=>`<col min="${i+1}" max="${i+1}" width="${Math.min(42,Math.max(15,String(name).length*1.4))}" customWidth="1"/>`).join('');
+ const xmlRow=(values,index)=>`<row r="${index+1}">${values.map((val,j)=>{
+  const ref=`${excelColumn(j)}${index+1}`;
+  if(index>0&&fields[j][0]==='qty'&&typeof val==='number'&&Number.isFinite(val))return `<c r="${ref}"><v>${val}</v></c>`;
+  return `<c r="${ref}" t="inlineStr"${index===0?' s="1"':''}><is><t xml:space="preserve">${xmlText(val)}</t></is></c>`;
+ }).join('')}</row>`;
+ const body=[fields.map(([,name])=>name),...rows.map(row=>fields.map(([key])=>row[key]??''))].map(xmlRow).join('');
+ const cellRange=`A1:${excelColumn(fields.length-1)}${rows.length+1}`;
+ const sheetName=title.replace(/[\\/*?:\[\]]/g,' ').slice(0,31);
+ const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="${cellRange}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="16"/><cols>${columnsXml}</cols><sheetData>${body}</sheetData><autoFilter ref="${cellRange}"/></worksheet>`;
+ const types=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+ const rootRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+ const workbook=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xmlText(sheetName)}" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+ const workbookRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+ const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF26476B"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs></styleSheet>`;
+ return zipStored([['[Content_Types].xml',types],['_rels/.rels',rootRels],['xl/workbook.xml',workbook],['xl/_rels/workbook.xml.rels',workbookRels],['xl/worksheets/sheet1.xml',sheet],['xl/styles.xml',styles]]);
+}
+function exportExcel(){
+ if(state.view==='dashboard')return;
+ const rows=filtered(),fields=columns[state.view],blob=makeExcel(rows,fields,PAGES[state.view].title);
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;
+ a.download=`pickpack-${state.view}-${new Date().toISOString().slice(0,10)}.xlsx`;
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ state.notice=`Đã xuất Excel ${rows.length} bản ghi`;render();
+}
 root.addEventListener('submit',function(e){
  if(e.target.id==='login-form'){
   e.preventDefault();const fd=new FormData(e.target);
@@ -329,7 +378,7 @@ root.addEventListener('click',e=>{
  case'logout':storageRemove(SESSION_KEY);location.href='index.html';return;
  case'bulk-delete':deleteIds([...state.selected]);return;
  case'reset':if(window.confirm('Khôi phục dữ liệu ban đầu? Những chỉnh sửa hiện tại sẽ bị xóa.')){Object.assign(store,seedRecords());persist();state.selected.clear();state.drawer='';state.notice='Đã khôi phục dữ liệu ban đầu';}break;
- case'export':exportCSV();return;
+ case'export':exportExcel();return;
  }
  render();
 });
