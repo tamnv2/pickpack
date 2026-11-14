@@ -198,6 +198,57 @@ function scanShift(code,operation){
  }
  return outcome(false,'Thao tác không hợp lệ.');
 }
+function laborScanPanel(){
+ const result=state.laborScan,person=result?.code?store.people.find(p=>p.id===result.code):null;
+ return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('calendar',20)}</span><div><h2>Quét mã công nhật</h2><p>Quét mã nhân viên để xác định hồ sơ, ca và user. Giờ công được chấm sau khi có căn cứ.</p></div></div><form id="labor-scan-form" autocomplete="off"><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên</label><div class="scan-form-row"><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${scanPreview(person)}</div></section>`;
+}
+function scanLabor(code){
+ const staff=String(code||'').trim(),p=store.people.find(row=>row.id===staff),now=new Date();
+ const date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+ const time=now.toLocaleTimeString('vi-VN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const result=(ok,message)=>{state.laborScan={ok,code:staff,message};render();root.querySelector('#labor-staff-code')?.focus();return ok};
+ if(!p)return result(false,'Không tìm thấy mã nhân viên.');
+ if(!p.shift)return result(false,`Nhân viên ${p.name} chưa được phân ca.`);
+ if(store.labor.some(row=>row.date===date&&row.staff===p.id))return result(false,`Đã có bản ghi công nhật ngày ${date} của ${p.name}. Không tạo trùng.`);
+ store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:p.name,staff:p.id,user:p.user||'—',date,shift:p.shift,work:p.position||'—',scannedAt:time,hours:'—',state:'Tạm tính'});
+ persist();return result(true,`Đã ghi nhận công nhật · ${p.name} · ${p.shift} · ${date} ${time}. Giờ công chờ xác nhận.`);
+}
+function resolvePda(code){
+ const key=String(code||'').trim().toUpperCase();
+ if(!key)return null;
+ const exact=store.pdaDevices.filter(d=>[d.id,d.serial,d.last5].some(v=>String(v).toUpperCase()===key));
+ return exact.length===1?exact[0]:null;
+}
+function pdaDevicePreview(device){
+ if(!device)return '<div class="scan-empty">Nhập hoặc quét QR/seri PDA để nhận diện thiết bị.</div>';
+ const active=store.pda.find(r=>r.name===device.id&&r.state==='Đang mượn');
+ return `<div class="scan-device"><strong>${escape(device.id)} · ${escape(device.serial)}</strong><span>${active?`Đang mượn: ${escape(active.holder)}`:'Sẵn sàng cho mượn'}</span></div>`;
+}
+function pdaScanPanel(){
+ const result=state.pdaScan,person=result?.staff?store.people.find(p=>p.id===result.staff):null,device=result?.device?resolvePda(result.device):null,mode=state.pdaMode;
+ return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('device',20)}</span><div><h2>Quét mã mượn / trả PDA</h2><p>Quét mã nhân viên, sau đó QR/seri PDA. Mỗi thiết bị chỉ có một lượt mượn đang mở.</p></div></div><div class="scan-mode-wrapper"><span class="scan-code-label">Thao tác</span><div class="scan-mode" role="group" aria-label="Chế độ mượn trả PDA"><button type="button" class="${mode==='borrow'?'active':''}" data-pda-mode="borrow" aria-pressed="${mode==='borrow'}">Mượn PDA</button><button type="button" class="${mode==='return'?'active':''}" data-pda-mode="return" aria-pressed="${mode==='return'}">Trả PDA</button></div></div><form id="pda-scan-form" autocomplete="off"><div class="scan-code-grid"><label class="scan-code-label" for="pda-staff-code">Mã nhân viên / QR nhân viên<input id="pda-staff-code" name="employeeCode" maxlength="30" placeholder="Quét mã nhân viên" required autocomplete="off"></label><label class="scan-code-label" for="pda-device-code">Mã PDA / QR / seri / 5 số cuối<input id="pda-device-code" name="deviceCode" maxlength="120" placeholder="Quét mã PDA" required autocomplete="off"></label><button class="btn primary" type="submit">Ghi nhận ${mode==='borrow'?'mượn':'trả'} PDA</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-pair-preview"><div id="pda-person-preview">${person?scanPreview(person):'<div class="scan-empty">Nhân sự chưa được xác định.</div>'}</div><div id="pda-device-preview">${pdaDevicePreview(device)}</div></div></section>`;
+}
+function scanPda(employeeCode,deviceCode){
+ const staff=String(employeeCode||'').trim(),deviceInput=String(deviceCode||'').trim();
+ const p=store.people.find(x=>x.id===staff),device=resolvePda(deviceInput),now=new Date(),date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+ const time=now.toLocaleTimeString('vi-VN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const out=(ok,message)=>{state.pdaScan={ok,staff,device:deviceInput,message};render();root.querySelector('#pda-staff-code')?.focus();return ok};
+ if(!p)return out(false,'Không tìm thấy mã nhân viên.');
+ if(!device)return out(false,'Mã PDA không tồn tại hoặc không xác định được duy nhất một thiết bị.');
+ const open=store.pda.find(row=>row.name===device.id&&row.state==='Đang mượn');
+ if(state.pdaMode==='borrow'){
+  if(open)return out(false,`${device.id} đang được mượn bởi ${open.holder}. Không được mượn trùng.`);
+  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:device.id,staff:p.id,holder:p.name,user:p.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',state:'Đang mượn'});
+  persist();return out(true,`Đã mượn ${device.id} · ${p.name} · ${date} ${time}`);
+ }
+ if(state.pdaMode==='return'){
+  if(!open)return out(false,`${device.id} chưa có lượt mượn đang mở.`);
+  if(open.staff!==p.id)return out(false,`Người trả không khớp lượt mượn của ${device.id}.`);
+  updateRecord('pda',open.id,{return:time,returnAt:now.toISOString(),state:'Đã trả'});
+  return out(true,`Đã trả ${device.id} · ${p.name} · ${date} ${time}`);
+ }
+ return out(false,'Thao tác không hợp lệ.');
+}
 function deviceRegistry(){
  const devices=store.pdaDevices||[];
  return `<section class="panel table-panel device-registry"><div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('device',17)}</span><span class="records-label">Danh sách PDA <b>${devices.length}</b></span></div></div><div class="table-scroll"><table><thead><tr><th>Seri PDA</th><th>5 số cuối Seri</th><th>Nguồn</th><th>Tình trạng</th><th>Ghi chú</th></tr></thead><tbody>${devices.map(d=>{const active=store.pda.some(x=>x.name===d.id&&x.state==='Đang mượn');return `<tr><td><span class="mono">${escape(d.serial)}</span></td><td>${escape(d.last5)}</td><td>${escape(d.source)}</td><td>${badge(active?'Đang sử dụng':'Sẵn sàng')}</td><td>${escape(d.note||'—')}</td></tr>`}).join('')}</tbody></table></div></section>`;
