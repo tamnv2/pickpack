@@ -236,13 +236,15 @@ with sync_playwright() as p:
  assert app.locator('.catalog-tabs [data-category-tab]').count()==5
  assert app.locator('.catalog-panel tbody tr').count()==4
  app.locator('.catalog-panel [data-category-edit="0"]').click()
+ assert app.locator('#confirm-form').count()==1
+ authorize()
  app.locator('#catalog-form input[name="value"]').fill('Pick thử')
  assert 'is-valid' in app.locator('#catalog-form input[name="value"]').get_attribute('class')
  app.locator('#catalog-form button[type="submit"]').click()
  assert app.get_by_text('Pick thử',exact=True).count()==1
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people[0].position")=='Pick thử'
  app.locator('.catalog-panel [data-category-delete="0"]').click()
- assert 'Không thể xóa' in app.locator('.toast').inner_text()
+ assert 'Không thể xóa' in app.locator('.toast-stack .toast').last.inner_text()
  app.locator('button[data-action="category-add"]').click()
  app.locator('#catalog-form input[name="value"]').fill('Vị trí thử')
  app.locator('#catalog-form button[type="submit"]').click()
@@ -250,10 +252,11 @@ with sync_playwright() as p:
  app.locator('button[data-action="category-add"]').click()
  app.locator('#catalog-form input[name="value"]').fill('vị trí thử')
  app.locator('#catalog-form button[type="submit"]').click()
- assert 'đã tồn tại' in app.locator('.toast').inner_text()
+ assert 'đã tồn tại' in app.locator('.toast-stack .toast').last.inner_text()
  app.locator('.modal [data-action="close-modal"]').first.click()
- app.once('dialog',lambda d:d.accept())
  app.locator('.catalog-panel [data-category-delete="4"]').click()
+ assert app.locator('#confirm-form').count()==1
+ authorize()
  assert app.locator('.catalog-panel tbody tr').count()==4
  app.locator('button[data-category-tab="supplier"]').click()
  assert app.locator('.catalog-panel tbody tr').count()==3
@@ -266,6 +269,14 @@ with sync_playwright() as p:
  app.locator('#global-search').fill('')
  assert app.locator('.catalog-panel tbody tr').count()>=1
  app.locator('.catalog-heading a[data-nav="people"]').click()
+ print('testing scoped catalogs',flush=True)
+ for module,field in [('labor','laborWork'),('minutes','minutesType'),('assets','assetsType')]:
+  app.locator(f'a.nav-main[href*="view={module}"]').click()
+  app.locator(f'a[data-catalog-scope="{module}"]').click()
+  assert app.locator(f'[data-category-tab="{field}"]').count()==1
+  assert app.locator('.catalog-panel tbody tr').count()>0
+  app.locator(f'.catalog-heading a[data-nav="{module}"]').click()
+ app.locator('a.nav-main[href*="view=people"]').click()
  print('testing staff columns',flush=True)
  head=app.locator('.people-table thead th').all_inner_texts()
  assert head[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác'],head
@@ -299,13 +310,20 @@ with sync_playwright() as p:
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
  print('testing edit',flush=True)
  app.locator('table tbody tr').first.locator('[data-edit]').click()
+ authorize()
  app.locator('#record-form input[name="name"]').fill('Nhân viên giả lập đã chỉnh sửa')
  app.locator('#record-form button[type="submit"]').click()
  assert 'đã chỉnh sửa' in app.locator('table tbody tr').first.inner_text()
- app.once('dialog',lambda d:d.accept())
  print('testing delete',flush=True)
  app.locator('table tbody tr').first.locator('[data-delete]').click()
+ assert app.locator('#confirm-form').count()==1
+ authorize()
  assert app.locator('.records-label b').inner_text()=='36'
+ print('testing toast queue',flush=True)
+ for _ in range(6):app.locator('button[data-action="export"]').click()
+ assert app.locator('#toast-stack .toast').count()==5
+ app.wait_for_timeout(5200)
+ assert app.locator('#toast-stack .toast').count()==0
  print('testing search',flush=True)
  app.locator('input#global-search').fill('KhôngCóTrongDanhSách_TEST')
  assert app.get_by_text('Không tìm thấy bản ghi phù hợp').count()==1
@@ -314,8 +332,9 @@ with sync_playwright() as p:
  print('testing bulk',flush=True)
  app.locator('table tbody tr').first.locator('[data-select]').check()
  assert 'Xóa đã chọn (1)' in app.locator('button[data-action="bulk-delete"]').inner_text()
- app.once('dialog',lambda d:d.accept())
  app.locator('button[data-action="bulk-delete"]').click()
+ assert app.locator('#confirm-form').count()==1
+ authorize()
  assert app.locator('.records-label b').inner_text()=='35'
  print('testing PDA',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
@@ -347,5 +366,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.9.0 theme-native unboxed text clock HH:mm:ss, aligned and responsive, CRUD/QR/XLSX')
+ print('PASS: v0.9.0 12h clock, capped toasts, passworded modals, all catalogs, paired labor, shift choice, CRUD/QR/XLSX/mobile')
  browser.close()
