@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "GOVERNANCE_BOOTSTRAP",
-  "application_code": "NOT_STARTED",
-  "technical_ci": "NOT_RUN",
+  "phase": "UI_PROTOTYPE_OWNER_REVIEW",
+  "application_code": "OFFLINE_UI_PROTOTYPE_CODE_READY",
+  "technical_ci": "LOCAL_BROWSER_SMOKE_PASS_CI_NOT_RUN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "SPEC_IN_PROGRESS",
+  "owner_business_acceptance": "UI_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,8 +28,9 @@
     "realtime": true
   },
   "pending": [
-    "Verify current read-only role validation contract without Inventory mutation",
-    "Approve detailed business permission matrix and data model before implementation"
+    "Owner review and approve UI prototype before implementing business workflows, roles, storage, API, or APK",
+    "Verify current read-only role validation contract without Inventory mutation (deferred until UI approved)",
+    "Approve detailed business permission matrix and data model before implementation (deferred until UI approved)"
   ],
-  "latest_checkpoint": "PP-20261114-001"
+  "latest_checkpoint": "PP-20261114-002"
 }
