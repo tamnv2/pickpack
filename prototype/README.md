@@ -1,24 +1,22 @@
-# PickPack 1291 — Web Office v0.7
+# PickPack 1291 — Web Office v0.8
 
-**Phạm vi:** bản Web thử giao diện và quy trình quản lý vận hành, dữ liệu hoàn toàn giả lập. Không có backend, Firebase Auth, kiểm tra quyền ở server, OpsCore hoặc kết nối trực tiếp Google Sheet. **Không nhập thông tin nhân sự, ảnh chân dung hoặc dữ liệu vận hành thật vào bản thử nghiệm công cộng.**
+**Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
-## Truy cập
-- Mở `prototype/index.html` trên Chrome/Edge hoặc static host thử nghiệm; đăng nhập **admin / admin** (kiểm thử client-only, không phải xác thực thật).
-- Menu là thẻ liên kết HTML thật: có thể chuột phải → mở trong tab mới. Giao diện hỗ trợ light/dark, 90–120% cỡ chữ, desktop và mobile.
-- Dữ liệu mô phỏng lưu bằng browser localStorage, không gọi API/Worker/Firebase; các tab cùng origin có thể nhận tín hiệu thay đổi storage.
+## Giao diện
+- Nhận diện: `CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN` tại tiêu đề trái; thông tin **Quản trị viên** duy nhất trong thanh trên; cạnh dưới sidebar chỉ có nút Đăng xuất.
+- Cỡ chữ mặc định tăng **10 điểm phần trăm** so với v0.7: từ 100% thành 110%. Cài đặt 100–130% theo bước 5%; người có mức chữ cũ được nâng +10 điểm **một lần**.
+- Giao diện sáng chọn **7 màu**: đỏ, cam, vàng, lục, lam, chàm, tím. Mặc định lam; lưu lựa chọn theo trình duyệt. Giao diện tối giữ màu riêng, không bị thay đổi bởi palette sáng.
+- Giảm padding/margin ở đầu trang, menu, KPI, bảng, quét ca; vẫn tăng cỡ chữ và bảo đảm xem trên desktop/mobile.
+- **Tổng quan** chỉ đọc, dữ liệu tính từ 6 phân hệ: 8 KPI nhân sự/ca/công nhật/biên bản/CCDC/PDA, trạng thái tất cả phân hệ, việc cần xử lý, biểu đồ quét theo giờ và lượt ca gần đây. **Không có tạo/sửa/xóa, tạo biên bản hay lối tắt điều hướng**.
+- Có 7 phân hệ: Tổng quan, Nhân sự, Ra/vào ca, Công nhật, Biên bản, Công cụ dụng cụ, Mượn/trả PDA. Menu HTML anchor thật cho chuột phải mở tab mới.
 
-## Nghiệp vụ được dựng
-- **Nhân sự:** trường dữ liệu từ cấu trúc `DANH SÁCH NHÂN SỰ` của Google Sheet Owner tham chiếu: mã NV, họ tên, điện thoại, vị trí chính, nhà cung cấp, bộ phận, site, kho, ngày bắt đầu, ghi chú và dấu vết cập nhật. Bổ sung riêng **ca được phân** và **user làm việc** phục vụ liên kết khi quét. Tạo/sửa hồ sơ và mã nhân viên duy nhất. Thêm, thay hoặc xóa **ảnh đại diện** JPEG/PNG/WebP; trình duyệt thu nhỏ về JPEG 192×192, lưu cục bộ.
-- **Ra / vào ca:** vùng quét / nhập mã NV riêng nằm đầu tab. Chọn trước **chế độ Vào ca / Ra ca**, sau đó có thể quét liên tiếp; máy quét gửi Enter sẽ xác nhận đúng chế độ hiện tại. Nhập mã sẽ hiển thị thông tin đầy đủ từ hồ sơ đã lưu. Bấm **Vào ca** (hoặc bắn mã và Enter) / **Ra ca** để ghi thời gian giờ–phút–giây hiện tại cùng ngày, ca được phân và user tương ứng. Chặn mã không tồn tại, chưa phân ca, vào ca trùng hoặc ra ca khi không có lượt đang mở. Lịch sử quét ở chế độ xem và xuất CSV, không chỉnh trạng thái thủ công.
-- **PDA:** hiển thị danh mục seri, 5 số cuối, nguồn, trạng thái và ghi chú dựa trên cấu trúc `DANH SÁCH PDA` của Sheet; bên dưới là lịch sử mượn/trả. Có ràng buộc không cho một PDA có hai lượt mượn đang mở.
-- Các phân hệ đã duyệt khác: Công nhật, Biên bản, Công cụ dụng cụ và Tổng quan. Dữ liệu mô phỏng cho 36 nhân sự, 42 lượt ca, 42 công nhật, 30 biên bản, 30 CCDC, 30 lượt mượn/trả, 3 PDA giả lập. Tìm kiếm, lọc, xem chi tiết, chỉnh sửa nghiệp vụ mock, xuất CSV; đã loại bỏ nút reset dữ liệu và các thao tác ghi nhận ca bằng tay không phù hợp.
+## Nghiệp vụ demo
+- Nhân sự: trường theo tiêu đề Google Sheet tham chiếu (mã NV, họ tên, điện thoại, vị trí, nhà cung cấp, bộ phận, site, kho, ngày bắt đầu, ghi chú, người/thời gian cập nhật), cùng hai trường **ca được phân/user làm việc** giả lập để thử liên kết quét. Có chỉnh sửa ảnh đại diện JPEG/PNG/WebP, được thu nhỏ JPEG 192×192 trong trình duyệt.
+- Ra/vào ca: nhập/bắn mã, xem hồ sơ, chọn chế độ vào/ra và Enter để ghi nhận; chặn ca chưa phân, mã không tồn tại, quét vào trùng/ra thiếu lượt mở. Không sửa lịch sử quét thủ công.
+- PDA: danh mục 3 seri giả lập và lịch sử mượn/trả; bảo vệ không mở hai lượt mượn trùng PDA.
+- **Xuất Excel .xlsx thật** trên các phân hệ có bảng (từ bản ghi đã lọc), với tiêu đề có định dạng, cố định hàng tiêu đề và bộ lọc Excel. Tự tạo OOXML/ZIP tại trình duyệt, **không dùng CSV** hoặc tải thư viện bên ngoài; giữ mã nhân viên dạng chuỗi để không mất số 0 đầu.
 
-## Phạm vi đồng bộ dữ liệu thật
-- Google Sheet tham khảo chỉ đọc; không cập nhật hoặc sao chép dữ liệu của Sheet lên repo public. Tại thời điểm đọc, các hàng được kiểm tra dưới header không có dữ liệu nghiệp vụ; các danh mục chưa có lựa chọn được xác minh.
-- Sheet tham khảo **không có mapping mã NV → lịch phân ca → user đang được gán**. Trong bản demo, ca và user nằm trong hồ sơ giả lập để kiểm thử. **Không suy ca từ giờ quét.** Kết nối dữ liệu thật, đồng bộ phân ca, phiên làm việc, xác thực và RBAC phải được thiết kế/duyệt riêng.
-- Nhập ảnh thật hoặc thông tin cá nhân trên một bản host công cộng với đăng nhập giả lập có nguy cơ lộ thông tin; chỉ được dùng ảnh và dữ liệu thử nghiệm không nhạy cảm.
-
-## Kiểm thử
+## Kiểm chứng
 ```bash
 cd prototype
 npm run check
@@ -26,8 +24,6 @@ npm run build
 python tests/browser_smoke.py
 python tests/hosted_smoke.py
 ```
-Node >= 18, Playwright/Chromium cho smoke trình duyệt; không có JavaScript dependency tại runtime. `dist/` là thư mục build (untracked).
-
-- **CODE_READY — Web Office v0.7 prototype / CI_PASS:** GitHub Actions [#43584401138](https://github.com/tamnv2/pickpack/actions/runs/43584401138) trên commit `e85b1579fd0ed1e47fc004923abf110849a391a4` PASS: `npm run check`, `npm run build` (7 tệp, 145383 bytes), Chromium smoke (đăng nhập, CRUD, ảnh avatar, quét ca, PDA, theme/font, mobile), và HTTP hosted smoke (đăng nhập chuyển URL, Ctrl+click mở tab, đồng bộ localStorage giữa tab, CSV, quét ca, mobile, không gọi host ngoài).
-- **Chưa xác nhận:** máy quét vật lý, hệ thống auth/roles/backend, dữ liệu thật, môi trường field; các cổng `RELEASE_PASS`, `FIELD_PASS`, `OWNER_PASS` không được suy ra từ `CI_PASS`.
-- Không merge PR / deploy Web/APK/Worker/Production theo mặc định; chờ lệnh riêng của Owner.
+- GitHub Actions `.github/workflows/office-check.yml` chạy build, Chromium giao diện, HTTP-hosted Chromium (đăng nhập, multi-tab, đồng bộ, xuất XLSX) và dùng `openpyxl` để kiểm tra file xuất thật.
+- `CODE_READY` và `CI_PASS` chỉ được công bố khi commit code và các bài kiểm thử thực sự PASS trên GitHub. PR vẫn chưa merge, không phát hành hoặc tạo tài nguyên provider.
+- **Không kiểm thử:** máy quét vật lý, dữ liệu/ảnh thật, phân quyền server, dữ liệu ca có thẩm quyền, APK/Production/Field. Google Sheet tham chiếu chỉ đọc; chưa có mapping mã nhân viên ↔ lịch phân ca ↔ user dùng thật.
