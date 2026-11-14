@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "OFFICE_UI_V08_CODE_READY_OWNER_REVIEW",
-  "application_code": "WEB_OFFICE_STATIC_V08_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43586461064_BUILD_CHROMIUM_DOM_HTTP_E2E_XLSX_OPENPYXL",
+  "phase": "OFFICE_UI_V081_TEST_PREVIEW_READY",
+  "application_code": "WEB_OFFICE_STATIC_V081_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43587655812_BUILD_CHROMIUM_HOSTED_CDN_BROWSER",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V08_OWNER_UI_REVIEW_PENDING",
+  "owner_business_acceptance": "V081_TEST_PREVIEW_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,15 +28,15 @@
     "realtime": true
   },
   "pending": [
-    "Owner review of v0.8 seven UI changes and system-wide read-only dashboard on static preview",
-    "Real production attendance requires authoritative employee→shift→user map, secure Auth/RBAC/OpsCore/API and realtime",
-    "Physical barcode reader, APK/Production, FIELD_PASS and OWNER_PASS not verified or authorized"
+    "Owner visual review v0.8.1 code-ready static test preview at immutable CDN URL",
+    "Actual employee→shift→work-user mapping and secure backend Auth/RBAC/OpsCore/realtime remain unverified",
+    "Physical barcode scanner, APK, RELEASE_PASS/FIELD_PASS/OWNER_PASS not tested or authorized"
   ],
-  "latest_checkpoint": "PP-20261114-010",
+  "latest_checkpoint": "PP-20261114-011",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
-    "release": "DRAFT_PR_UNMERGED_NOT_PRODUCTION",
+    "release": "PUBLIC_STATIC_TEST_PREVIEW_ONLY_PR_DRAFT_UNMERGED_NOT_PRODUCTION",
     "themes": [
       "light",
       "dark"
@@ -47,7 +47,7 @@
     "provider_usage": "ZERO_RUNTIME_API_CALLS",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -84,6 +84,22 @@
     "density": "COMPACT_RESPONSIVE",
     "dashboard": "READ_ONLY_8_KPIS_6_MODULE_STATUS_PENDING_TREND_SCAN_NO_CRUD_NO_SHORTCUT",
     "export": "NATIVE_EXCEL_XLSX_STORED_ZIP_OOXML_STYLE_FILTER_FROZEN_HEADER_NO_EXTERNAL_REQUESTS",
-    "verification_v08": "CODE_READY_CI_PASS_SOURCE_741503bd12a7528f68546880ffd8ee97204bd8a8_RUN_43586461064_NODE_BUILD_7_FILES_160367_BYTES_CHROMIUM_DOM_HOSTED_XLSX_OPENPYXL_PASS"
+    "verification_v08": "CODE_READY_CI_PASS_SOURCE_741503bd12a7528f68546880ffd8ee97204bd8a8_RUN_43586461064_NODE_BUILD_7_FILES_160367_BYTES_CHROMIUM_DOM_HOSTED_XLSX_OPENPYXL_PASS",
+    "footer": "Phát triển hệ thống - tamnv2 | Pick Pack 1291",
+    "footer_placement": "FIXED_VIEWPORT_BOTTOM_RIGHT_OPACITY_0_64",
+    "version_label": "WEB_V0_8_1_SIDEBAR_BOTTOM_AND_LOGIN",
+    "verification_v081": "CODE_READY_CI_PASS_PREVIEW_PASS_ACTIONS_43587655812_BUILD_7_FILES_161451_BYTES_LOCAL_CHROMIUM_HTTP_HOSTED_AND_REMOTE_CDN_BROWSER_PASS"
+  },
+  "test_preview": {
+    "status": "WEB_TEST_PREVIEW_PASS",
+    "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/ddc12d9b66461f842f65c6f8ffa323f3d992a41d/prototype/index.html",
+    "verified_commit": "ddc12d9b66461f842f65c6f8ffa323f3d992a41d",
+    "verified_run": "43587655812",
+    "public_access": true,
+    "credentials": "admin/admin_CLIENT_MOCK_ONLY",
+    "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
+    "production": false,
+    "provider_resources_created": false
   }
 }
