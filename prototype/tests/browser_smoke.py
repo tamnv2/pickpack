@@ -93,6 +93,7 @@ with sync_playwright() as p:
  app.locator('#photo-preview img').wait_for()
  assert app.locator('#photo-preview img').get_attribute('src').startswith('data:image/jpeg;base64,')
  app.locator('#record-form button[type="submit"]').click()
+ print('after create URL=',app.url,'records=',app.locator('.records-label b').count(),'form=',app.locator('#record-form').count(),'body=',app.locator('body').inner_text()[:800],'errors=',errs,flush=True)
  assert app.locator('.records-label b').inner_text()=='37'
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
  print('testing edit',flush=True)
