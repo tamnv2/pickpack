@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "OFFICE_UI_V087_PUBLIC_TEST_PREVIEW_VERIFIED",
-  "application_code": "WEB_OFFICE_STATIC_V087_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43607830838_SOURCE_9a1fbb4de5bf886f291896a3ce21421b8088a8b7",
+  "phase": "OFFICE_UI_V088_PUBLIC_TEST_PREVIEW_VERIFIED",
+  "application_code": "WEB_OFFICE_STATIC_V088_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43614819960_SOURCE_e5de98df9d5c3db9122641d75df2d3c59144686e",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V087_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V088_OWNER_VISUAL_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner UI visual review of physical 3D flip and shared toolbar v0.8.7",
+    "Owner visual review of VisualTimer-inspired flip clock v0.8.8",
     "Authoritative identity/role/shift-user backend and security before real operations",
-    "Physical hardware/field tests, APK, Production RELEASE_PASS/FIELD_PASS/OWNER_PASS not approved"
+    "Physical field tests, APK, Production RELEASE_PASS/FIELD_PASS/OWNER_PASS not approved"
   ],
-  "latest_checkpoint": "PP-20261114-018",
+  "latest_checkpoint": "PP-20261114-020",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -48,7 +48,7 @@
     "provider_usage": "ZERO_RUNTIME_BUSINESS_API_CALLS_STATIC_CDN_TRANSFER_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.8.7",
+    "version": "0.8.8",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -88,7 +88,7 @@
     "verification_v08": "CODE_READY_CI_PASS_SOURCE_741503bd12a7528f68546880ffd8ee97204bd8a8_RUN_43586461064_NODE_BUILD_7_FILES_160367_BYTES_CHROMIUM_DOM_HOSTED_XLSX_OPENPYXL_PASS",
     "footer": "Phát triển hệ thống - tamnv2 | Pick Pack 1291",
     "footer_placement": "SIDEBAR_UNDER_WEB_VERSION_NOT_FIXED_VIEWPORT",
-    "version_label": "WEB_V0_8_7_SIDEBAR_BOTTOM_AND_LOGIN",
+    "version_label": "WEB_V0_8_8_SIDEBAR_BOTTOM_AND_LOGIN",
     "verification_v081": "CODE_READY_CI_PASS_PREVIEW_PASS_ACTIONS_43587655812_BUILD_7_FILES_161451_BYTES_LOCAL_CHROMIUM_HTTP_HOSTED_AND_REMOTE_CDN_BROWSER_PASS",
     "layout": "TABLE_ONLY_NO_CARD_TOGGLE",
     "labor_scan": "EMPLOYEE_CODE_QR_KEYBOARD_EXACT_PROFILE_SHIFT_USER_DATE_TIME_TEMP_NO_GUESSED_HOURS_WORK_ONE_PER_DAY",
@@ -104,16 +104,17 @@
     "verification_v085": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_0cdc1a07372015ead7f62f43c014891765760c13_RUN_43604203541_7_FILES_192767_BYTES_CHROMIUM_HOSTED_TIMEBOUNDARY_18H_XLSX_MOBILE_NO_EXTERNAL_CALLS",
     "dashboard_search": "VISIBLE_CROSS_SIX_SYNTHETIC_MODULES_TOTAL_COUNT_UP_TO_12_LINKS_LIVE_RESULTS_NO_KPI_FILTER_NO_FULL_RENDER",
     "verification_v086": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_09f92c6b65ba80563ddbf0dbf61adf4ecac93453_RUN_43606010315_BUILD_7_FILES_199141_BYTES_CHROMIUM_HOSTED_CDN_BROWSER",
-    "clock": "PHYSICAL_3D_TWO_STAGE_TOP_OUT_BOTTOM_IN_CHANGED_DIGITS_ONLY_REDUCED_MOTION",
+    "clock": "VISUALTIMER_REFERENCE_STYLE_LOCAL_RETRO_SPLIT_FLAP_270MS_TOP_320MS_BOTTOM_HIGH_CONTRAST_HINGE_3D_REDUCED_MOTION_SETTLE",
     "catalog_search": "LIVE_FILTER_NAME_ORIGINAL_EDIT_DELETE_INDICES",
-    "verification_v087": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_9a1fbb4de5bf886f291896a3ce21421b8088a8b7_RUN_43607830838_7_FILES_202898_BYTES_CHROMIUM_HOSTED_CSS_ANIMATION_LAYOUT_INVARIANT_BROWSER"
+    "verification_v087": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_9a1fbb4de5bf886f291896a3ce21421b8088a8b7_RUN_43607830838_7_FILES_202898_BYTES_CHROMIUM_HOSTED_CSS_ANIMATION_LAYOUT_INVARIANT_BROWSER",
+    "verification_v088": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_43614819960_SOURCE_e5de98df9d5c3db9122641d75df2d3c59144686e_7_FILES_206998_BYTES_CHROMIUM_HOSTED_MID_ROTATION_REDUCED_MOTION_CDN_BROWSER"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/9a1fbb4de5bf886f291896a3ce21421b8088a8b7/prototype/index.html",
-    "verified_commit": "9a1fbb4de5bf886f291896a3ce21421b8088a8b7",
-    "verified_run": "43607830838",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/e5de98df9d5c3db9122641d75df2d3c59144686e/prototype/index.html",
+    "verified_commit": "e5de98df9d5c3db9122641d75df2d3c59144686e",
+    "verified_run": "43614819960",
     "public_access": true,
     "credentials": "admin/admin_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
