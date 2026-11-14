@@ -1,33 +1,30 @@
-# PickPack 1291 — Horilla-style Admin Demo UI v0.5
+# PickPack 1291 — Web Office v0.6
 
-**Giai đoạn:** bản Web offline để Owner kiểm thử giao diện, chưa có backend, Firebase Auth, quyền thực tế, OpsCore, Worker hay Production. Chỉ sửa `tamnv2/pickpack`.
+**Phạm vi:** bản thử giao diện và quy trình quản trị bằng dữ liệu tổng hợp. Chưa có backend, xác thực Firebase, quyền nghiệp vụ server, OpsCore hay Production. Không được nhập thông tin nhân sự, thiết bị, biên bản thật.
 
-## Chạy thử
+## Truy cập và thao tác
+- Mở `index.html` trên Chrome/Edge (hoặc dùng static server của riêng người kiểm thử); đăng nhập **admin / admin**. Tài khoản này **chỉ là điều kiện kiểm thử trong JavaScript**, không phải tài khoản quản trị thực.
+- Có 7 phân hệ: tổng quan, nhân sự, ra/vào ca, công nhật, biên bản, CCDC, mượn/trả PDA.
+- Các danh sách hỗ trợ xem chi tiết, tạo/sửa/xóa, xóa nhiều, tìm kiếm, lọc trạng thái, dạng bảng/thẻ, xuất CSV và khôi phục dữ liệu gốc. Thao tác nhanh cập nhật trạng thái, có ràng buộc không cho một PDA xuất hiện trong 2 lượt mượn mở.
+- Biểu tượng được vẽ dạng SVG theo nghiệp vụ. Menu ghim bên trái đổi màu đồng nhất theo chế độ sáng/tối. Cài đặt tăng/giảm cỡ chữ 90–120% theo bước 5%, ghi nhớ trên trình duyệt. Thông báo tập hợp các mục chờ xử lý từ dữ liệu hiện có.
+- Các mục menu và tên hồ sơ là liên kết `<a href>` thật: chuột phải → Mở liên kết trong tab mới. Không có nút tạo tab.
+- Giao diện cố ý không chứa nội dung trao đổi AI–Owner hoặc hướng dẫn kỹ thuật. Thông tin an toàn chỉ ghi trong tài liệu này.
 
-1. Mở `index.html` bằng Chrome/Edge, đăng nhập `admin` / `admin` (chỉ có hiệu lực trong giao diện demo, không phải tài khoản thực).
-2. Dùng menu 7 phân hệ, tìm kiếm, lọc, tạo/sửa/xóa, xóa hàng loạt, xem hồ sơ, chuyển bảng/thẻ, xuất CSV, đặt lại dữ liệu giả và đổi trạng thái minh họa. Đăng xuất từ menu trái.
-3. Để mở tab mới theo cách trình duyệt: **nhấn chuột phải vào tên chức năng hoặc tên bản ghi → Mở liên kết trong tab mới**, hoặc Ctrl+click / click chuột giữa. Không có nút tạo tab mới.
-4. Đổi sáng/tối ở góc trên phải; giao diện có responsive desktop/mobile, chuyển động nhẹ và tuân thủ reduced-motion.
-5. Nếu mở trực tiếp bằng `file://`, demo dùng tham số `demo=1` nhằm chuyển giữa các trang khi localStorage không được trình duyệt chia sẻ cho các tệp local; **đây không phải bảo mật**. Để xác nhận đồng bộ giữa nhiều tab, nên mở qua static HTTP origin khi kiểm thử cục bộ.
+## Bộ dữ liệu tự tạo
+- 36 nhân sự, 42 lượt ra/vào, 42 dòng công nhật, 30 biên bản, 30 CCDC, 30 lịch sử mượn/trả trên 3 mã PDA. Tên, mã, user, ngày, trạng thái là **dữ liệu tổng hợp do thuật toán sinh**, không lấy từ nghiệp vụ thật.
+- `localStorage` lưu các chỉnh sửa và cài đặt trên một trình duyệt, có tín hiệu đồng bộ giữa các tab cùng origin. Có thể nhấn **Khôi phục** để tạo lại bộ dữ liệu cố định.
+- Khi mở qua `file://`, chuyển tab dùng tham số demo nội bộ do mỗi tệp có thể bị trình duyệt cách ly localStorage. Đây không phải tính năng bảo mật.
+- Trên preview bên thứ ba, **không nhập dữ liệu thật**: URL/CDN công cộng không phải môi trường riêng tư hay hệ thống chính thức.
 
-## Dữ liệu giả lập
-
-- Nhân sự **36**; ra/vào ca **42**; công nhật **42**; biên bản **30**; CCDC **30**; lịch sử mượn/trả PDA **30** dòng, với **3 mã thiết bị mẫu**.
-- Tên, user, mã, tình trạng, thời điểm đều **do phần mềm sinh giả lập, có tính thực tế về hình thức**, không phải thông tin nhân viên hoặc thiết bị có thật.
-- Thay đổi dữ liệu được lưu `localStorage` trên trình duyệt nếu có hỗ trợ, đồng bộ sang tab khác của cùng origin; làm mới dữ liệu bằng nút **Đặt lại**. Tuyệt đối không nhập dữ liệu thật.
-
-## Biểu tượng
-
-- Ảnh logo người dùng cung cấp được chuyển thành `assets/supra-mark.png` và `assets/favicon.png`/`favicon.ico`. Các tệp chỉ dùng nội bộ trong bản Web demo.
-
-## Build/kiểm thử
-
+## Kiểm chứng
 ```bash
+cd prototype
 npm run check
 npm run build
+python tests/browser_smoke.py
 ```
+Yêu cầu Node ≥18, Playwright/Chromium cho bài kiểm thử trình duyệt. Không cài thư viện JavaScript tại runtime. Bảy tệp tĩnh thuộc thư mục `dist/` khi build.
 
-- Node ≥18, không cài package, 7 static assets nằm trong `dist/`.
-- Kết quả kiểm thử: Node syntax + source check + build PASS; Chromium inline DOM smoke desktop/mobile PASS các thao tác nhập sai login, hiển thị/ẩn mật khẩu, bảng/số bản ghi ở 6 phân hệ, tạo/sửa/xóa, lọc, bulk, reset, drawer, đổi trạng thái, theme và đường dẫn menu là anchor gốc.
-- **Giới hạn:** trình duyệt tự động trong môi trường kiểm thử không thể điều hướng đến `file://` hoặc `localhost` do chính sách sandbox; chưa thể khẳng định end-to-end login redirect, context-menu new-tab, CSV tải xuống, đồng bộ qua hai tab trên Chrome/Edge thật. Cần kiểm thử trực tiếp trước khi chấp nhận FIELD_PASS.
-- Login mẫu JavaScript và quản trị dữ liệu mẫu **không cung cấp quyền truy cập hay bảo mật backend**. Không deploy bản này ra URL public/Production.
+- Đã xác nhận mã JavaScript biên dịch trong V8; 16 phép thử render/structure, 6 phép thử hành vi ở môi trường DOM giả lập (font, theme, CRUD và chặn PDA trùng) PASS.
+- **Chưa chạy build và Chromium end-to-end trong phiên v0.6**; `CI_PASS`, điều hướng browser thật, download CSV, đồng bộ hai tab, hiển thị ở nhiều kích thước màn hình và `FIELD_PASS` **chưa xác nhận**.
+- Toàn bộ thông tin đăng nhập và thao tác quản trị chỉ có ở client. Bản này không được dùng để kiểm soát dữ liệu thật hoặc cấp quyền thực.
