@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.10'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.0'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.10'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.0'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -50,7 +50,8 @@ with sync_playwright() as p:
  assert app.locator('.flip-digit,.flip-pane,.flip-flap').count()==0
  assert app.locator('#clock-hours').count()==1 and app.locator('#clock-seconds').count()==1
  assert app.locator('#clock-time').get_attribute('aria-live')=='off'
- assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.textContent)")
+ assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2} [AP]M$/.test(el.getAttribute('aria-label'))")
+ assert app.locator('#clock-period').inner_text() in ('AM','PM')
  assert app.locator('.header-clock').get_attribute('aria-label')=='Giờ Việt Nam'
  assert app.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1&&c.top>=h.top-1&&c.bottom<=h.bottom+1}")
  assert app.locator('#clock-time').evaluate("el=>getComputedStyle(el).backgroundColor")=='rgba(0, 0, 0, 0)'
@@ -138,26 +139,36 @@ with sync_playwright() as p:
   assert app.locator('[data-action="layout-cards"],[data-action="layout-table"]').count()==0
   assert app.locator('.page-header h1').count()==0
   assert app.locator('.module-summary').count()==0
+ def authorize(password='admin'):
+  assert app.locator('#confirm-form').count()==1
+  app.locator('#confirm-password').fill(password)
+  app.locator('#confirm-form button[type="submit"]').click()
  print('testing labor QR scan',flush=True)
  app.locator('a.nav-main[href*="view=labor"]').click()
  assert app.locator('#labor-scan-form').count()==1
+ assert app.locator('[data-catalog-scope="labor"]').count()==1
  assert app.locator('button[data-action="add"]').count()==0
+ assert ['Giờ bắt đầu','Giờ kết thúc']==app.locator('.table-panel thead th').all_inner_texts()[-3:-1]
+ app.locator('#labor-work').select_option('Pick')
  app.locator('#labor-staff-code').fill('90000034')
- assert '90000034' in app.locator('#labor-scan-preview').inner_text()
  app.locator('#labor-staff-code').press('Enter')
- assert 'Đã ghi nhận công nhật' in app.locator('.scan-outcome').inner_text()
+ assert 'Đã bắt đầu công nhật' in app.locator('.scan-outcome').inner_text()
  assert app.locator('.records-label b').inner_text()=='43'
+ assert app.locator('#labor-work').input_value()=='Pick'
  app.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
+ authorize('wrong')
+ assert app.locator('#confirm-error').inner_text()=='Mật khẩu không đúng'
+ authorize()
  assert app.locator('#record-form').count()==1
  app.locator('#record-form select[name="work"]').select_option('Pick')
- app.locator('#record-form input[name="hours"]').fill('8,0')
- app.locator('#record-form select[name="state"]').select_option('Đã xác nhận')
+ app.locator('#record-form input[name="startTime"]').fill('06:30:01')
  app.locator('#record-form button[type="submit"]').click()
- assert 'Đã xác nhận' in app.locator('.table-panel').last.locator('tbody tr').first.inner_text()
+ assert '06:30:01' in app.locator('.table-panel').last.locator('tbody tr').first.inner_text()
  app.locator('#labor-staff-code').fill('90000034')
  app.locator('#labor-staff-code').press('Enter')
- assert 'Không tạo trùng' in app.locator('.scan-outcome').inner_text()
+ assert 'Đã kết thúc công nhật' in app.locator('.scan-outcome').inner_text()
  assert app.locator('.records-label b').inner_text()=='43'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).labor[0].endTime!='—'")
  app.locator('#labor-staff-code').fill('NOT_FOUND')
  app.locator('#labor-staff-code').press('Enter')
  assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
@@ -193,18 +204,22 @@ with sync_playwright() as p:
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
  assert app.locator('button[data-scan-mode="enter"]').get_attribute('aria-pressed')=='true'
+ assert app.locator('#scan-shift-choice').count()==1
+ app.locator('#scan-shift-choice').select_option('Ca HC')
  assert app.locator('button[data-action="add"]').count()==0
  app.locator('input#shift-code').fill('90000001')
  assert app.locator('#scan-preview').get_by_text('Mã nhân viên:',exact=False).count()>=1
  app.locator('input#shift-code').press('Enter')
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
  assert 'Đã vào ca' in app.locator('.scan-outcome').inner_text()
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].shift")=='Ca HC'
  app.locator('input#shift-code').fill('90000001')
  app.locator('input#shift-code').press('Enter')
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
  assert 'không ghi nhận vào ca lần hai' in app.locator('.scan-outcome').inner_text()
  app.locator('button[data-scan-mode="exit"]').click()
  assert app.locator('button[data-scan-mode="exit"]').get_attribute('aria-pressed')=='true'
+ assert app.locator('#scan-shift-choice').count()==0
  app.locator('input#shift-code').fill('90000001')
  app.locator('input#shift-code').press('Enter')
  assert 'Đã ra ca' in app.locator('.scan-outcome').inner_text()
@@ -332,5 +347,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.8.10 theme-native unboxed text clock HH:mm:ss, aligned and responsive, CRUD/QR/XLSX')
+ print('PASS: v0.9.0 theme-native unboxed text clock HH:mm:ss, aligned and responsive, CRUD/QR/XLSX')
  browser.close()
