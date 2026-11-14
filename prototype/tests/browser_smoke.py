@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.9'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.10'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.9'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.10'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -47,24 +47,18 @@ with sync_playwright() as p:
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  assert app.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
  assert app.locator('#clock-time').count()==1 and app.locator('#clock-date').count()==0
- assert app.locator('#clock-time .flip-digit').count()==6
- assert app.locator('#clock-time .flip-separator').count()==2
- assert app.locator('#clock-time .flip-upper').count()==6
- assert app.locator('#clock-time .flip-lower').count()==6
- assert app.locator('#clock-time .flip-out').count()==6
- assert app.locator('#clock-time .flip-in').count()==6
+ assert app.locator('.flip-digit,.flip-pane,.flip-flap').count()==0
+ assert app.locator('#clock-hours').count()==1 and app.locator('#clock-seconds').count()==1
  assert app.locator('#clock-time').get_attribute('aria-live')=='off'
- assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.getAttribute('aria-label'))")
- assert app.locator('#clock-time .flip-digit').first.evaluate("el=>getComputedStyle(el).perspective")!='none'
- assert app.locator('#clock-time .flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")==44
- assert app.locator('#clock-time .flip-digit').first.evaluate("el=>getComputedStyle(el).backgroundColor")=='rgb(34, 37, 44)'
- assert app.locator('#clock-time .flip-digit').first.evaluate("el=>getComputedStyle(el,'::after').height")=='2px'
+ assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.textContent)")
  assert app.locator('.header-clock').get_attribute('aria-label')=='Giờ Việt Nam'
  assert app.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1&&c.top>=h.top-1&&c.bottom<=h.bottom+1}")
- old_clock=app.locator('#clock-time').get_attribute('aria-label')
+ assert app.locator('#clock-time').evaluate("el=>getComputedStyle(el).backgroundColor")=='rgba(0, 0, 0, 0)'
+ assert app.locator('#clock-hours').evaluate("el=>getComputedStyle(el).color")!=app.locator('#clock-seconds').evaluate("el=>getComputedStyle(el).color")
+ old_clock=app.locator('#clock-time').inner_text()
  app.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
  app.wait_for_timeout(1250)
- assert app.locator('#clock-time').get_attribute('aria-label')!=old_clock
+ assert app.locator('#clock-time').inner_text()!=old_clock
  assert app.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
  app.set_viewport_size({'width':1024,'height':768})
  assert app.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1}")
@@ -326,7 +320,8 @@ with sync_playwright() as p:
  mobile=new_screen(mobile=True)
  assert mobile.locator('button.menu-button').is_visible()
  assert mobile.locator('#clock-date').count()==0
- assert mobile.locator('.flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")==26
+ assert mobile.locator('.flip-digit').count()==0
+ assert mobile.locator('#clock-time').is_visible()
  assert mobile.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.right<=h.right+1&&c.left>=h.left-1}")
  assert mobile.locator('button.menu-button').inner_text()=='Mục'
  mobile.screenshot(path=str(root/'preview-mobile.png'),full_page=True)
@@ -337,5 +332,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.8.9 time-only enlarged flip clock without clipped digits on desktop/tablet/mobile, CRUD/QR/XLSX')
+ print('PASS: v0.8.10 theme-native unboxed text clock HH:mm:ss, aligned and responsive, CRUD/QR/XLSX')
  browser.close()
