@@ -42,8 +42,8 @@ try:
         with context.expect_page() as opened:
             link.click(modifiers=['Control'])
         second = opened.value
+        second.wait_for_url('**/app.html?view=people*', timeout=5000)
         second.wait_for_load_state()
-        assert 'view=people' in second.url
         assert second.locator('.records-label b').inner_text() == '36'
         assert 'view=dashboard' in page.url
 
