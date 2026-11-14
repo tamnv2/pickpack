@@ -133,7 +133,7 @@ with sync_playwright() as p:
   assert all(abs(a-b)<1 for x,y in zip(overview_slots,header_slots()) for a,b in zip(x,y)),module
   assert app.locator('.table-panel').last.locator('.records-label b').inner_text()==str(n),(module,app.locator('.table-panel').last.locator('.records-label b').inner_text())
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
-  assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}')
+  assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}'),(module,app.locator('a.cell-record-link').first.get_attribute('href'))
   assert app.locator('.table-panel').last.locator('button[data-action="export"]').inner_text().strip().endswith('Xuất Excel')
   assert app.locator('.record-card').count()==0
   assert app.locator('[data-action="layout-cards"],[data-action="layout-table"]').count()==0
