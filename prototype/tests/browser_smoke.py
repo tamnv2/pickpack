@@ -185,7 +185,7 @@ with sync_playwright() as p:
  assert app.locator('.catalog-panel tbody tr').count()==4
  app.locator('button[data-category-tab="supplier"]').click()
  assert app.locator('.catalog-panel tbody tr').count()==3
- app.locator('a[data-nav="people"]').click()
+ app.locator('.catalog-heading a[data-nav="people"]').click()
  print('testing create',flush=True)
  app.locator('button[data-action="add"]').click()
  assert app.locator('form#record-form').count()==1
