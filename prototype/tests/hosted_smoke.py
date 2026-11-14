@@ -168,6 +168,12 @@ try:
         mobile.locator('a.nav-main[href*="view=shifts"]').click()
         assert mobile.locator('#shift-scan-form').is_visible()
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
+        # Account dropdown logs out the whole mock browser origin, including other tabs.
+        second.locator('.top-profile').click()
+        second.locator('.profile-dropdown [data-action="logout"]').click()
+        second.wait_for_url('**/index.html',timeout=5000)
+        assert second.locator('#login-form').is_visible()
+        page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
         print('HOSTED_SMOKE_PASS: compact nav and profile, local catalog CRUD/select, QR labor/PDA, Ctrl-tab storage, XLSX, mobile, no external requests')
