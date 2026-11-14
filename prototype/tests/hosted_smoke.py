@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.10'
+assert version=='0.9.0'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -54,7 +54,8 @@ try:
         assert page.locator('#clock-time').is_visible()
         assert page.locator('#clock-date,.flip-digit,.flip-pane,.flip-flap').count()==0
         assert page.locator('#clock-hours').count()==1 and page.locator('#clock-seconds').count()==1
-        assert page.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.textContent)")
+        assert page.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2} [AP]M$/.test(el.getAttribute('aria-label'))")
+        assert page.locator('#clock-period').inner_text() in ('AM','PM')
         assert page.locator('.header-clock').get_attribute('aria-label')=='Giờ Việt Nam'
         assert page.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1&&c.top>=h.top-1&&c.bottom<=h.bottom+1}")
         assert page.locator('#clock-time').evaluate("el=>getComputedStyle(el).backgroundColor")=='rgba(0, 0, 0, 0)'
@@ -104,11 +105,11 @@ try:
         time_probe=context.new_page()
         time_probe.clock.install(time=datetime(2026,11,14,10,32,58,tzinfo=timezone.utc))
         assert time_probe.goto(base + '/app.html?view=dashboard').ok
-        assert time_probe.locator('#clock-time').text_content()=='17:32:58'
+        assert time_probe.locator('#clock-time').get_attribute('aria-label')=='05:32:58 PM'
         time_probe.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
         time_probe.clock.fast_forward(3000)
-        assert time_probe.locator('#clock-time').text_content()=='17:33:01'
-        assert time_probe.locator('#clock-hours').inner_text()=='17:33'
+        assert time_probe.locator('#clock-time').get_attribute('aria-label')=='05:33:01 PM'
+        assert time_probe.locator('#clock-hours').inner_text()=='05:33'
         assert time_probe.locator('#clock-seconds').inner_text()==':01'
         assert time_probe.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
         assert time_probe.locator('.flip-digit,.flip-pane,.flip-flap').count()==0
@@ -190,29 +191,38 @@ try:
         workbook.close()
 
         second.locator('a.nav-main[href*="view=shifts"]').click()
+        second.locator('#scan-shift-choice').select_option('Ca HC')
         second.locator('#shift-code').fill('90009999')
         second.locator('#shift-code').press('Enter')
         assert 'Đã vào ca' in second.locator('.scan-outcome').inner_text()
-        assert 'Ca 1' in second.locator('.scan-outcome').inner_text()
+        assert 'Ca HC' in second.locator('.scan-outcome').inner_text()
         second.locator('[data-scan-mode="exit"]').click()
+        assert second.locator('#scan-shift-choice').count()==0
         second.locator('#shift-code').fill('90009999')
         second.locator('#shift-code').press('Enter')
         assert 'Đã ra ca' in second.locator('.scan-outcome').inner_text()
 
+        # Start/end labor are one row, with job selected from the live catalog.
         second.locator('a.nav-main[href*="view=labor"]').click()
-        assert second.locator('#labor-scan-form').count() == 1
-        assert second.locator('[data-action="layout-cards"],[data-action="layout-table"]').count() == 0
-        assert second.locator('.module-summary').count() == 0
+        assert second.locator('#labor-scan-form').count()==1
+        assert second.locator('[data-catalog-scope="labor"]').count()==1
+        second.locator('#labor-work').select_option('Pick')
         second.locator('#labor-staff-code').fill('90000034')
         second.locator('#labor-staff-code').press('Enter')
-        assert 'Đã ghi nhận công nhật' in second.locator('.scan-outcome').inner_text()
-        assert second.locator('.records-label b').inner_text() == '43'
+        assert 'Đã bắt đầu công nhật' in second.locator('.scan-outcome').inner_text()
+        assert second.locator('.records-label b').inner_text()=='43'
         second.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
+        assert second.locator('#confirm-form').is_visible()
+        second.locator('#confirm-password').fill('admin')
+        second.locator('#confirm-form button[type="submit"]').click()
         second.locator('#record-form select[name="work"]').select_option('Pick')
-        second.locator('#record-form input[name="hours"]').fill('8,5')
-        second.locator('#record-form select[name="state"]').select_option('Đã xác nhận')
+        second.locator('#record-form input[name="startTime"]').fill('05:35:00')
         second.locator('#record-form button[type="submit"]').click()
-        assert 'Đã xác nhận' in second.locator('.table-panel').last.locator('tbody tr').first.inner_text()
+        assert '05:35:00' in second.locator('.table-panel').last.locator('tbody tr').first.inner_text()
+        second.locator('#labor-staff-code').fill('90000034')
+        second.locator('#labor-staff-code').press('Enter')
+        assert 'Đã kết thúc công nhật' in second.locator('.scan-outcome').inner_text()
+        assert second.locator('.records-label b').inner_text()=='43'
         second.locator('a.nav-main[href*="view=pda"]').click()
         assert second.locator('.table-panel').last.locator('[data-edit]').count()==0
         second.locator('#pda-staff-code').fill('90000034')
@@ -257,7 +267,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.10 unboxed live time across views, minute rollover, theme/responsive layout, QR/XLSX, zero external API')
+        print('HOSTED_SMOKE_PASS: v0.9.0 AM/PM, native confirm password, catalog labor paired scans, shift choices, QR/XLSX, zero API')
         browser.close()
 finally:
     server.shutdown()
