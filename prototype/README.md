@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.8.7
+# PickPack 1291 — Web Office v0.8.8
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -61,3 +61,9 @@ python tests/hosted_smoke.py
 - Vùng tìm kiếm, thông báo, giờ/ngày đặt trong ba cột cố định của topbar ở tất cả các trang, bao gồm Tổng quan và Quản lý danh mục; chống dịch chuyển theo nội dung và có layout responsive. Danh mục hỗ trợ lọc tên, giữ đúng chỉ số gốc để sửa/xóa.
 - Đồng hồ sử dụng 4 lớp trên mỗi chữ số: mặt tĩnh trên/dưới và hai nửa thẻ động; số cũ gập xuống theo X, số mới mở ra theo X. Chỉ animate chữ số đổi, cập nhật mặt dưới khi animation kết thúc, cập nhật thời gian qua DOM không dựng lại trang; reduced-motion bỏ animation. Giờ Việt Nam.
 - Bản kiểm thử giả lập, không gọi API nghiệp vụ và không phát hành Production.
+
+## Web Office v0.8.8 — Visual Timer-inspired mechanical flip
+- Owner approved using https://visualtimer.com/timers/flip-clock/ as **visual/motion reference**. Original PickPack HTML/CSS/JS; no copied provider assets, libraries, requests, sound or countdown/stopwatch additions.
+- Dark charcoal split-flap cards with larger white numerals, center hinge/end pins, contrast/shadows and top-out (270 ms) then bottom-in (320 ms) 3D easing. Only changed digits animate; HH:mm:ss and Vietnamese calendar date remain.
+- Active flaps settle safely when hidden or reduced-motion is enabled; static face updates without page rerender or business API usage. Search/notification/clock toolbar slots stay unchanged.
+- Chromium/HTTP-hosted E2E verifies mid-rotation transforms, reduced-motion settling, mobile and actual public CDN preview: GitHub Actions #43614819960 (tested source e5de98df9d5c3db9122641d75df2d3c59144686e). UI visual similarity still requires Owner review.
