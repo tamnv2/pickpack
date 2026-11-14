@@ -117,3 +117,8 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 - Sidebar ordered as Owner specified: Tổng quan vận hành, Quản lý nhân sự, Quét vào/ra ca, Mượn / trả PDA, Quản lý công nhật, Quản lý biên bản, Quản lý CCDC. Keep right-click/new-tab native links.
 - Personal display adds **Tự động/Sáng/Tối**; auto follows Vietnam time: 06:00–17:59 light and 18:00–05:59 dark; manual choice persists locally and across same-origin tabs. Header sticky with live Vietnamese weekday/date, HH:mm:ss; update only clock DOM each second, not full app; respect reduced motion and responsive constraints.
 - Design conventions referenced read-only from VoltAgent DESIGN.md (IBM/SAP/Airtable/Linear), without copying source/assets or changing backend, Auth, providers or Production.
+
+## Web Office preview v0.8.6 — Owner 14/11/2026
+- **APPROVED UI only:** sticky header displays a six-digit, two-colon split-flap clock in Vietnam time. At each tick, animate only changing digits; preserve weekday/date and avoid full-page rerender. Respect reduced-motion system setting; no remote time/API.
+- **APPROVED functionality:** show same top search control on dashboard; type-to-search all synthetic records in six business modules, show up to 12 matches and total count, with native detail anchors/right-click new-tab and explicit no-result state. Dashboard KPIs remain complete/unfiltered and no provider/API usage.
+- No real data, backend/RBAC, Production/provider resource or Inventory source changes; PR remains unmerged pending Owner review.
