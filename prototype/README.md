@@ -1,30 +1,32 @@
-# PickPack 1291 — Web Office v0.6
+# PickPack 1291 — Web Office v0.7
 
-**Phạm vi:** bản thử giao diện và quy trình quản trị bằng dữ liệu tổng hợp. Chưa có backend, xác thực Firebase, quyền nghiệp vụ server, OpsCore hay Production. Không được nhập thông tin nhân sự, thiết bị, biên bản thật.
+**Phạm vi:** bản Web thử giao diện và quy trình quản lý vận hành, dữ liệu hoàn toàn giả lập. Không có backend, Firebase Auth, kiểm tra quyền ở server, OpsCore hoặc kết nối trực tiếp Google Sheet. **Không nhập thông tin nhân sự, ảnh chân dung hoặc dữ liệu vận hành thật vào bản thử nghiệm công cộng.**
 
-## Truy cập và thao tác
-- Mở `index.html` trên Chrome/Edge (hoặc dùng static server của riêng người kiểm thử); đăng nhập **admin / admin**. Tài khoản này **chỉ là điều kiện kiểm thử trong JavaScript**, không phải tài khoản quản trị thực.
-- Có 7 phân hệ: tổng quan, nhân sự, ra/vào ca, công nhật, biên bản, CCDC, mượn/trả PDA.
-- Các danh sách hỗ trợ xem chi tiết, tạo/sửa/xóa, xóa nhiều, tìm kiếm, lọc trạng thái, dạng bảng/thẻ, xuất CSV và khôi phục dữ liệu gốc. Thao tác nhanh cập nhật trạng thái, có ràng buộc không cho một PDA xuất hiện trong 2 lượt mượn mở.
-- Biểu tượng được vẽ dạng SVG theo nghiệp vụ. Menu ghim bên trái đổi màu đồng nhất theo chế độ sáng/tối. Cài đặt tăng/giảm cỡ chữ 90–120% theo bước 5%, ghi nhớ trên trình duyệt. Thông báo tập hợp các mục chờ xử lý từ dữ liệu hiện có.
-- Các mục menu và tên hồ sơ là liên kết `<a href>` thật: chuột phải → Mở liên kết trong tab mới. Không có nút tạo tab.
-- Giao diện cố ý không chứa nội dung trao đổi AI–Owner hoặc hướng dẫn kỹ thuật. Thông tin an toàn chỉ ghi trong tài liệu này.
+## Truy cập
+- Mở `prototype/index.html` trên Chrome/Edge hoặc static host thử nghiệm; đăng nhập **admin / admin** (kiểm thử client-only, không phải xác thực thật).
+- Menu là thẻ liên kết HTML thật: có thể chuột phải → mở trong tab mới. Giao diện hỗ trợ light/dark, 90–120% cỡ chữ, desktop và mobile.
+- Dữ liệu mô phỏng lưu bằng browser localStorage, không gọi API/Worker/Firebase; các tab cùng origin có thể nhận tín hiệu thay đổi storage.
 
-## Bộ dữ liệu tự tạo
-- 36 nhân sự, 42 lượt ra/vào, 42 dòng công nhật, 30 biên bản, 30 CCDC, 30 lịch sử mượn/trả trên 3 mã PDA. Tên, mã, user, ngày, trạng thái là **dữ liệu tổng hợp do thuật toán sinh**, không lấy từ nghiệp vụ thật.
-- `localStorage` lưu các chỉnh sửa và cài đặt trên một trình duyệt, có tín hiệu đồng bộ giữa các tab cùng origin. Có thể nhấn **Khôi phục** để tạo lại bộ dữ liệu cố định.
-- Khi mở qua `file://`, chuyển tab dùng tham số demo nội bộ do mỗi tệp có thể bị trình duyệt cách ly localStorage. Đây không phải tính năng bảo mật.
-- Trên preview bên thứ ba, **không nhập dữ liệu thật**: URL/CDN công cộng không phải môi trường riêng tư hay hệ thống chính thức.
+## Nghiệp vụ được dựng
+- **Nhân sự:** trường dữ liệu từ cấu trúc `DANH SÁCH NHÂN SỰ` của Google Sheet Owner tham chiếu: mã NV, họ tên, điện thoại, vị trí chính, nhà cung cấp, bộ phận, site, kho, ngày bắt đầu, ghi chú và dấu vết cập nhật. Bổ sung riêng **ca được phân** và **user làm việc** phục vụ liên kết khi quét. Tạo/sửa hồ sơ và mã nhân viên duy nhất. Thêm, thay hoặc xóa **ảnh đại diện** JPEG/PNG/WebP; trình duyệt thu nhỏ về JPEG 192×192, lưu cục bộ.
+- **Ra / vào ca:** vùng quét / nhập mã NV riêng nằm đầu tab. Nhập mã sẽ hiển thị thông tin đầy đủ từ hồ sơ đã lưu. Bấm **Vào ca** (hoặc bắn mã và Enter) / **Ra ca** để ghi thời gian giờ–phút–giây hiện tại cùng ngày, ca được phân và user tương ứng. Chặn mã không tồn tại, chưa phân ca, vào ca trùng hoặc ra ca khi không có lượt đang mở. Lịch sử quét ở chế độ xem và xuất CSV, không chỉnh trạng thái thủ công.
+- **PDA:** hiển thị danh mục seri, 5 số cuối, nguồn, trạng thái và ghi chú dựa trên cấu trúc `DANH SÁCH PDA` của Sheet; bên dưới là lịch sử mượn/trả. Có ràng buộc không cho một PDA có hai lượt mượn đang mở.
+- Các phân hệ đã duyệt khác: Công nhật, Biên bản, Công cụ dụng cụ và Tổng quan. Dữ liệu mô phỏng cho 36 nhân sự, 42 lượt ca, 42 công nhật, 30 biên bản, 30 CCDC, 30 lượt mượn/trả, 3 PDA giả lập. Tìm kiếm, lọc, xem chi tiết, chỉnh sửa nghiệp vụ mock, xuất CSV; đã loại bỏ nút reset dữ liệu và các thao tác ghi nhận ca bằng tay không phù hợp.
 
-## Kiểm chứng
+## Phạm vi đồng bộ dữ liệu thật
+- Google Sheet tham khảo chỉ đọc; không cập nhật hoặc sao chép dữ liệu của Sheet lên repo public. Tại thời điểm đọc, các hàng được kiểm tra dưới header không có dữ liệu nghiệp vụ; các danh mục chưa có lựa chọn được xác minh.
+- Sheet tham khảo **không có mapping mã NV → lịch phân ca → user đang được gán**. Trong bản demo, ca và user nằm trong hồ sơ giả lập để kiểm thử. **Không suy ca từ giờ quét.** Kết nối dữ liệu thật, đồng bộ phân ca, phiên làm việc, xác thực và RBAC phải được thiết kế/duyệt riêng.
+- Nhập ảnh thật hoặc thông tin cá nhân trên một bản host công cộng với đăng nhập giả lập có nguy cơ lộ thông tin; chỉ được dùng ảnh và dữ liệu thử nghiệm không nhạy cảm.
+
+## Kiểm thử
 ```bash
 cd prototype
 npm run check
 npm run build
 python tests/browser_smoke.py
 ```
-Yêu cầu Node ≥18, Playwright/Chromium cho bài kiểm thử trình duyệt. Không cài thư viện JavaScript tại runtime. Bảy tệp tĩnh thuộc thư mục `dist/` khi build.
+Node >= 18, Playwright/Chromium cho smoke trình duyệt; không có JavaScript dependency tại runtime. `dist/` là thư mục build (untracked).
 
-- Đã xác nhận mã JavaScript biên dịch trong V8; 16 phép thử render/structure, 6 phép thử hành vi ở môi trường DOM giả lập (font, theme, CRUD và chặn PDA trùng) PASS.
-- **Chưa chạy build và Chromium end-to-end trong phiên v0.6**; `CI_PASS`, điều hướng browser thật, download CSV, đồng bộ hai tab, hiển thị ở nhiều kích thước màn hình và `FIELD_PASS` **chưa xác nhận**.
-- Toàn bộ thông tin đăng nhập và thao tác quản trị chỉ có ở client. Bản này không được dùng để kiểm soát dữ liệu thật hoặc cấp quyền thực.
+- **Đã xác nhận trên v0.7:** phân tích cú pháp JS V8, 17 phép kiểm cấu trúc + hành vi quét và 11 phép kiểm hồ sơ/ca bằng DOM giả lập đều PASS.
+- **Chưa chạy v0.7:** npm check/build, Chromium end-to-end, ảnh upload qua Chromium, kiểm thử phần cứng máy quét, CSV, đa tab và CI/Field. Không được gọi `CODE_READY`, `CI_PASS`, `FIELD_PASS` hay `RELEASE_PASS` khi chưa có bằng chứng.
+- Không merge PR / deploy Web/APK/Worker/Production theo mặc định; chờ lệnh riêng của Owner.
