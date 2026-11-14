@@ -1,93 +1,124 @@
-/* PickPack UI review only: zero backend, zero real authentication and zero network. */
+/* PickPack 1291 UI design review. All records fictional, all actions local-only. */
 (() => {
-  'use strict';
-  const designs = [
-    {id:1,name:'Điều hành',desc:'Sidebar tác nghiệp, bảng số liệu rõ ràng',shape:'side',tint:'blue',note:'Tập trung thao tác nhanh'},
-    {id:2,name:'Không gian mở',desc:'Thanh điều hướng ngang, thoáng và tối giản',shape:'top',tint:'cyan',note:'Ưu tiên nội dung rộng'},
-    {id:3,name:'Trung tâm kiểm soát',desc:'Bảng vận hành đậm nét, mật độ dữ liệu cao',shape:'compact',tint:'green',note:'Giám sát cùng lúc nhiều chỉ số'},
-    {id:4,name:'Thẻ nghiệp vụ',desc:'Bố cục bo mềm, chú trọng theo dõi danh mục',shape:'rail',tint:'orange',note:'Dễ học, dễ thao tác'},
-    {id:5,name:'Command Studio',desc:'Thanh công cụ nổi, chia vùng điều khiển',shape:'studio',tint:'purple',note:'Ưu tiên linh hoạt nhiều cửa sổ'}
-  ];
-  const modules = [
-    {id:'overview',name:'Tổng quan',ico:'◫',detail:'Tình hình vận hành mẫu'},
-    {id:'people',name:'Nhân sự',ico:'♙',detail:'Danh sách và hồ sơ'},
-    {id:'shifts',name:'Ra/vào ca',ico:'◷',detail:'Lịch sử quét theo ca'},
-    {id:'labor',name:'Công nhật',ico:'▦',detail:'Theo dõi công theo ngày'},
-    {id:'minutes',name:'Biên bản',ico:'▤',detail:'Biên bản nghiệp vụ'},
-    {id:'assets',name:'CCDC',ico:'▣',detail:'Tài sản và công cụ'},
-    {id:'pda',name:'Mượn/trả PDA',ico:'▥',detail:'Theo dõi thiết bị mẫu'}
-  ];
-  const params = new URLSearchParams(location.search);
-  const validId = n => Math.max(1, Math.min(5, Number.parseInt(n,10) || 1));
-  const designId = validId(params.get('design'));
-  const mode = params.get('mode') === 'dark' ? 'dark' : 'light';
-  const moduleId = modules.some(m=>m.id===params.get('page')) ? params.get('page') : 'overview';
-  const root = document.getElementById('root');
-  const html = t => String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const url = (page,design=designId,theme=mode) => `app.html?design=${design}&mode=${theme}&page=${encodeURIComponent(page)}`;
-  const active = modules.find(m=>m.id===moduleId);
-  function gallery(){
-    document.documentElement.dataset.mode='light';
-    root.innerHTML = `<div class="gallery"><div class="gallery-top"><div class="brand-line"><span class="logo">P<span>·</span></span><div><strong>PickPack 1291</strong><small>UI DESIGN REVIEW / 0.2</small></div></div><span class="demo-chip">DEMO · Không có dữ liệu thật</span></div>
-      <div class="gallery-intro"><span class="section-kicker">THƯ VIỆN GIAO DIỆN</span><h1>5 phương án, một hệ thống.</h1><p>Chọn phong cách và chế độ sáng/tối để mở giao diện vận hành thực tế ở <b>tab trình duyệt mới</b>. Các mẫu dùng chung 7 mục, chỉ khác cách bố trí, mật độ và ngôn ngữ hình ảnh.</p></div>
-      <div class="design-grid">${designs.map(d=>`<article class="design-card"><div class="design-mini mini-${d.id}" aria-hidden="true"><div class="mini-frame"><span class="mini-nav"></span><div class="mini-main"><span class="mini-header"></span><div class="mini-tiles"><i></i><i></i><i></i></div><div class="mini-content"><i></i><i></i></div></div></div></div><div class="design-text"><span class="design-count">MẪU ${String(d.id).padStart(2,'0')}</span><h2>${d.name}</h2><p>${d.desc}</p><span class="design-note">${d.note}</span><div class="design-links"><a class="cta" href="${url('overview',d.id,'light')}" target="_blank" rel="noopener">Xem sáng <span aria-hidden="true">↗</span></a><a class="outline" href="${url('overview',d.id,'dark')}" target="_blank" rel="noopener">Xem tối <span aria-hidden="true">↗</span></a></div></div></article>`).join('')}</div>
-      <footer class="gallery-foot">Bản review UI: mở trực tiếp offline hoặc từ thư mục build. Chưa có login thực, phân quyền, cơ sở dữ liệu, API, Worker và realtime.</footer></div>`;
-  }
-  const rowData = {
-    people:[['NV-DEMO-001','Nhân sự mẫu A','Ca 1','Đang làm việc'],['NV-DEMO-002','Nhân sự mẫu B','Ca 2','Đang làm việc'],['NV-DEMO-003','Nhân sự mẫu C','Ca 1','Tạm nghỉ'],['NV-DEMO-004','Nhân sự mẫu D','Ca 2','Đang làm việc']],
-    shifts:[['CA-001','Quét vào ca','08:00','Hoàn tất'],['CA-002','Quét vào ca','08:02','Hoàn tất'],['CA-003','Quét ra ca','17:05','Chờ rà soát'],['CA-004','Quét vào ca','18:00','Hoàn tất']],
-    labor:[['CN-001','Công mẫu A','08:00 – 17:00','Đã ghi nhận'],['CN-002','Công mẫu B','08:00 – 17:00','Đã ghi nhận'],['CN-003','Công mẫu C','18:00 – 22:00','Đang rà soát'],['CN-004','Công mẫu D','08:00 – 12:00','Đã ghi nhận']],
-    minutes:[['BB-001','Ghi nhận sự việc mẫu','14/11/2026','Nháp'],['BB-002','Biên bản bàn giao mẫu','13/11/2026','Đã lập'],['BB-003','Biên bản CCDC mẫu','12/11/2026','Đã lập']],
-    assets:[['CCDC-001','Máy quét cầm tay','Khu vực A','Sẵn sàng'],['CCDC-002','Bộ sạc dự phòng','Khu vực B','Đang sử dụng'],['CCDC-003','Đồng phục mẫu','Kho cấp phát','Sẵn sàng']],
-    pda:[['PDA-MOCK-01','Thiết bị mẫu 01','Người mượn giả A','Đang mượn'],['PDA-MOCK-02','Thiết bị mẫu 02','Chưa cấp phát','Sẵn sàng'],['PDA-MOCK-03','Thiết bị mẫu 03','Người mượn giả B','Đang mượn']]
-  };
-  const fields = {
-    people:['Mã nhân sự','Họ tên (giả)','Phân ca','Trạng thái'],shifts:['Mã lượt','Sự kiện','Thời gian','Trạng thái'],
-    labor:['Mã công','Người thực hiện','Khung giờ','Trạng thái'],minutes:['Mã biên bản','Tiêu đề','Ngày tạo','Trạng thái'],
-    assets:['Mã CCDC','Tên dụng cụ','Vị trí','Trạng thái'],pda:['Mã PDA','Tên thiết bị','Liên kết (giả)','Trạng thái']
-  };
-  const colorsForStatus = s => /sẵn sàng|hoàn tất|đã lập|đã ghi|đang làm/i.test(s) ? 'ok' : /chờ|rà soát|tạm nghỉ|nháp/i.test(s) ? 'warn' : 'info';
-  const nav = () => modules.map(m=>{
-    const selected=m.id===moduleId?' current':'';
-    const href=url(m.id);
-    return `<div class="nav-item${selected}"><a class="nav-main" href="${href}" title="${m.name}"><span class="nav-icon">${m.ico}</span><span class="nav-text">${m.name}</span></a><a class="newtab" href="${href}" target="_blank" rel="noopener" title="Mở ${m.name} trong tab mới" aria-label="Mở ${m.name} trong tab mới">↗</a></div>`
-  }).join('');
-  function overview(){
-    const kpis=[['Nhân sự trong ca','24','người','↗'],['Đã quét vào ca','21','lượt','◷'],['Thiết bị đang mượn','02','PDA','▥'],['Biên bản cần xem','03','mục','▤']];
-    return `<div class="metric-grid">${kpis.map((k,i)=>`<article class="metric card"><div class="metric-label">${k[0]}<span class="metric-icon">${k[3]}</span></div><div class="metric-number">${k[1]} <small>${k[2]}</small></div><div class="metric-strap">Số liệu minh họa · Không realtime</div></article>`).join('')}</div>
-    <div class="mid-grid"><section class="card chart-card"><div class="card-heading"><div><h2>Nhịp độ vận hành</h2><p>Minh họa theo khung giờ</p></div><span class="tag">DEMO DATA</span></div><div class="chart-visual">${[34,56,44,71,84,68,93,61,79,48].map((v,i)=>`<div class="chart-col"><div class="chart-bar" style="height:${v}%"></div><span>${7+i}h</span></div>`).join('')}</div></section>
-    <section class="card"><div class="card-heading"><div><h2>Hoạt động gần đây</h2><p>Nhật ký hiển thị giả lập</p></div></div><div class="event-list">${[['08:02','Quét vào ca được ghi nhận','Hoàn tất'],['08:12','Bàn giao PDA mẫu 01','Đang mượn'],['08:30','Biên bản mẫu đã tạo','Nháp'],['09:10','Công nhật đang rà soát','Chờ rà soát']].map(e=>`<div class="event-row"><span class="event-dot"></span><div><strong>${e[1]}</strong><small>${e[2]}</small></div><time>${e[0]}</time></div>`).join('')}</div></section></div>
-    <div class="section-label">Truy cập nhanh · Mở độc lập trong tab mới</div><div class="shortcut-grid">${modules.filter(m=>m.id!=='overview').map(m=>`<a class="shortcut card" href="${url(m.id)}" target="_blank" rel="noopener"><span class="shortcut-icon">${m.ico}</span><div><strong>${m.name}</strong><small>${m.detail}</small></div><span class="shortcut-go">↗</span></a>`).join('')}</div>`;
-  }
-  function rows(page){return (rowData[page] || []).map(row=>[...row]);}
-  let currentRows=rows(moduleId);
-  let filter='all';
-  function table(){
-    const q=(document.querySelector('#query')?.value || '').toLocaleLowerCase('vi');
-    const data=currentRows.filter(row=>row.join(' ').toLocaleLowerCase('vi').includes(q) && (filter==='all'||colorsForStatus(row[3])===filter));
-    const tableNode=document.getElementById('table-zone');
-    tableNode.innerHTML=`<div class="table-scroll"><table><thead><tr>${fields[moduleId].map(f=>`<th>${f}</th>`).join('')}<th>Chi tiết</th></tr></thead><tbody>${data.length?data.map((r,i)=>`<tr>${r.map((v,j)=>`<td>${j===3?`<span class="status ${colorsForStatus(v)}">${html(v)}</span>`:html(v)}</td>`).join('')}<td><a class="detail" href="${url(moduleId)}&record=${encodeURIComponent(r[0])}" target="_blank" rel="noopener" title="Xem riêng bản ghi ${html(r[0])}">Mở tab ↗</a></td></tr>`).join(''):`<tr><td colspan="5" class="empty">Không có bản ghi mẫu phù hợp.</td></tr>`}</tbody></table></div><div class="table-foot"><span>${data.length} / ${currentRows.length} dòng minh họa</span><span>Không có dữ liệu thật</span></div>`;
-  }
-  function modulePage(){return `<section class="card list-card"><div class="toolbar"><label class="search"><span>⌕</span><input id="query" type="search" placeholder="Tìm trong dữ liệu mẫu..." autocomplete="off"></label><select id="status-filter" aria-label="Lọc trạng thái"><option value="all">Tất cả trạng thái</option><option value="ok">Hoàn tất / Sẵn sàng</option><option value="info">Đang sử dụng</option><option value="warn">Chờ xử lý / Nháp</option></select><button id="add-record" class="btn primary">+ Thêm mẫu</button></div><div id="table-zone"></div></section>`;}
-  function detailPanel(){const id=params.get('record');if(!id||moduleId==='overview')return '';
-    const r=currentRows.find(row=>row[0]===id);
-    if(!r)return `<div class="detail-banner">Không tìm thấy mã minh họa <b>${html(id)}</b> trong dữ liệu trang. Bản ghi thêm cục bộ ở tab khác không được chia sẻ.</div>`;
-    return `<div class="detail-banner"><strong>Chi tiết bản ghi giả: ${html(r[0])}</strong><span>${r.map(x=>html(x)).join('　·　')}</span><button id="close-detail" class="btn ghost">Đóng chi tiết</button></div>`;
-  }
-  function renderApp(){
-    const design=designs.find(d=>d.id===designId);
-    document.documentElement.dataset.design=String(designId);
-    document.documentElement.dataset.mode=mode;
-    document.title=`${active.name} · ${design.name} · PickPack 1291`;
-    root.innerHTML=`<div class="app-shell"><aside class="sidebar"><a class="brand" href="index.html" title="Chọn mẫu khác"><span class="logo">P<span>·</span></span><span><strong>PickPack 1291</strong><small>VẬN HÀNH / DEMO</small></span></a><div class="nav-title">DANH MỤC</div><nav class="side-links" aria-label="Danh mục chức năng">${nav()}</nav><div class="sidebar-bottom"><strong>Admin Demo</strong><small>Giao diện giả lập · Không có quyền thật</small><a href="index.html">← Chọn mẫu khác</a></div></aside>
-      <div class="app-main"><header class="header"><div class="header-start"><button id="mobile-nav" class="icon-btn mobile-only" aria-label="Hiện danh mục" aria-expanded="false">☰</button><span class="top-context">PickPack / <strong>${active.name}</strong></span></div><div class="header-controls"><label class="design-select"><span>Mẫu</span><select id="design-change" aria-label="Chọn phương án">${designs.map(d=>`<option value="${d.id}" ${d.id===designId?'selected':''}>${String(d.id).padStart(2,'0')} · ${d.name}</option>`).join('')}</select></label><button id="mode-change" class="btn mode-btn" aria-label="Chuyển giao diện sáng hoặc tối">${mode==='light'?'☾ Tối':'☀ Sáng'}</button><a class="btn open-button" href="${url(moduleId)}${params.has('record')?'&record='+encodeURIComponent(params.get('record')):''}" target="_blank" rel="noopener" title="Mở trang này trong tab mới">↗ <span>Mở tab mới</span></a><span class="person-pill">AD <span>Admin Demo</span></span></div></header>
-      <main class="work-area"><div class="disclaimer"><span><b>UI PROTOTYPE</b> · Tất cả số liệu và nhân sự đều giả lập; chưa có login, API hay lưu trữ thực.</span><a href="index.html">Xem 5 mẫu ↗</a></div><div class="page-head"><div><div class="section-kicker">${String(designId).padStart(2,'0')} / ${design.name} · ${active.detail}</div><h1>${active.name}</h1><p>${moduleId==='overview'?'Bảng điều hành trực quan dành cho bản review.':'Kiểm tra cách hiển thị bảng, tìm kiếm, lọc và mở bản ghi trong tab mới.'}</p></div><div class="page-actions"><a class="btn ghost" href="${url(moduleId)}" target="_blank" rel="noopener">↗ Mở cửa sổ độc lập</a></div></div>${detailPanel()}${moduleId==='overview'?overview():modulePage()}</main>
-      <footer class="footer">PickPack 1291 · Bộ mẫu giao diện 0.2 · CODE ONLY / NO BACKEND <span>Không triển khai Production</span></footer></div></div>`;
-    document.getElementById('design-change').addEventListener('change',e=>{location.href=url(moduleId,validId(e.target.value),mode)+(params.has('record')?'&record='+encodeURIComponent(params.get('record')):'')});
-    document.getElementById('mode-change').addEventListener('click',()=>{location.href=url(moduleId,designId,mode==='light'?'dark':'light')+(params.has('record')?'&record='+encodeURIComponent(params.get('record')):'')});
-    document.getElementById('mobile-nav').addEventListener('click',e=>{const open=document.body.classList.toggle('nav-open');e.currentTarget.setAttribute('aria-expanded',String(open))});
-    const close=document.getElementById('close-detail'); if(close)close.addEventListener('click',()=>location.href=url(moduleId));
-    const query=document.getElementById('query');if(query){query.addEventListener('input',table);document.getElementById('status-filter').addEventListener('change',e=>{filter=e.target.value;table()});document.getElementById('add-record').addEventListener('click',()=>{const idx=currentRows.length+1;currentRows.unshift([`DEMO-${String(idx).padStart(3,'0')}`,`Bản ghi minh họa ${idx}`,`Ca mẫu ${idx%2+1}`,'Chờ rà soát']);query.value='';document.getElementById('status-filter').value='all';filter='all';table()});table()}
-  }
-  if (document.body.dataset.screen === 'gallery')gallery();else renderApp();
+'use strict';
+const designs=[
+ {id:1,name:'Điều hành tổng hợp',eng:'EXECUTIVE DESK',tag:'Dashboard đa chức năng',desc:'Sidebar ổn định, KPI, biểu đồ và nhật ký; phù hợp quản lý tổng hợp.',why:'Theo dõi toàn cục, đi nhanh tới từng nghiệp vụ.',glyph:'layout-dashboard',style:'corporate'},
+ {id:2,name:'Trung tâm giám sát',eng:'CONTROL TOWER',tag:'Bảng điều hành theo ca',desc:'Thanh trạng thái ngang, cảnh báo nổi bật, timeline và khu vực giám sát.',why:'Quan sát tình hình ca và xử lý ngoại lệ ưu tiên.',glyph:'radio-tower',style:'control'},
+ {id:3,name:'Luồng công việc',eng:'WORKFLOW BOARD',tag:'Kanban nghiệp vụ',desc:'Các cột trạng thái dạng thẻ, quy trình được nhìn thấy ngay từ đầu.',why:'Theo dõi những việc đang chờ, đang làm và đã xong.',glyph:'columns-3',style:'workflow'},
+ {id:4,name:'Bàn dữ liệu',eng:'DATA WORKBENCH',tag:'Bảng dữ liệu ưu tiên',desc:'Bố cục giống ứng dụng nghiệp vụ: thanh công cụ, bảng lớn và inspector.',why:'Tìm, lọc, đối chiếu và mở nhiều hồ sơ song song.',glyph:'table-2',style:'data'},
+ {id:5,name:'Trạm tác nghiệp',eng:'FIELD HUB',tag:'Mobile-first, thao tác nhanh',desc:'Các thẻ chức năng và hành động lớn, tối ưu dùng bằng tay tại hiện trường.',why:'Mở tác vụ quét, nhân sự, thiết bị ngay trên màn hình nhỏ.',glyph:'scan-line',style:'field'}
+];
+const mods=[
+ {id:'overview',label:'Tổng quan',icon:'layout-dashboard',desc:'Bảng điều hành'},
+ {id:'people',label:'Nhân sự',icon:'users',desc:'Hồ sơ và chân dung'},
+ {id:'shifts',label:'Ra/vào ca',icon:'scan-line',desc:'Quét ca và user'},
+ {id:'labor',label:'Công nhật',icon:'calendar-check',desc:'Công theo ngày'},
+ {id:'minutes',label:'Biên bản',icon:'file-text',desc:'Ghi nhận sự việc'},
+ {id:'assets',label:'CCDC',icon:'package',desc:'Quản lý công cụ'},
+ {id:'pda',label:'Mượn/trả PDA',icon:'smartphone',desc:'Giao nhận PDA'}
+];
+const fixtures={
+ people:{cols:['Mã NV','Nhân sự','Ca','Trạng thái'],rows:[['NV-MAU-001','Nhân sự mẫu A','Ca 1','Đang làm việc'],['NV-MAU-002','Nhân sự mẫu B','Ca 2','Đang làm việc'],['NV-MAU-003','Nhân sự mẫu C','Ca 1','Tạm nghỉ'],['NV-MAU-004','Nhân sự mẫu D','Ca 2','Đã ra ca'],['NV-MAU-005','Nhân sự mẫu E','Ca 1','Đang làm việc'],['NV-MAU-006','Nhân sự mẫu F','Ca 1','Chưa vào ca']]},
+ shifts:{cols:['Mã lượt','Sự kiện','Thời gian','Trạng thái'],rows:[['CA-MAU-001','Quét vào ca','07:56','Hoàn tất'],['CA-MAU-002','Quét vào ca','07:59','Hoàn tất'],['CA-MAU-003','Gắn user làm việc','08:06','Chờ xác nhận'],['CA-MAU-004','Quét ra ca','17:03','Hoàn tất'],['CA-MAU-005','Quét vào ca','18:01','Hoàn tất']]},
+ labor:{cols:['Mã công','Nhân sự','Khung giờ','Trạng thái'],rows:[['CN-MAU-001','Nhân sự mẫu A','08:00–17:00','Đã chốt'],['CN-MAU-002','Nhân sự mẫu B','08:00–17:00','Đã chốt'],['CN-MAU-003','Nhân sự mẫu C','18:00–22:00','Chờ rà soát'],['CN-MAU-004','Nhân sự mẫu D','08:00–12:00','Đã chốt']]},
+ minutes:{cols:['Mã biên bản','Loại biên bản','Ngày lập','Trạng thái'],rows:[['BB-MAU-001','Sự việc vận hành','14/11/2026','Bản nháp'],['BB-MAU-002','Bàn giao công cụ','13/11/2026','Hoàn tất'],['BB-MAU-003','Ghi nhận hiện trường','12/11/2026','Chờ xác nhận'],['BB-MAU-004','Điều chỉnh công nhật','11/11/2026','Hoàn tất']]},
+ assets:{cols:['Mã CCDC','Tên công cụ','Vị trí','Trạng thái'],rows:[['CC-MAU-001','Máy quét mẫu','Khu A','Sẵn sàng'],['CC-MAU-002','Bộ sạc mẫu','Khu B','Đang sử dụng'],['CC-MAU-003','Phụ kiện mẫu','Tủ CCDC','Sẵn sàng'],['CC-MAU-004','Giá đỡ mẫu','Khu A','Chờ kiểm tra']]},
+ pda:{cols:['Mã PDA','Thiết bị','Người mượn (giả)','Trạng thái'],rows:[['PDA-MAU-01','PDA số 01','Nhân sự mẫu A','Đang mượn'],['PDA-MAU-02','PDA số 02','Chưa bàn giao','Sẵn sàng'],['PDA-MAU-03','PDA số 03','Nhân sự mẫu B','Đang mượn']]}
+};
+const paths={
+ 'layout-dashboard':'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+ 'users':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ 'scan-line':'<path d="M4 8V5a1 1 0 0 1 1-1h3M20 8V5a1 1 0 0 0-1-1h-3M4 16v3a1 1 0 0 0 1 1h3M20 16v3a1 1 0 0 1-1 1h-3M4 12h16"/>',
+ 'calendar-check':'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18m-13 6 2 2 4-4"/>',
+ 'file-text':'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8"/>',
+ 'package':'<path d="m12 2 9 5-9 5-9-5 9-5ZM3 7v10l9 5 9-5V7M12 12v10"/>',
+ 'smartphone':'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/>',
+ 'radio-tower':'<path d="M4 7a10 10 0 0 0 0 10m16-10a10 10 0 0 1 0 10M7 10a6 6 0 0 0 0 4m10-4a6 6 0 0 1 0 4M12 12l-5 10m5-10 5 10M9 18h6"/><circle cx="12" cy="9" r="2"/>',
+ 'columns-3':'<rect x="2" y="4" width="6" height="16" rx="1"/><rect x="9" y="4" width="6" height="16" rx="1"/><rect x="16" y="4" width="6" height="16" rx="1"/>',
+ 'table-2':'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/>',
+ 'sun':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m17.07-7.07-1.42 1.42M6.35 17.65l-1.42 1.42m14.14 0-1.42-1.42M6.35 6.35 4.93 4.93"/>',
+ 'moon':'<path d="M20.5 14.1A8.3 8.3 0 0 1 9.9 3.5 8.5 8.5 0 1 0 20.5 14.1Z"/>',
+ 'arrow-up-right':'<path d="M7 17 17 7M8 7h9v9"/>',
+ 'chevron-right':'<path d="m9 18 6-6-6-6"/>',
+ 'search':'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+ 'plus':'<path d="M12 5v14M5 12h14"/>',
+ 'bell':'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+ 'clock':'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ 'check-circle':'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+ 'alert-triangle':'<path d="m10.3 3.8-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0ZM12 9v4m0 4h.01"/>',
+ 'log-out':'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5m5 5H9"/>',
+ 'menu':'<path d="M4 7h16M4 12h16M4 17h16"/>',
+ 'sliders':'<path d="M4 7h16M4 17h16M9 4v6m6 4v6"/>',
+ 'arrow-right':'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+ 'layers':'<path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/>',
+ 'list-check':'<path d="m3 6 2 2 4-4m4 3h8M3 16l2 2 4-4m4 3h8"/>',
+ 'x':'<path d="M18 6 6 18M6 6l12 12"/>'
+};
+const ico=(name,size=19)=>`<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths['layers']}</svg>`;
+const params=new URLSearchParams(location.search);
+const design=Math.max(1,Math.min(5,Number(params.get('design'))||1));
+const theme=params.get('mode')==='dark'?'dark':'light';
+const page=mods.some(m=>m.id===params.get('page'))?params.get('page'):'overview';
+const detail=params.get('record')||'';
+const m=mods.find(x=>x.id===page), d=designs[design-1];
+const root=document.getElementById('root');
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const href=(p=page,did=design,mode=theme,r='')=>`app.html?design=${did}&mode=${mode}&page=${encodeURIComponent(p)}${r?'&record='+encodeURIComponent(r):''}`;
+const ext=(p=page,cls='',txt='Mở tab mới',r='')=>`<a class="${cls}" href="${href(p,design,theme,r)}" target="_blank" rel="noopener noreferrer" title="${esc(txt)}">${ico('arrow-up-right',16)}<span>${esc(txt)}</span></a>`;
+const key=(label,icon)=>`<span class="key">${ico(icon,14)}${label}</span>`;
+const isGood=s=>/hoàn tất|đã chốt|sẵn sàng|đã ra ca|đang làm việc/i.test(s);
+const isWarn=s=>/chờ|tạm|nháp|chưa vào/i.test(s);
+const tone=s=>isGood(s)?'success':isWarn(s)?'warning':'neutral';
+const status=s=>`<span class="status status-${tone(s)}"><i></i>${esc(s)}</span>`;
+const kpis=[['Nhân sự trong ca','24','người','users'],['Lượt vào ca','21','lượt','scan-line'],['PDA đang mượn','02','thiết bị','smartphone'],['Cần rà soát','03','mục','alert-triangle']];
+const logs=[['07:56','Bắt đầu quét vào ca','Ra/vào ca','shifts','success'],['08:06','Một lượt chờ liên kết user','Ra/vào ca','shifts','warning'],['08:12','PDA mẫu 01 được bàn giao','Mượn/trả PDA','pda','neutral'],['08:34','Biên bản mới dạng nháp','Biên bản','minutes','warning'],['09:05','Công nhật chờ rà soát','Công nhật','labor','warning']];
+const navLink=(x,clazz='')=>`<div class="nav-item ${x.id===page?'is-active':''}"><a class="nav-link ${clazz}" href="${href(x.id)}">${ico(x.icon,18)}<span>${esc(x.label)}</span></a><a class="tab-launch" href="${href(x.id)}" target="_blank" rel="noopener noreferrer" title="Mở ${esc(x.label)} trong tab mới" aria-label="Mở ${esc(x.label)} trong tab mới">${ico('arrow-up-right',14)}</a></div>`;
+const allNav=()=>mods.map(x=>navLink(x)).join('');
+const brand=()=>`<div class="brand"><span class="brand-symbol">P<span>·</span></span><span><strong>PickPack</strong><small>VẬN HÀNH 1291</small></span></div>`;
+const themeLink=()=>`<a class="theme-switch" href="${href(page,design,theme==='dark'?'light':'dark',detail)}" title="Chuyển sang chế độ ${theme==='dark'?'sáng':'tối'}">${ico(theme==='dark'?'sun':'moon',18)}<span>${theme==='dark'?'Sáng':'Tối'}</span></a>`;
+const headTools=()=>`<div class="head-tools"><a class="head-launch" href="index.html" title="Quay về thư viện 5 mẫu">${ico('layers',17)}<span>5 mẫu</span></a>${ext(page,'head-launch','Mở tab mới',detail)}${themeLink()}<span class="demo-user"><span class="user-dot">AD</span> Admin Demo</span></div>`;
+const labelDemo=()=>`<div class="demo-banner">${ico('alert-triangle',15)} <strong>DEMO GIAO DIỆN</strong> · Dữ liệu giả, không xác thực thật, không kết nối API hoặc cơ sở dữ liệu.</div>`;
+const title=()=>`<div class="page-heading"><div><div class="eyebrow">VẬN HÀNH / ${esc(d.eng)}</div><h1>${esc(m.label)}</h1><p>${esc(m.desc)} · Dữ liệu minh họa để duyệt thiết kế</p></div><div class="heading-acts">${ext(page,'btn btn-outline','Mở trang riêng')}${page!=='overview'?`<button id="add-row" class="btn btn-primary" type="button">${ico('plus',16)} Thêm mẫu</button>`:''}</div></div>`;
+function gallery(){document.documentElement.dataset.theme='light';document.documentElement.dataset.design='0';
+ root.innerHTML=`<div class="gallery-shell"><header class="gallery-header">${brand()}<div class="gallery-meta">BẢN REVIEW 0.3 · HTML/CSS/JS · OFFLINE</div></header><section class="gallery-hero"><span class="eyebrow">THƯ VIỆN PHƯƠNG ÁN · 14/11/2026</span><h1>Năm cách tổ chức <em>công việc</em>.<br>Không chỉ là năm màu.</h1><p>Được thiết kế riêng cho 7 nghiệp vụ PickPack 1291. Mỗi phương án có cấu trúc điều hướng, cách sắp xếp dữ liệu và ưu tiên thao tác khác nhau. Chọn chế độ sáng hoặc tối để mở trong tab mới.</p><div class="hero-note">${ico('check-circle',16)} 5 kiến trúc bố cục · 10 màn hình sáng/tối · 7 nghiệp vụ · Mở nhiều tab · Không Cloud</div></section><section class="gallery-grid">${designs.map(x=>`<article class="choice-card"><div class="art art-${x.id}">${mini(x.id)}</div><div class="choice-body"><div class="choice-id">PHƯƠNG ÁN 0${x.id} · ${x.eng}</div><h2>${esc(x.name)}</h2><p>${esc(x.desc)}</p><div class="choice-role">${ico(x.glyph,17)} ${esc(x.why)}</div><div class="choice-actions"><a class="btn btn-primary" href="${href('overview',x.id,'light')}" target="_blank" rel="noopener noreferrer">Xem sáng ${ico('arrow-up-right',16)}</a><a class="btn btn-outline" href="${href('overview',x.id,'dark')}" target="_blank" rel="noopener noreferrer">Xem tối ${ico('arrow-up-right',16)}</a></div></div></article>`).join('')}</section><footer class="gallery-bottom">Tài liệu tham khảo: UI UX Pro Max (uupm.cc) · Áp dụng nguyên tắc responsive, tương phản, phân cấp và mật độ dữ liệu. Không sao chép nguyên mẫu website.</footer></div>`;
+}
+function mini(n){const boxes=(num,cl='')=>Array.from({length:num},(_,i)=>`<span class="mini-box ${cl}"></span>`).join('');if(n===1)return `<div class="mini-enterprise"><i></i><div><b></b><section>${boxes(4)}</section><article>${boxes(2)}</article></div></div>`;if(n===2)return `<div class="mini-tower"><b></b><section>${boxes(5)}</section><article><i></i>${boxes(3)}</article></div>`;if(n===3)return `<div class="mini-workflow"><b></b><section>${[0,1,2].map(()=>`<i>${boxes(3)}</i>`).join('')}</section></div>`;if(n===4)return `<div class="mini-datadesk"><i></i><section><b></b>${boxes(7)}</section><aside></aside></div>`;return `<div class="mini-field"><b></b><section>${boxes(4)}</section><article>${boxes(3)}</article><footer></footer></div>`;}
+function enterprise(){return `<div class="app enterprise"><aside class="e-aside">${brand()}<div class="side-kicker">DANH MỤC NGHIỆP VỤ</div><nav>${allNav()}</nav><div class="aside-foot">${key('Bản mẫu offline','check-circle')}<small>Chỉ có dữ liệu giả</small></div></aside><div class="e-main"><header class="e-header"><div>${ico('layers',19)} <strong>Quản lý vận hành</strong><span class="header-sep">/</span>${esc(m.label)}</div>${headTools()}</header><main class="content e-content">${labelDemo()}${title()}${page==='overview'?enterpriseHome():genericModule('enterprise')}</main></div></div>`;}
+function executiveMetrics(){return `<div class="metric-grid">${kpis.map((k,i)=>`<div class="metric-card"><div class="metric-top"><span>${esc(k[0])}</span><span class="metric-glyph">${ico(k[3],19)}</span></div><div class="metric-val">${k[1]}<small>${k[2]}</small></div><div class="metric-meta"><span class="signal ${i===3?'amber':''}"></span>Giá trị minh họa</div></div>`).join('')}</div>`;}
+function barChart(){return `<div class="bar-chart">${[22,38,57,43,64,78,69,86,61,73,53,36].map((v,i)=>`<div class="bar-column"><i style="height:${v}%"></i><small>${7+i}h</small></div>`).join('')}</div>`;}
+function logRows(){return logs.map(l=>`<a class="log-line" href="${href(l[3])}" target="_blank" rel="noopener noreferrer"><span class="log-time">${l[0]}</span><span class="log-pin ${l[4]}"></span><span class="log-copy"><strong>${esc(l[1])}</strong><small>${esc(l[2])}</small></span>${ico('arrow-up-right',15)}</a>`).join('');}
+function shortcuts(){return `<div class="shortcut-grid">${mods.filter(x=>x.id!=='overview').map(x=>`<a href="${href(x.id)}" target="_blank" rel="noopener noreferrer" class="shortcut"><span class="shortcut-icon">${ico(x.icon,21)}</span><strong>${esc(x.label)}</strong>${ico('arrow-up-right',16)}</a>`).join('')}</div>`;}
+function enterpriseHome(){return `${executiveMetrics()}<div class="two-panels"><section class="panel chart-panel"><div class="panel-title"><div><h2>Nhịp hoạt động</h2><p>Lượt thao tác theo giờ · dữ liệu mô phỏng</p></div>${key('Theo giờ','clock')}</div>${barChart()}</section><section class="panel"><div class="panel-title"><div><h2>Nhật ký vận hành</h2><p>Các cập nhật gần đây</p></div>${ext('shifts','text-link','Xem riêng')}</div><div class="log-list">${logRows()}</div></section></div><h2 class="section-h2">Đi tới nghiệp vụ</h2>${shortcuts()}`;}
+function tower(){return `<div class="app tower"><header class="tower-head"><div class="tower-topline">${brand()}<span class="tower-label">CONTROL TOWER / 1291</span>${headTools()}</div><nav class="tower-nav">${allNav()}</nav></header><main class="content tower-content"><div class="tower-strip"><span><i class="pulse"></i> CHẾ ĐỘ DEMO</span><strong>GIÁM SÁT THEO CA</strong><span>KHÔNG CÓ DỮ LIỆU THẬT</span></div>${labelDemo()}${title()}${page==='overview'?towerHome():genericModule('tower')}</main></div>`;}
+function towerHome(){return `<div class="tower-overview"><section class="tower-main panel"><div class="tower-displaytop"><span class="tower-overline">SƠ ĐỒ TÌNH HÌNH · THEO CA</span><span class="tower-live"><i></i> MINH HỌA</span></div><div class="tower-bignum">24 <span>/ nhân sự trong ca</span></div><div class="tower-gauge"><span style="width:84%"></span></div><div class="tower-stats">${kpis.slice(1).map(k=>`<div><small>${k[0]}</small><strong>${k[1]}</strong><span>${k[2]}</span></div>`).join('')}</div><div class="tower-subhead">HOẠT ĐỘNG THEO KHUNG GIỜ</div>${barChart()}</section><aside class="tower-alerts"><div class="alert-head">${ico('alert-triangle',18)} ƯU TIÊN KIỂM TRA <b>03</b></div>${[['01','Lượt quét chưa liên kết user','shifts'],['02','Công nhật chờ đối chiếu','labor'],['03','Biên bản cần xác nhận','minutes']].map(x=>`<a class="alert-box" href="${href(x[2])}" target="_blank" rel="noopener noreferrer"><small>NGHIỆP VỤ ${x[0]}</small><strong>${x[1]}</strong><span>Kiểm tra mục ${ico('arrow-up-right',14)}</span></a>`).join('')}</aside></div><section class="panel tower-events"><div class="panel-title"><h2>Timeline hoạt động</h2>${ext('shifts','text-link','Mở lịch sử')}</div><div class="tower-timeline">${logRows()}</div></section>`;}
+function workflow(){return `<div class="app workflow"><header class="flow-header">${brand()}<span class="flow-header-tag">WORKFLOW / QUẢN LÝ THEO TRẠNG THÁI</span>${headTools()}</header><div class="flow-nav"><span class="flow-side-label">LUỒNG CHỨC NĂNG</span><nav>${allNav()}</nav></div><main class="content flow-content">${labelDemo()}${title()}${page==='overview'?workflowHome():genericModule('workflow')}</main></div>`;}
+function cardTask(row,mod){return `<a class="task-card" href="${href(mod,design,theme,row[0])}" target="_blank" rel="noopener noreferrer"><span class="task-code">${esc(row[0])} ${ico('arrow-up-right',14)}</span><strong>${esc(row[1])}</strong><span class="task-second">${esc(row[2])}</span><div>${status(row[3])}</div></a>`;}
+function workflowHome(){let tasks=[...fixtures.shifts.rows.map(r=>({...{r},mod:'shifts'})),...fixtures.pda.rows.map(r=>({r,mod:'pda'})),...fixtures.minutes.rows.map(r=>({r,mod:'minutes'}))];const lanes=[['Chờ xử lý','warning',tasks.filter(x=>isWarn(x.r[3]))],['Đang thực hiện','neutral',tasks.filter(x=>!isWarn(x.r[3])&&!isGood(x.r[3]))],['Hoàn tất','success',tasks.filter(x=>isGood(x.r[3]))]];return `<div class="flow-overview"><div class="flow-summary"><div><span class="flow-num">${tasks.length}</span> <span>tác vụ minh họa</span></div><span>Quét ca → Thiết bị → Biên bản</span></div><div class="kanban">${lanes.map(x=>`<section class="lane"><header><span class="lane-dot ${x[1]}"></span><strong>${x[0]}</strong><b>${x[2].length}</b></header><div class="lane-body">${x[2].map(t=>cardTask(t.r,t.mod)).join('')||'<div class="lane-empty">Không có mục minh họa</div>'}</div></section>`).join('')}</div></div>`;}
+function workbench(){return `<div class="app workbench"><header class="wb-head">${brand()}<span class="wb-document">BẢN LÀM VIỆC / ${esc(m.label.toUpperCase())}</span>${headTools()}</header><div class="wb-toolbar">${ico('table-2',18)}<strong>Bảng nghiệp vụ</strong><span> / </span> <span>${esc(m.label)}</span><div class="wb-toolbar-right">DỮ LIỆU GIẢ · NGOẠI TUYẾN</div></div><aside class="wb-rail"><nav>${allNav()}</nav><a class="rail-gallery" href="index.html" title="5 mẫu giao diện">${ico('layers',19)}</a></aside><main class="content wb-content">${labelDemo()}${title()}${page==='overview'?workbenchHome():genericModule('workbench')}</main></div>`;}
+function workbenchHome(){const entries=mods.filter(x=>x.id!=='overview');return `<div class="wb-workspace"><section class="wb-sheet"><div class="sheet-toolbar">${ico('table-2',17)} <strong>BẢNG THEO DÕI NGHIỆP VỤ</strong><span>6 danh mục</span></div><div class="scroll-table"><table><thead><tr><th>#</th><th>Chức năng</th><th>Bản ghi giả</th><th>Trạng thái</th><th>Chi tiết</th></tr></thead><tbody>${entries.map((x,i)=>`<tr><td class="sheet-num">${String(i+1).padStart(2,'0')}</td><td><strong>${esc(x.label)}</strong></td><td>${fixtures[x.id].rows.length}</td><td>${status(i%2?'Đang sử dụng':'Sẵn sàng')}</td><td><a class="table-open" href="${href(x.id)}" target="_blank" rel="noopener noreferrer">Mở tab ${ico('arrow-up-right',13)}</a></td></tr>`).join('')}</tbody></table></div><div class="sheet-foot">TỔNG HỢP · 6 NGHIỆP VỤ · KHÔNG KẾT NỐI DỮ LIỆU</div></section><aside class="wb-inspector"><span class="eyebrow">BẢNG PHÂN TÍCH</span><h2>Trạng thái giả lập</h2><div class="inspector-stat"><strong>21</strong><small>Lượt vào ca</small></div><div class="inspector-stat"><strong>03</strong><small>Mục cần rà soát</small></div><div class="inspector-stat"><strong>02</strong><small>PDA đang mượn</small></div><div class="inspector-note">Nhấn “Mở tab” để xem bảng dữ liệu từng nghiệp vụ độc lập.</div></aside></div>`;}
+function field(){return `<div class="app field"><header class="field-header">${brand()}<span class="field-station">TRẠM 1291 · UI DEMO</span>${headTools()}</header><main class="content field-content"><div class="field-inner">${labelDemo()}${title()}${page==='overview'?fieldHome():genericModule('field')}</div></main><nav class="field-bottom">${mods.filter(x=>['overview','people','shifts','pda'].includes(x.id)).map(x=>`<a href="${href(x.id)}" class="${x.id===page?'chosen':''}">${ico(x.icon,20)}<span>${esc(x.label)}</span></a>`).join('')}</nav></div>`;}
+function fieldHome(){return `<div class="field-welcome"><small>TRẠM TÁC NGHIỆP / CA MẪU</small><h2>Chọn việc cần làm</h2><p>Giao diện thao tác nhanh, dành cho người vận hành tại vị trí làm việc.</p></div><a class="scan-action" href="${href('shifts')}" target="_blank" rel="noopener noreferrer"><span class="scan-icon">${ico('scan-line',35)}</span><span><strong>MỞ GIAO DIỆN QUÉT CA</strong><small>Chỉ xem bố cục, chưa quét mã thật</small></span>${ico('arrow-up-right',21)}</a><div class="field-actions">${mods.filter(x=>x.id!=='overview'&&x.id!=='shifts').map(x=>`<a href="${href(x.id)}" target="_blank" rel="noopener noreferrer" class="field-action"><span>${ico(x.icon,23)}</span><strong>${esc(x.label)}</strong><small>${esc(x.desc)}</small>${ico('arrow-up-right',14)}</a>`).join('')}</div><div class="field-summary"><div><span>Trong ca (giả)</span><strong>24</strong></div><div><span>PDA mượn (giả)</span><strong>02</strong></div><div><span>Cần xem (giả)</span><strong>03</strong></div></div><section class="field-activity"><div class="panel-title"><h2>Vừa ghi nhận (mẫu)</h2>${ext('shifts','text-link','Xem')}</div>${logRows().slice(0)}</section>`;}
+let currentRows=page==='overview'?[]:fixtures[page].rows.map(row=>[...row]);let searchVal='',filterVal='all';
+const filtered=()=>currentRows.filter(r=>r.join(' ').toLocaleLowerCase('vi').includes(searchVal.toLocaleLowerCase('vi'))&&(filterVal==='all'||tone(r[3])===filterVal));
+function filters(){return `<div class="module-tools"><label class="field-search">${ico('search',17)} <input id="search-records" aria-label="Tìm trong dữ liệu mẫu" placeholder="Tìm mã, tên hoặc trạng thái..." value="${esc(searchVal)}" autocomplete="off"></label><select id="filter-records" aria-label="Lọc theo trạng thái"><option value="all">Tất cả trạng thái</option><option value="success">Hoàn tất / Sẵn sàng</option><option value="warning">Chờ xử lý</option><option value="neutral">Đang sử dụng</option></select><span class="module-count">${currentRows.length} bản ghi mẫu</span></div>`;}
+function tableRows(){const data=filtered();if(!data.length)return `<tr><td colspan="5" class="empty-row">Không có bản ghi mẫu phù hợp.</td></tr>`;return data.map((r,i)=>`<tr data-idx="${i}">${r.map((v,j)=>`<td>${j===3?status(v):esc(v)}</td>`).join('')}<td><a class="table-open" href="${href(page,design,theme,r[0])}" target="_blank" rel="noopener noreferrer">Mở tab ${ico('arrow-up-right',14)}</a></td></tr>`).join('');}
+function dataTable(){return `<div class="table-shell"><div class="scroll-table"><table><thead><tr>${fixtures[page].cols.map(x=>`<th>${esc(x)}</th>`).join('')}<th>Mở riêng</th></tr></thead><tbody id="rows-table">${tableRows()}</tbody></table></div><div class="sheet-foot">${filtered().length} / ${currentRows.length} DÒNG · DỮ LIỆU GIẢ</div></div>`;}
+function detailPanel(){if(!detail)return '';const r=currentRows.find(x=>x[0]===detail);return `<div class="detail-panel" id="detail-panel">${r?`<span class="eyebrow">HỒ SƠ MẪU · CHỈ ĐỌC</span><h2>${esc(r[0])}</h2><div class="detail-fields">${r.map((v,i)=>`<div><small>${esc(fixtures[page].cols[i])}</small><strong>${esc(v)}</strong></div>`).join('')}</div>`:`<strong>Không tìm thấy mã ${esc(detail)}</strong><p>Bản ghi thêm ở tab khác không được chia sẻ trong bản UI demo.</p>`}</div>`;}
+function genericModule(kind){const data=filtered();const toolbar=filters();if(kind==='workflow')return `<div class="module-body workflow-module">${toolbar}${detailPanel()}<div id="module-results">${workflowRows()}</div></div>`;
+ if(kind==='field')return `<div class="module-body field-module"><div class="field-module-help">${ico(m.icon,27)}<div><strong>${esc(m.label)}</strong><small>Chọn bản ghi minh họa để mở chi tiết ở tab mới</small></div></div>${toolbar}${detailPanel()}<div id="module-results">${fieldRows()}</div></div>`;
+ if(kind==='tower')return `<div class="module-body tower-module"><div class="tower-module-signal"><span class="pulse"></span>DANH MỤC KIỂM SOÁT · ${esc(m.label.toUpperCase())}</div>${toolbar}${detailPanel()}<div id="module-results">${dataTable()}</div></div>`;
+ if(kind==='workbench')return `<div class="wb-workspace wb-module"><section class="wb-sheet"><div class="sheet-toolbar">${ico('table-2',17)} <strong>${esc(m.label.toUpperCase())}</strong><span>WORKSPACE</span></div>${toolbar}<div id="module-results">${dataTable()}</div></section><aside class="wb-inspector"><span class="eyebrow">THANH KIỂM TRA</span><h2>Thông tin bảng</h2><div class="inspector-stat"><strong>${data.length}</strong><small>Bản ghi đang hiển thị</small></div><div class="inspector-note">Tìm kiếm, lọc, mở hồ sơ trong tab khác. Dữ liệu chỉ nằm trong phiên trình duyệt này.</div>${detailPanel()}</aside></div>`;
+ return `<div class="module-body enterprise-module">${toolbar}${detailPanel()}<div id="module-results">${dataTable()}</div></div>`;}
+function workflowRows(){const data=filtered(),lanes=[['Chờ / cần xử lý',r=>isWarn(r[3])],['Đang sử dụng',r=>!isWarn(r[3])&&!isGood(r[3])],['Hoàn tất',r=>isGood(r[3])]];return `<div class="kanban module-kanban">${lanes.map((x,i)=>`<section class="lane"><header><span class="lane-dot ${['warning','neutral','success'][i]}"></span><strong>${x[0]}</strong><b>${data.filter(x[1]).length}</b></header><div class="lane-body">${data.filter(x[1]).map(r=>cardTask(r,page)).join('')||'<div class="lane-empty">Không có dữ liệu phù hợp</div>'}</div></section>`).join('')}</div>`;}
+function fieldRows(){const data=filtered();return `<div class="field-record-grid">${data.map(r=>`<a class="field-record" href="${href(page,design,theme,r[0])}" target="_blank" rel="noopener noreferrer"><span class="field-record-code">${esc(r[0])}${ico('arrow-up-right',16)}</span><strong>${esc(r[1])}</strong><small>${esc(r[2])}</small>${status(r[3])}</a>`).join('')||'<div class="lane-empty">Không có dữ liệu phù hợp</div>'}</div>`;}
+function bind(){if(page!=='overview'){
+ const inp=document.getElementById('search-records'),sel=document.getElementById('filter-records');
+ const paint=()=>{const target=document.getElementById('module-results');if(target)target.innerHTML=design===3?workflowRows():design===5?fieldRows():dataTable();const cnt=document.querySelector('.module-count');if(cnt)cnt.textContent=`${filtered().length} / ${currentRows.length} bản ghi mẫu`;};
+ inp?.addEventListener('input',e=>{searchVal=e.target.value;paint();});sel?.addEventListener('change',e=>{filterVal=e.target.value;paint();});
+ document.getElementById('add-row')?.addEventListener('click',()=>{const id=`MAU-${String(currentRows.length+1).padStart(3,'0')}`;currentRows.unshift([id,'Bản ghi thêm tạm','Mẫu mới','Chờ rà soát']);searchVal='';filterVal='all';if(inp)inp.value='';if(sel)sel.value='all';paint();});
+ }
+ document.querySelectorAll('[data-mobile-nav]').forEach(btn=>btn.addEventListener('click',()=>document.body.classList.toggle('open-mobile-nav')));
+}
+function launch(){document.documentElement.dataset.theme=theme;document.documentElement.dataset.design=String(design);document.body.classList.add('design-'+design);root.innerHTML=(design===1?enterprise:design===2?tower:design===3?workflow:design===4?workbench:field)();bind();}
+if(document.body.dataset.page==='gallery')gallery();else launch();
 })();
