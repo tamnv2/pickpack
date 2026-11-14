@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.8.8';
+ const WEB_VERSION='0.8.9';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes']];
@@ -37,15 +37,14 @@ const LEGACY_FONT_KEY='pickpack1291_office_font_v06';
  const FONT_KEY='pickpack1291_office_font_setting_v082';
 const THEME_KEY='pickpack1291_office_theme_v06';
 const VN_ZONE='Asia/Ho_Chi_Minh';
-const VN_DATE=new Intl.DateTimeFormat('vi-VN',{timeZone:VN_ZONE,weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
 const VN_TIME=new Intl.DateTimeFormat('vi-VN',{timeZone:VN_ZONE,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
 const VN_HOUR=new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,hour:'2-digit',hourCycle:'h23'});
 function resolveTheme(mode,now=new Date()){if(mode!=='auto')return mode;const hour=Number(VN_HOUR.format(now));return hour>=6&&hour<18?'light':'dark'}
-function clockNow(now=new Date()){return {date:VN_DATE.format(now),time:VN_TIME.format(now),iso:now.toISOString()}}
+function clockNow(now=new Date()){return {time:VN_TIME.format(now),iso:now.toISOString()}}
 function clockDigits(time){return [...time].map((char,i)=>char===':'?'<span class="flip-separator" aria-hidden="true">:</span>':`<span class="flip-digit" data-value="${char}" data-index="${i}" aria-hidden="true"><span class="flip-pane flip-upper" data-digit="${char}"></span><span class="flip-pane flip-lower" data-digit="${char}"></span><span class="flip-flap flip-out" data-digit="${char}"></span><span class="flip-flap flip-in" data-digit="${char}"></span></span>`).join('')}
-function clockMarkup(){const now=clockNow();return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Ngày và giờ Việt Nam"><span class="clock-pulse" aria-hidden="true"></span><div class="clock-values"><time id="clock-time" class="flip-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off">${clockDigits(now.time)}</time><span id="clock-date">${escape(now.date)}</span></div></div>`}
+function clockMarkup(){const now=clockNow();return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Giờ Việt Nam"><div class="clock-values"><time id="clock-time" class="flip-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off">${clockDigits(now.time)}</time></div></div>`}
 function tickClock(){
- const now=clockNow(),clock=document.getElementById('clock-time'),date=document.getElementById('clock-date');
+ const now=clockNow(),clock=document.getElementById('clock-time');
  const animate=!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  if(clock&&!animate)for(const el of clock.querySelectorAll('.flip-digit.is-flipping')){
   el.classList.remove('is-flipping');
@@ -70,7 +69,6 @@ function tickClock(){
   }
  }
  if(clock){clock.dateTime=now.iso;clock.setAttribute('aria-label',now.time)}
- if(date&&date.textContent!==now.date)date.textContent=now.date;
  const next=resolveTheme(state.themeMode);if(next!==state.theme){state.theme=next;render()}
 }
 
