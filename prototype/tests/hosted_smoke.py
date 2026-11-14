@@ -7,6 +7,8 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
+from zipfile import ZipFile
+from openpyxl import load_workbook
 from playwright.sync_api import sync_playwright
 
 webroot = Path(__file__).resolve().parents[1] / 'dist'
@@ -35,7 +37,19 @@ try:
         page.locator('#login-form button[type="submit"]').click()
         page.wait_for_url('**/app.html?view=dashboard*')
         assert page.locator('a.nav-main').count() == 7
-        assert page.locator('.metrics .metric-card').count() == 4
+        assert page.locator('.metrics .metric-card').count() == 8
+        assert page.locator('.coverage-row').count() == 6
+        assert page.locator('.corporate-brand').inner_text() == 'CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN'
+        assert page.locator('.shortcut-panel').count() == 0
+        assert page.locator('.overview-page [data-action="add"]').count() == 0
+        assert page.locator('.overview-page [data-action="export"]').count() == 0
+        page.locator('button[data-action="settings"]').click()
+        assert page.locator('.font-steps output').inner_text() == '110%'
+        assert page.locator('[data-accent-choice]').count() == 7
+        page.locator('[data-accent-choice="violet"]').click()
+        assert page.evaluate("document.documentElement.dataset.accent") == 'violet'
+        assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()") == '#823eab'
+        page.locator('[data-action="close-modal"]').last.click()
 
         link = page.locator('a.nav-main[href*="view=people"]')
         assert link.get_attribute('href').startswith('app.html?view=people')
@@ -61,9 +75,19 @@ try:
         with second.expect_download() as finished:
             second.locator('button[data-action="export"]').click()
         download = finished.value
-        assert download.suggested_filename == 'pickpack-people.csv'
-        exported = Path(download.path()).read_text(encoding='utf-8-sig')
-        assert '90009999' in exported and 'Nhân viên kiểm thử liên tab' in exported
+        assert download.suggested_filename.startswith('pickpack-people-')
+        assert download.suggested_filename.endswith('.xlsx')
+        with ZipFile(download.path()) as archive:
+            assert archive.testzip() is None
+            assert {'[Content_Types].xml', 'xl/workbook.xml', 'xl/styles.xml', 'xl/worksheets/sheet1.xml'} <= set(archive.namelist())
+        workbook = load_workbook(download.path(), read_only=True, data_only=True)
+        sheet = workbook.active
+        assert sheet['A1'].value == 'Họ và tên'
+        assert sheet['B1'].value == 'Mã nhân viên'
+        assert sheet['A2'].value == 'Nhân viên kiểm thử liên tab'
+        assert sheet['B2'].value == '90009999'
+        assert sheet.max_row == 38
+        workbook.close()
 
         second.locator('a.nav-main[href*="view=shifts"]').click()
         second.locator('#shift-code').fill('90009999')
@@ -90,7 +114,7 @@ try:
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: login redirect, Ctrl+new-tab, real storage sync, CSV download, scan/clock-out, mobile, no external calls')
+        print('HOSTED_SMOKE_PASS: full dashboard read-only, 7 light themes, font 110, login, Ctrl+tab, storage sync, valid Excel XLSX via openpyxl, scanning, mobile, no external requests')
         browser.close()
 finally:
     server.shutdown()
