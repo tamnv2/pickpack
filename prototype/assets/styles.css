@@ -514,3 +514,21 @@ html{scrollbar-gutter:stable}
 @media(prefers-reduced-motion:reduce){
  .flip-digit.is-flipping .flip-out,.flip-digit.is-flipping .flip-in{animation:none;visibility:hidden;will-change:auto}
 }
+
+
+/* v0.8.9 — time-only clock uses the full existing toolbar slot; no date row. */
+.header-clock .clock-values{gap:0;justify-content:center}
+.flip-digit{--tile-w:28px;--tile-h:44px}
+.flip-pane::before,.flip-flap::before{font-size:30px}
+@media(max-width:1200px){
+ .flip-digit{--tile-w:26px;--tile-h:40px}
+ .flip-pane::before,.flip-flap::before{font-size:27px}
+}
+@media(max-width:1020px){
+ .flip-digit{--tile-w:24px;--tile-h:36px}
+ .flip-pane::before,.flip-flap::before{font-size:24px}
+}
+@media(max-width:600px){
+ .flip-digit{--tile-w:15px;--tile-h:26px}
+ .flip-pane::before,.flip-flap::before{font-size:14px}
+}
