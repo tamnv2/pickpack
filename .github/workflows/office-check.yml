@@ -62,7 +62,7 @@ jobs:
               response=page.goto(base+'index.html',wait_until='domcontentloaded',timeout=30000)
               assert response and response.ok, ('HTTP',response.status if response else None)
               page.locator('form#login-form').wait_for(timeout=10000)
-              assert page.locator('.login-links .web-version').inner_text()=='Web v0.8.1'
+              assert page.locator('.login-links .web-version').inner_text()=='Web v0.8.2'
               page.locator('#demo-user').fill('admin')
               page.locator('#demo-password').fill('admin')
               page.locator('#login-form button[type="submit"]').click()
