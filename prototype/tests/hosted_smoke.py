@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.9'
+assert version=='0.8.10'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -52,16 +52,13 @@ try:
         assert page.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
         assert page.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
         assert page.locator('#clock-time').is_visible()
-        assert page.locator('#clock-time .flip-digit').count() == 6
-        assert page.locator('#clock-time .flip-separator').count() == 2
-        assert page.locator('.flip-upper').count()==6
-        assert page.locator('.flip-lower').count()==6
-        assert page.locator('.flip-out').count()==6
-        assert page.locator('.flip-in').count()==6
-        assert page.locator('#clock-date').count()==0
+        assert page.locator('#clock-date,.flip-digit,.flip-pane,.flip-flap').count()==0
+        assert page.locator('#clock-hours').count()==1 and page.locator('#clock-seconds').count()==1
+        assert page.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.textContent)")
         assert page.locator('.header-clock').get_attribute('aria-label')=='Giờ Việt Nam'
-        assert page.locator('#clock-time .flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")==44
         assert page.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1&&c.top>=h.top-1&&c.bottom<=h.bottom+1}")
+        assert page.locator('#clock-time').evaluate("el=>getComputedStyle(el).backgroundColor")=='rgba(0, 0, 0, 0)'
+        assert page.locator('#clock-hours').evaluate("el=>getComputedStyle(el).color")!=page.locator('#clock-seconds').evaluate("el=>getComputedStyle(el).color")
         assert page.locator('.metrics .metric-card').count() == 8
         assert page.locator('#global-search').is_visible()
         slots=lambda: page.evaluate("""() => ['.top-search','.topbar .notif','.header-clock'].map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return [r.x,r.y,r.width]})""")
@@ -103,37 +100,19 @@ try:
         assert page.evaluate("document.documentElement.dataset.accent") == 'violet'
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()") == '#823eab'
         page.locator('[data-action="close-modal"]').last.click()
-        # Verify a true seconds rollover and flip without re-rendering the page.
-        flip_probe=context.new_page()
-        flip_probe.clock.install(time=datetime(2026,11,14,10,32,58,tzinfo=timezone.utc))
-        assert flip_probe.goto(base + '/app.html?view=dashboard').ok
-        assert flip_probe.locator('#clock-time').get_attribute('aria-label')=='17:32:58'
-        flip_probe.evaluate("() => window.__flipClock=document.querySelector('#clock-time')")
-        flip_probe.clock.fast_forward(3000)
-        assert flip_probe.locator('#clock-time').get_attribute('aria-label')=='17:33:01'
-        assert flip_probe.locator('.flip-digit.is-flipping').count()>=1
-        assert flip_probe.locator('.flip-digit.is-flipping .flip-out').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-retro-flap-out'
-        assert flip_probe.locator('.flip-digit.is-flipping .flip-in').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-retro-flap-in'
-        assert flip_probe.locator('.flip-digit.is-flipping .flip-upper').first.get_attribute('data-digit') is not None
-        # Assert both rotating halves actually reach a 3D mid-angle, not a framed number swap.
-        out_transform=flip_probe.locator('.flip-digit.is-flipping .flip-out').first.evaluate("""el => {
-          const a=el.getAnimations()[0]; if(!a)return '';
-          a.pause(); a.currentTime=150; return getComputedStyle(el).transform
-        }""")
-        in_transform=flip_probe.locator('.flip-digit.is-flipping .flip-in').first.evaluate("""el => {
-          const a=el.getAnimations()[0]; if(!a)return '';
-          a.pause(); a.currentTime=430; return getComputedStyle(el).transform
-        }""")
-        assert out_transform.startswith('matrix3d('),out_transform
-        assert in_transform.startswith('matrix3d('),in_transform
-        assert flip_probe.locator('.flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")>=35
-        assert flip_probe.evaluate("() => window.__flipClock===document.querySelector('#clock-time')")
-        # Motion accessibility: instant stable face when animations are disabled.
-        flip_probe.emulate_media(reduced_motion='reduce')
-        flip_probe.clock.fast_forward(1000)
-        assert flip_probe.locator('.flip-digit.is-flipping').count()==0
-        assert flip_probe.locator('.flip-digit').evaluate_all("els=>els.every(el=>el.querySelector('.flip-lower').dataset.digit===el.dataset.value)")
-        flip_probe.close()
+        # Verify live clock text and no page rerender, including the minute rollover.
+        time_probe=context.new_page()
+        time_probe.clock.install(time=datetime(2026,11,14,10,32,58,tzinfo=timezone.utc))
+        assert time_probe.goto(base + '/app.html?view=dashboard').ok
+        assert time_probe.locator('#clock-time').inner_text()=='17:32:58'
+        time_probe.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
+        time_probe.clock.fast_forward(3000)
+        assert time_probe.locator('#clock-time').inner_text()=='17:33:01'
+        assert time_probe.locator('#clock-hours').inner_text()=='17:33'
+        assert time_probe.locator('#clock-seconds').inner_text()==':01'
+        assert time_probe.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
+        assert time_probe.locator('.flip-digit,.flip-pane,.flip-flap').count()==0
+        time_probe.close()
         # Check the exact 18:00 Vietnam transition with Playwright's deterministic browser clock.
         page.locator('.top-profile').click()
         page.locator('button[data-action="settings"]').click()
@@ -256,7 +235,8 @@ try:
         mobile.locator('#login-form button[type="submit"]').click()
         mobile.wait_for_url('**/app.html?view=dashboard*')
         assert mobile.locator('#clock-date').count()==0
-        assert mobile.locator('#clock-time .flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")==26
+        assert mobile.locator('.flip-digit').count()==0
+        assert mobile.locator('#clock-time').is_visible()
         assert mobile.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1}")
         assert mobile.locator('button.menu-button').is_visible()
         assert mobile.locator('button.menu-button').inner_text()=='Mục'
@@ -277,7 +257,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.9 time-only enlarged retro flip fits desktop/mobile, 3D rotation, reduced-motion, toolbar geometry, QR/XLSX, zero API')
+        print('HOSTED_SMOKE_PASS: v0.8.10 unboxed live time across views, minute rollover, theme/responsive layout, QR/XLSX, zero external API')
         browser.close()
 finally:
     server.shutdown()
