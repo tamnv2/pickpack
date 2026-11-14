@@ -121,8 +121,32 @@ function workload(){const labs=['05h','07h','09h','11h','13h','15h','17h'];
  const counts=labs.map(t=>today.filter(r=>r.checkin<=t.slice(0,2)+':59'&&(r.checkout==='—'||r.checkout>t.slice(0,2)+':59')).length);
  const max=Math.max(1,...counts);
  return `<section class="panel chart-panel"><div class="panel-title"><div><h2>Phân bổ nhân sự theo giờ</h2><p>Số lượt đang trong ca theo thời gian</p></div><span class="legend"><i></i>Đang làm việc</span></div><div class="chart-area"><div class="chart-lines"><span>${max}</span><span>${Math.round(max*.75)}</span><span>${Math.round(max*.5)}</span><span>${Math.round(max*.25)}</span></div><div class="chart-bars">${counts.map((n,i)=>`<div class="chart-col"><div class="bar-wrap"><div class="bar" style="height:${Math.max(4,Math.round(n/max*100))}%"><span>${n}</span></div></div><small>${labs[i]}</small></div>`).join('')}</div></div></section>`}
-function attention(){const items=notificationItems();return `<section class="panel alert-panel"><div class="panel-title"><div><h2>Cần kiểm tra</h2><p>Hạng mục đang chờ xử lý</p></div><span class="bubble">${items.reduce((a,x)=>a+x.count,0)}</span></div><div class="alert-list">${items.map(x=>`<a href="${href(x.view)}" class="alert-row"><span class="alert-icon amber">${icon(x.ic,17)}</span><span><strong>${x.title}</strong><small>${x.count} mục đang chờ</small></span><span>›</span></a>`).join('')||'<p class="no-alerts">Không có mục cần kiểm tra</p>'}</div></section>`}
-function dashboard(){return `<div class="page-content">${pageHead(`<button class="btn primary" data-action="add">${icon("plus",16)} Tạo biên bản</button>`)}<div class="metrics">${stat('Tổng nhân sự',String(store.people.length).padStart(2,'0'),'Danh sách hồ sơ','blue','♙')}${stat('Đang trong ca',String(store.shifts.filter(r=>r.state==='Trong ca').length).padStart(2,'0'),'Theo dõi ra / vào ca','green','◷')}${stat('PDA đang mượn',String(new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size).padStart(2,'0')+' / '+String(store.pdaDevices.length).padStart(2,'0'),'Thiết bị đang quản lý','purple','▯')}${stat('Biên bản chờ duyệt',String(store.minutes.filter(r=>r.state==='Chờ xác nhận').length).padStart(2,'0'),'Hồ sơ cần xử lý','orange','▤')}</div><div class="two-col">${workload()}${attention()}</div><div class="two-col lower">${activity()}<section class="panel shortcut-panel"><div class="panel-title"><div><h2>Truy cập nhanh</h2><p>Những chức năng dùng thường xuyên</p></div></div><div class="shortcut-grid">${[['people','♙','Tra cứu nhân sự'],['shifts','◷','Ghi nhận ra/vào'],['labor','▦','Bảng công nhật'],['minutes','▤','Biên bản'],['assets','▣','Kho CCDC'],['pda','▯','Mượn / trả PDA']].map(([view,ic,title])=>`<a href="${href(view)}" class="shortcut"><span>${icon(({'♙':'users','◷':'clock','▦':'calendar','▤':'file','▣':'boxes','▯':'device'})[ic]||ic,22)}</span><strong>${title}</strong><small>→</small></a>`).join('')}</div></section></div></div>`}
+function panelAttention(){
+ const items=notificationItems();
+ return `<section class="panel alert-panel"><div class="panel-title"><div><h2>Cần xử lý</h2><p>Tổng hợp tồn đọng nghiệp vụ</p></div><span class="bubble">${items.reduce((n,x)=>n+x.count,0)}</span></div><div class="alert-list">${items.length?items.map(x=>`<div class="alert-row"><span class="alert-icon amber">${icon(x.ic,17)}</span><span><strong>${x.title}</strong><small>${x.count} bản ghi cần xử lý</small></span><b class="overview-count">${x.count}</b></div>`).join(''):'<p class="no-alerts">Không có mục cần xử lý</p>'}</div></section>`;
+}
+function coveragePanel(){
+ const total=(x)=>x.length,confirmed=(x,s)=>x.filter(r=>r.state===s).length;
+ const sets=[
+ ['Nhân sự',total(store.people),store.people.filter(r=>r.shift).length,'Đã phân ca'],
+ ['Ra / vào ca',total(store.shifts),confirmed(store.shifts,'Trong ca'),'Trong ca'],
+ ['Công nhật',total(store.labor),confirmed(store.labor,'Đã xác nhận'),'Đã xác nhận'],
+ ['Biên bản',total(store.minutes),confirmed(store.minutes,'Đã xác nhận'),'Đã xác nhận'],
+ ['Công cụ dụng cụ',total(store.assets),confirmed(store.assets,'Sẵn sàng'),'Sẵn sàng'],
+ ['Mượn / trả PDA',total(store.pdaDevices),new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size,'Đang mượn']
+ ];
+ return `<section class="panel coverage-panel"><div class="panel-title"><div><h2>Trạng thái toàn hệ thống</h2><p>Tổng hợp trực tiếp từ 6 phân hệ nghiệp vụ</p></div></div><div class="coverage-list">${sets.map(([name,total,part,desc])=>`<div class="coverage-row"><strong>${escape(name)}</strong><span>${escape(desc)}</span><b>${part} / ${total}</b><div class="coverage-track"><span style="width:${total?Math.min(100,Math.round(part/total*100)):0}%"></span></div></div>`).join('')}</div></section>`;
+}
+function dashboard(){
+ const todayDate=new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
+ const inShift=store.shifts.filter(r=>r.state==='Trong ca').length;
+ const pendingLabor=store.labor.filter(r=>r.state!=='Đã xác nhận').length;
+ const pendingMinutes=store.minutes.filter(r=>r.state==='Chờ xác nhận').length;
+ const flaggedAssets=store.assets.filter(r=>r.state==='Cần kiểm tra').length;
+ const borrowed=new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size;
+ const todayScans=store.shifts.filter(r=>r.date===todayDate&&r.checkin!=='—').length;
+ return `<div class="page-content overview-page">${pageHead()}<div class="metrics overview-metrics">${stat('Tổng nhân sự',store.people.length,'Hồ sơ đang quản lý','blue','users')}${stat('Đã phân ca',store.people.filter(r=>r.shift).length,'Nhân sự có thông tin ca','green','calendar')}${stat('Đang trong ca',inShift,'Lượt ra/vào chưa kết thúc','green','clock')}${stat('Vào ca hôm nay',todayScans,todayDate,'blue','clock')}${stat('Công nhật chưa chốt',pendingLabor,'Chưa xác nhận','orange','calendar')}${stat('Biên bản chờ duyệt',pendingMinutes,'Chờ xác nhận','orange','file')}${stat('CCDC cần kiểm tra',flaggedAssets,'Theo tình trạng thiết bị','purple','boxes')}${stat('PDA đang mượn',`${borrowed} / ${store.pdaDevices.length}`,'Thiết bị hiện quản lý','purple','device')}</div><div class="overview-sections">${coveragePanel()}${panelAttention()}</div><div class="two-col lower">${workload()}${activity()}</div></div>`;
+}
 function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong>${view==='people'?`<small>${escape(row.user)}</small>`:''}</div></div>`;if(key==='state')return badge(row[key]);if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key])}
 function filtered(){const set=store[state.view]||[];let rows=set.filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);return rows}
 function controls(){
@@ -216,18 +240,22 @@ async function preparePortrait(file){
  }finally{URL.revokeObjectURL(url)}
 }
 function notificationItems(){return [
+ {view:'labor',title:'Công nhật chưa xác nhận',count:store.labor.filter(r=>r.state!=='Đã xác nhận').length,ic:'calendar'},
 {view:'minutes',title:'Biên bản chờ xác nhận',count:store.minutes.filter(r=>r.state==='Chờ xác nhận').length,ic:'file'},
 {view:'assets',title:'CCDC cần kiểm tra',count:store.assets.filter(r=>r.state==='Cần kiểm tra').length,ic:'boxes'},
 {view:'shifts',title:'Nhân sự chờ vào ca',count:store.shifts.filter(r=>r.state==='Chờ vào ca').length,ic:'clock'}
 ].filter(x=>x.count>0)}
-function prefsModal(){return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Điều chỉnh nền sáng hoặc tối</small></div><div class="theme-steps"><button class="${state.theme==='light'?'active':''}" data-theme-choice="light">${icon('sun',15)} Sáng</button><button class="${state.theme==='dark'?'active':''}" data-theme-choice="dark">${icon('moon',15)} Tối</button></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Khôi phục cỡ chữ tiêu chuẩn</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`}
+function prefsModal(){
+ const accentRow=state.theme==='light'?`<div class="setting-row accent-setting"><div><strong>Màu chủ đạo</strong><small>Chọn một trong bảy màu cho giao diện sáng</small></div><div class="accent-swatches" role="group" aria-label="Màu giao diện sáng">${ACCENTS.map(([key,label])=>`<button type="button" data-accent-choice="${key}" class="accent-swatch accent-${key} ${state.accent===key?'active':''}" aria-label="${label}" title="${label}" aria-pressed="${state.accent===key}">${state.accent===key?'✓':''}</button>`).join('')}</div></div>`:'';
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Điều chỉnh nền sáng hoặc tối</small></div><div class="theme-steps"><button class="${state.theme==='light'?'active':''}" data-theme-choice="light">${icon('sun',15)} Sáng</button><button class="${state.theme==='dark'?'active':''}" data-theme-choice="dark">${icon('moon',15)} Tối</button></div></div>${accentRow}<div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn mới</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
+}
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
 function modal(){
  if(!state.modal)return '';
  if(state.modal==='settings')return prefsModal();
  if(state.modal==='notifications')return noticesModal();
- const key=state.view==='dashboard'?'minutes':state.view;
- if(key==='shifts')return '';
+ const key=state.view;
+ if(key==='shifts'||key==='dashboard')return '';
  const existing=store[key]?.find(r=>r.id===state.editId);
  const editing=state.modal==='edit'&&!!existing;
  const title=editing?`Sửa ${PAGES[key].title.toLowerCase()}`:`Thêm ${PAGES[key].title.toLowerCase()}`;
@@ -241,8 +269,8 @@ function safeHistory(method,url){try{history[method](null,'',url)}catch{ /* Brow
 function closeStuff(){state.sidebar=false;state.modal='';state.drawer='';state.editId=''}
 function setView(view){state.view=view;state.search='';state.filter='all';state.drawer='';state.sidebar=false;state.selected.clear();safeHistory('pushState',href(view));render();window.scrollTo(0,0)}
 function saveForm(form){
- const key=state.view==='dashboard'?'minutes':state.view;
- if(key==='shifts')return;
+ const key=state.view;
+ if(key==='shifts'||key==='dashboard')return;
  const fd=new FormData(form),editing=state.modal==='edit'&&!!state.editId;
  if(key==='people'){
   const id=String(fd.get('id')||'').trim(),name=String(fd.get('name')||'').trim();
@@ -294,7 +322,7 @@ root.addEventListener('click',e=>{
  const font=e.target.closest('[data-font]');if(font){state.fontPct=Math.max(100,Math.min(130,state.fontPct+Number(font.dataset.font)));storageSet(FONT_KEY,String(state.fontPct));render();return}const choice=e.target.closest('[data-theme-choice]');if(choice){state.theme=choice.dataset.themeChoice;storageSet(THEME_KEY,state.theme);safeHistory('replaceState',href(state.view,state.drawer));render();return}const btn=e.target.closest('[data-action]');if(!btn)return;const act=btn.dataset.action;if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
  switch(act){case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
  case'theme':state.theme=state.theme==='light'?'dark':'light';storageSet(THEME_KEY,state.theme);safeHistory('replaceState',document.body.dataset.screen==='app'?href(state.view,state.drawer):'index.html?theme='+state.theme);break;
- case'add':if(state.view==='shifts')return;state.editId='';state.photoDraft='';state.modal='new';break;case'close-modal':state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
+ case'add':if(state.view==='shifts'||state.view==='dashboard')return;state.editId='';state.photoDraft='';state.modal='new';break;case'close-modal':state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
  case'notifications':state.modal='notifications';break;case'settings':state.modal='settings';break;case'reset-font':state.fontPct=110;storageSet(FONT_KEY,'110');break;
  case'layout-table':state.layout='table';break;case'layout-cards':state.layout='cards';break;case'clear-notice':state.notice='';break;
  case'show-password':{const form=root.querySelector('#login-form');const username=form?.querySelector('#demo-user')?.value||'';const password=form?.querySelector('#demo-password')?.value||'';state.loginVisible=!state.loginVisible;render();root.querySelector('#demo-user').value=username;root.querySelector('#demo-password').value=password;return}
