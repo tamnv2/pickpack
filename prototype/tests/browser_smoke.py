@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.3'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.4'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,11 +33,18 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.3'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.4'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
- assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).position")=='fixed'
- assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).textAlign")=='right'
- assert float(app.locator('.site-footer').evaluate("el => getComputedStyle(el).opacity"))<=0.70
+ assert app.locator('.side-bottom .site-footer').count()==1
+ assert app.locator('.app-main .site-footer').count()==0
+ assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).position")=='static'
+ assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).textAlign")=='left'
+ assert float(app.locator('.site-footer').evaluate("el => getComputedStyle(el).opacity"))<=0.75
+ assert not app.locator('button.menu-button').is_visible()
+ labels=app.locator('.nav-flat .nav-label').all_inner_texts()
+ assert len(labels)==7 and all(5<=len(label.split())<=6 for label in labels),labels
+ assert labels==['Tổng quan hoạt động vận hành','Quản lý hồ sơ nhân sự','Ghi nhận ra vào ca','Quản lý công nhật nhân sự','Quản lý biên bản sự việc','Quản lý công cụ dụng cụ','Ghi nhận mượn trả PDA']
+ assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  assert app.locator('.corporate-brand span').all_inner_texts()==['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
  assert app.locator('.top-profile').get_by_text('Quản trị viên').count()==1
  assert app.locator('.side-bottom').get_by_text('Quản trị viên').count()==0
@@ -251,11 +258,14 @@ with sync_playwright() as p:
  print('testing mobile',flush=True)
  mobile=new_screen(mobile=True)
  assert mobile.locator('button.menu-button').is_visible()
+ assert mobile.locator('button.menu-button').inner_text()=='Mục'
  mobile.screenshot(path=str(root/'preview-mobile.png'),full_page=True)
  assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth+3')
  mobile.locator('button.menu-button').click()
+ assert mobile.locator('.sidebar').evaluate('(el)=>el.classList.contains("is-open")')
+ assert mobile.locator('.nav-flat .nav-label').evaluate_all('(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)')
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: base 110% at setting 100%, two-line brand, dense single-header table UI, labor QR and PDA scan validation, login/CRUD/Excel, mobile')
+ print('PASS: v0.8.4 sidebar credit under version, 5–6-word nav labels, desktop toggle removed, mobile navigation, CRUD/QR/Excel')
  browser.close()
