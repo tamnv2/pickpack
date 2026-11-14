@@ -37,19 +37,49 @@ function storageSet(key,val){try{localStorage.setItem(key,val);return true}catch
 function storageRemove(key){try{localStorage.removeItem(key)}catch{}}
 function demoSession(){return storageGet(SESSION_KEY)==='demo-admin-only'||(location.protocol==='file:'&&new URLSearchParams(location.search).get('demo')==='1')}
 function seedRecords(){
- const family=['Nguyễn','Trần','Lê','Phạm','Hoàng','Vũ','Đặng','Bùi','Đỗ','Phan','Ngô','Hồ'];
- const middle=['Minh','Thị','Văn','Hồng','Quang','Thanh','Đức','Ngọc','Gia','Tuấn'];
- const given=['An','Bình','Châu','Dũng','Giang','Hà','Hải','Hạnh','Huy','Khánh','Lan','Linh','Long','Mai','Nam','Nhi','Phúc','Quân','Sơn','Trang','Vy','Yến'];
- const states=['Đang làm việc','Chờ vào ca','Nghỉ ca'];
- const people=Array.from({length:36},(_,i)=>({id:`NV-${String(i+1).padStart(3,'0')}`,name:`${family[i%family.length]} ${middle[(i*3+2)%middle.length]} ${given[(i*5+3)%given.length]}`,team:['Pick','Pack','Auto Pack','Điều phối'][i%4],shift:i%3===0?'Ca 2':'Ca 1',user:`hy1291.user${String(i+1).padStart(3,'0')}`,state:states[i%3],email:`office-nv${String(i+1).padStart(3,'0')}@example.invalid`,initial:`M${(i%9)+1}`}));
- const shifts=Array.from({length:42},(_,i)=>{const person=people[i%people.length],end=i%4===0;return {id:`CA-${String(i+1).padStart(3,'0')}`,name:person.name,staff:person.id,date:`${String(14-Math.floor(i/8)).padStart(2,'0')}/11/2026`,shift:person.shift,checkin:i%5===0?'—':`0${5+(i%3)}:${String(28+i%31).padStart(2,'0')}`,checkout:end?'14:0'+(i%9):'—',user:person.user,state:end?'Đã ra ca':i%5===0?'Chờ vào ca':'Trong ca'};});
- const labor=Array.from({length:42},(_,i)=>{const person=people[(i*7)%people.length];return {id:`CN-${String(i+1).padStart(3,'0')}`,name:person.name,date:`${String(14-Math.floor(i/9)).padStart(2,'0')}/11/2026`,shift:person.shift,work:person.team,hours:['8,0','8,5','9,0','0,0'][i%4],state:['Đã xác nhận','Tạm tính','Chưa chấm'][i%3]};});
- const issueTypes=['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'];
- const minutes=Array.from({length:30},(_,i)=>({id:`BB-${String(i+1).padStart(3,'0')}`,name:`Biên bản ${issueTypes[i%issueTypes.length].toLowerCase()} — ${String(i+1).padStart(2,'0')}`,type:issueTypes[i%issueTypes.length],date:`${String(14-Math.floor(i/6)).padStart(2,'0')}/11/2026`,owner:people[(i*3)%people.length].name,state:['Chờ xác nhận','Đã lưu','Đã xác nhận'][i%3]}));
- const goods=['Máy quét mã vạch','Khay phân loại','Bộ sạc thiết bị','Xe đẩy hàng','Bút kiểm kho','Băng dính','Giỏ nhựa','Tem nhãn','Bộ đàm','Kéo an toàn','Găng tay','Bảng kê'];
- const assets=Array.from({length:30},(_,i)=>({id:`CCDC-${String(i+1).padStart(3,'0')}`,name:`${goods[i%goods.length]} — lô ${Math.floor(i/goods.length)+1}`,type:i%3===0?'Thiết bị':'Dụng cụ',qty:2+(i*7%19),unit:['chiếc','cái','bộ'][i%3],holder:['Kho CCDC','Khu Pick','Khu Pack','Khu Auto'][i%4],state:['Sẵn sàng','Đang sử dụng','Cần kiểm tra'][i%3]}));
- // 30 borrowing/return history entries across exactly three distinct demo PDA devices.
- const pda=Array.from({length:30},(_,i)=>({id:`MT-${String(i+1).padStart(3,'0')}`,name:`PDA-${String(i%3+1).padStart(2,'0')}`,holder:people[(i*2)%people.length].name,user:people[(i*2)%people.length].user,borrow:`0${5+(i%4)}:${String(20+i%37).padStart(2,'0')}`,return:i<2?'—':`1${4+i%3}:${String(10+i%39).padStart(2,'0')}`,state:i<2?'Đang mượn':'Đã trả'}));
+ // 100% synthetic fixtures, deterministic across browsers and reloads; no real operational records.
+ let num=129114;const rand=()=>{num=(num*1664525+1013904223)>>>0;return num/4294967296};
+ const first=['Nguyễn','Trần','Lê','Phạm','Hoàng','Vũ','Đặng','Bùi','Đỗ','Phan','Ngô','Hồ'];
+ const second=['Văn','Thị','Minh','Quang','Ngọc','Thanh','Đức','Hồng','Gia','Tuấn','Đình','Khánh'];
+ const last=['An','Bình','Châu','Dũng','Giang','Hà','Hải','Hạnh','Hiếu','Huy','Khánh','Lan','Linh','Long','Mai','Nam','Nhi','Phúc','Quân','Sơn','Trang','Vy','Yến','Thảo','Tiến','Đạt','Phương','Nhung'];
+ const teams=['Pick','Pack thường','Pack Auto','Điều phối'];
+ const pick=(arr)=>arr[Math.floor(rand()*arr.length)];
+ const people=Array.from({length:36},(_,i)=>{const name=`${pick(first)} ${pick(second)} ${pick(last)}`,team=teams[i%4];return{
+   id:`NV-${String(260301+i)}`,name,team,shift:i%3===0?'Ca 2':'Ca 1',
+   user:`pp1291.${['pk','pa','au','dc'][i%4]}${String(Math.floor(i/4)+1).padStart(2,'0')}`,
+   state:['Đang làm việc','Đang làm việc','Chờ vào ca','Nghỉ ca'][i%4],
+   email:`office.${String(i+1).padStart(2,'0')}@example.invalid`,initial:name.split(' ').at(-1).slice(0,2)
+ }});
+ const shifts=Array.from({length:42},(_,i)=>{const p=people[(i*13)%people.length],day=14-Math.floor(i/7),pending=i%9===0,ended=i>7||i%5===0;return{
+  id:`CA-${String(261101+i)}`,name:p.name,staff:p.id,date:`${String(day).padStart(2,'0')}/11/2026`,shift:p.shift,
+  checkin:pending?'—':`${p.shift==='Ca 1'?'05':'13'}:${String(26+(i*7)%32).padStart(2,'0')}`,
+  checkout:ended&&!pending?`${p.shift==='Ca 1'?'14':'22'}:${String((i*9)%50).padStart(2,'0')}`:'—',
+  user:p.user,state:pending?'Chờ vào ca':ended?'Đã ra ca':'Trong ca'
+ }});
+ const labor=Array.from({length:42},(_,i)=>{const p=people[(i*7)%people.length];return{
+   id:`CN-${String(261101+i)}`,name:p.name,date:`${String(14-Math.floor(i/9)).padStart(2,'0')}/11/2026`,
+   shift:p.shift,work:p.team,hours:['8,0','8,0','8,5','9,0','7,5','10,0'][i%6],
+   state:['Đã xác nhận','Đã xác nhận','Tạm tính','Chưa chấm'][i%4]
+ }});
+ const topics=['Bàn giao ca khu Pick','Kiểm tra thiết bị đầu ca','Bàn giao vật tư Pack','Ghi nhận tình trạng dụng cụ','Xác nhận hoàn trả CCDC','Ghi nhận sai lệch bàn giao','Kiểm tra an toàn khu vực','Bàn giao PDA cuối ca','Kiểm tra khu đóng gói','Bàn giao khu Auto'];
+ const types=['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'];
+ const minutes=Array.from({length:30},(_,i)=>({
+  id:`BB-${String(261101+i)}`,name:`${topics[i%topics.length]} - ${String(14-Math.floor(i/6)).padStart(2,'0')}/11`,
+  type:types[i%5],date:`${String(14-Math.floor(i/6)).padStart(2,'0')}/11/2026`,
+  owner:people[(i*11)%people.length].name,state:['Chờ xác nhận','Đã lưu','Đã xác nhận'][i%3]
+ }));
+ const goods=['Máy quét mã vạch','Khay phân loại','Bộ sạc thiết bị','Xe đẩy hàng','Bộ niêm phong','Dây sạc','Giỏ nhựa','Kệ để hàng','Bộ đàm','Kéo an toàn','Găng tay','Bảng kê','Bộ pin dự phòng','Máy in tem','Bàn cân'];
+ const assets=Array.from({length:30},(_,i)=>({
+   id:`CCDC-${String(260201+i)}`,name:`${goods[i%goods.length]} - ${Math.floor(i/15)+1}`,
+   type:i%5===0?'Thiết bị':'Dụng cụ',qty:1+(i*7%22),unit:['chiếc','cái','bộ'][i%3],
+   holder:['Kho CCDC','Khu Pick','Khu Pack','Khu Auto','Bàn điều phối'][i%5],
+   state:['Sẵn sàng','Đang sử dụng','Sẵn sàng','Cần kiểm tra'][i%4]
+ }));
+ const pda=Array.from({length:30},(_,i)=>{const p=people[(i*7+3)%people.length],active=i<2;return{
+   id:`MT-${String(261101+i)}`,name:`PDA-${String(i%3+1).padStart(2,'0')}`,
+   holder:p.name,user:p.user,borrow:`${String(5+(i%5)).padStart(2,'0')}:${String(15+(i*7)%42).padStart(2,'0')}`,
+   return:active?'—':`${14+i%4}:${String(10+(i*9)%39).padStart(2,'0')}`,state:active?'Đang mượn':'Đã trả'
+ }});
  return {people,shifts,labor,minutes,assets,pda};
 }
 function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(seedRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500))return data}catch{}return seedRecords()}
@@ -86,7 +116,7 @@ function table(){const cols=columns[state.view],rows=filtered();return `<section
 function modulePage(){let n=(store[state.view]||[]).length;let call=state.view==='shifts'?'Ghi nhận ra / vào ca':state.view==='pda'?'Ghi nhận mượn / trả':state.view==='people'?'Thêm nhân sự':state.view==='minutes'?'Tạo biên bản':state.view==='assets'?'Thêm CCDC':'Thêm công nhật';return `<div class="page-content">${pageHead(`<button class="btn primary" data-action="add">${icon("plus",16)} ${call}</button>`)}<div class="module-summary">${stat('Tổng bản ghi',String(n).padStart(2,'0'),'Đã ghi nhận','blue','≡')}${stat('Đang xử lý',String((store[state.view]||[]).filter(r=>/Chờ|Đang|Trong ca|Tạm tính/.test(r.state)).length).padStart(2,'0'),'Trạng thái theo dõi','orange','◷')}${stat('Đang hiển thị','01','Tab hiện tại','green','▦')}</div>${table()}</div>`}
 function quickLabel(){return state.view==='pda'?'Mượn / trả':state.view==='shifts'?'Quét ca':state.view==='labor'?'Xác nhận công':state.view==='minutes'?'Duyệt biên bản':'Đổi trạng thái'}
 function drawer(){if(!state.drawer)return '';const row=store[state.view]?.find(x=>x.id===state.drawer);if(!row)return '';return `<div class="drawer-shade" data-action="close-drawer"></div><aside class="detail-drawer" role="dialog" aria-modal="true" aria-label="Chi tiết ${escape(row.id)}"><div class="detail-head"><div><small>CHI TIẾT HỒ SƠ</small><h2>${escape(row.name)}</h2></div><button class="icon-button" data-action="close-drawer" aria-label="Đóng chi tiết">×</button></div><div class="detail-content"><div class="detail-hero"><span class="detail-icon">${state.view==='people'?'♙':state.view==='pda'?'▯':'▤'}</span><div><strong>${escape(row.name)}</strong><small>${escape(row.id)}</small></div></div>${badge(row.state)}<div class="detail-fields">${(columns[state.view]||[]).slice(1).map(([k,label])=>`<div><span>${label}</span><b>${escape(row[k])}</b></div>`).join('')}</div><div class="detail-tip"></div><div class="drawer-actions"><button class="btn primary" data-edit="${escape(row.id)}">✎ Chỉnh sửa</button><button class="btn ghost" data-quick="${escape(row.id)}">${quickLabel()}</button><button class="btn danger" data-delete="${escape(row.id)}">Xóa</button></div></div></aside>`}
-const FIELD_OPTIONS={team:['Pick','Pack','Auto Pack','Điều phối'],shift:['Ca 1','Ca 2'],state:['Đang làm việc','Chờ vào ca','Nghỉ ca','Trong ca','Đã ra ca','Tạm tính','Đã xác nhận','Chưa chấm','Chờ xác nhận','Đã lưu','Sẵn sàng','Đang sử dụng','Cần kiểm tra','Đang mượn','Đã trả'],type:['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'],work:['Pick','Pack','Auto Pack','Điều phối']};
+const FIELD_OPTIONS={team:['Pick','Pack thường','Pack Auto','Điều phối'],shift:['Ca 1','Ca 2'],state:['Đang làm việc','Chờ vào ca','Nghỉ ca','Trong ca','Đã ra ca','Tạm tính','Đã xác nhận','Chưa chấm','Chờ xác nhận','Đã lưu','Sẵn sàng','Đang sử dụng','Cần kiểm tra','Đang mượn','Đã trả'],type:['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'],work:['Pick','Pack thường','Pack Auto','Điều phối']};
 function fieldInput(key,label,value){if(key==='id')return '';const opts=FIELD_OPTIONS[key];const v=String(value??'');if(opts)return `<label>${escape(label)}<select name="${key}" required><option value="">— Chọn —</option>${[...new Set([...opts,v])].filter(Boolean).map(x=>`<option value="${escape(x)}" ${x===v?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`;if(key==='qty')return `<label>${escape(label)}<input type="number" min="0" max="99999" name="${key}" value="${escape(v)}" required></label>`;return `<label>${escape(label)}<input name="${key}" maxlength="120" value="${escape(v)}" placeholder="${escape(label)}" ${key==='name'?'minlength="2" required':''} autocomplete="off"></label>`}
 function notificationItems(){return [
 {view:'minutes',title:'Biên bản chờ xác nhận',count:store.minutes.filter(r=>r.state==='Chờ xác nhận').length,ic:'file'},
