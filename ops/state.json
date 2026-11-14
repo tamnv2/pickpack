@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "OFFICE_UI_V07_CODE_READY_OWNER_REVIEW",
-  "application_code": "WEB_OFFICE_STATIC_V07_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_GITHUB_ACTIONS_43584401138_BUILD_CHROMIUM_HOSTED_E2E",
+  "phase": "OFFICE_UI_V08_CODE_READY_OWNER_REVIEW",
+  "application_code": "WEB_OFFICE_STATIC_V08_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43586461064_BUILD_CHROMIUM_DOM_HTTP_E2E_XLSX_OPENPYXL",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V07_WEB_UI_PENDING_OWNER_ACCEPTANCE",
+  "owner_business_acceptance": "V08_OWNER_UI_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner review v0.7 static Web Office UI, portraits, serial PDA inventory, employee-code in/out scanner",
-    "Production needs authoritative employee/shift/work-user mapping; no real Sheet rows verified",
-    "Physical PDA scanner and FIELD_PASS not tested; real Firebase Auth, RBAC, OpsCore/realtime/API and APK require separate authorization"
+    "Owner review of v0.8 seven UI changes and system-wide read-only dashboard on static preview",
+    "Real production attendance requires authoritative employee→shift→user map, secure Auth/RBAC/OpsCore/API and realtime",
+    "Physical barcode reader, APK/Production, FIELD_PASS and OWNER_PASS not verified or authorized"
   ],
-  "latest_checkpoint": "PP-20261114-009",
+  "latest_checkpoint": "PP-20261114-010",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -47,7 +47,7 @@
     "provider_usage": "ZERO_RUNTIME_API_CALLS",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -58,10 +58,10 @@
       "pda_history": 30,
       "pda_device_ids": 3
     },
-    "admin_actions": "BROWSER_LOCAL_SYNTHETIC_CRUD_BULK_CSV_STATUS_PDA_LOAN_GUARD",
+    "admin_actions": "BROWSER_LOCAL_SYNTHETIC_CRUD_BULK_XLSX_STATUS_PDA_LOAN_GUARD",
     "navigation": "NATIVE_ANCHORS_NO_NEW_TAB_BUTTON",
     "storage": "LOCALSTORAGE_FAKE_DATA_ONLY",
-    "font_scale": "90-120% STEP_5 PERSISTED",
+    "font_scale": "100-130_PERCENT_STEP_5_DEFAULT_110_MIGRATE_EXISTING_PLUS10_ONCE",
     "sidebar_theme": "LIGHT_IN_LIGHT_DARK_IN_DARK",
     "notifications": "DERIVED_FROM_SYNTHETIC_DATA",
     "chart": "DERIVED_FROM_SYNTHETIC_SHIFTS",
@@ -70,7 +70,20 @@
     "avatar": "BROWSER_LOCAL_FILE_TO_JPEG_192PX_NO_REAL_PHOTOS",
     "shift_scan": "PERSISTENT_IN_OUT_SCAN_MODE_BARCODE_ENTER_EXACT_CODE_LOOKUP_ASSIGNED_SHIFT_USER_BROWSER_TIME_GUARDS_READ_ONLY_HISTORY",
     "pda_inventory": "SERIAL_LAST5_SOURCE_STATUS_NOTES_SYNTHETIC",
-    "verified_v07": "V8_SYNTAX_17_SCAN_RENDER_PLUS_11_PERSONNEL_ASSIGNMENT_FAKE_DOM_PASS",
-    "verification_v07": "CODE_READY_CI_PASS_COMMIT_e85b1579fd0ed1e47fc004923abf110849a391a4_RUN_43584401138_BUILD_7_FILES_CHROMIUM_SMOKE_AND_HOSTED_HTTP_E2E_PASS"
+    "light_accent_colors": [
+      "red",
+      "orange",
+      "yellow",
+      "green",
+      "blue",
+      "indigo",
+      "violet"
+    ],
+    "brand": "CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN",
+    "admin_identity": "TOPBAR_ONLY_SIDEBAR_LOGOUT",
+    "density": "COMPACT_RESPONSIVE",
+    "dashboard": "READ_ONLY_8_KPIS_6_MODULE_STATUS_PENDING_TREND_SCAN_NO_CRUD_NO_SHORTCUT",
+    "export": "NATIVE_EXCEL_XLSX_STORED_ZIP_OOXML_STYLE_FILTER_FROZEN_HEADER_NO_EXTERNAL_REQUESTS",
+    "verification_v08": "CODE_READY_CI_PASS_SOURCE_741503bd12a7528f68546880ffd8ee97204bd8a8_RUN_43586461064_NODE_BUILD_7_FILES_160367_BYTES_CHROMIUM_DOM_HOSTED_XLSX_OPENPYXL_PASS"
   }
 }
