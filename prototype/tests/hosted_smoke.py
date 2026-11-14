@@ -67,11 +67,11 @@ try:
         page.locator('.top-profile').click()
         page.locator('button[data-action="settings"]').click()
         assert page.locator('.font-steps output').inner_text() == '100%'
-        assert page.locator('[data-accent-choice]').count() == 7
         page.locator('[data-theme-choice="auto"]').click()
         assert page.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')") == 'auto'
         page.locator('[data-theme-choice="light"]').click()
         assert page.evaluate("document.documentElement.dataset.theme") == 'light'
+        assert page.locator('[data-accent-choice]').count() == 7
         page.locator('[data-accent-choice="violet"]').click()
         assert page.evaluate("document.documentElement.dataset.accent") == 'violet'
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()") == '#823eab'
