@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.8.5';
+ const WEB_VERSION='0.8.6';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes']];
@@ -42,8 +42,25 @@ const VN_TIME=new Intl.DateTimeFormat('vi-VN',{timeZone:VN_ZONE,hour:'2-digit',m
 const VN_HOUR=new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,hour:'2-digit',hourCycle:'h23'});
 function resolveTheme(mode,now=new Date()){if(mode!=='auto')return mode;const hour=Number(VN_HOUR.format(now));return hour>=6&&hour<18?'light':'dark'}
 function clockNow(now=new Date()){return {date:VN_DATE.format(now),time:VN_TIME.format(now),iso:now.toISOString()}}
-function clockMarkup(){const now=clockNow();return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Ngày và giờ Việt Nam"><span class="clock-pulse" aria-hidden="true"></span><div class="clock-values"><time id="clock-time" datetime="${now.iso}">${escape(now.time)}</time><span id="clock-date">${escape(now.date)}</span></div></div>`}
-function tickClock(){const now=clockNow(),clock=document.getElementById('clock-time'),date=document.getElementById('clock-date');if(clock){if(clock.textContent!==now.time)clock.textContent=now.time;clock.dateTime=now.iso}if(date&&date.textContent!==now.date)date.textContent=now.date;const next=resolveTheme(state.themeMode);if(next!==state.theme){state.theme=next;render()}}
+function clockDigits(time){return [...time].map((char,i)=>char===':'?'<span class="flip-separator" aria-hidden="true">:</span>':`<span class="flip-digit" data-value="${char}" data-index="${i}" aria-hidden="true">${char}</span>`).join('')}
+function clockMarkup(){const now=clockNow();return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Ngày và giờ Việt Nam"><span class="clock-pulse" aria-hidden="true"></span><div class="clock-values"><time id="clock-time" class="flip-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off">${clockDigits(now.time)}</time><span id="clock-date">${escape(now.date)}</span></div></div>`}
+function tickClock(){
+ const now=clockNow(),clock=document.getElementById('clock-time'),date=document.getElementById('clock-date');
+ if(clock&&clock.textContent!==now.time){
+  const digits=clock.querySelectorAll('.flip-digit');
+  let digit=0;
+  for(const char of now.time){if(char===':')continue;
+   const el=digits[digit++];if(!el)break;
+   if(el.dataset.value===char)continue;
+   const old=el.dataset.value;el.dataset.old=old;el.dataset.next=char;el.dataset.value=char;el.textContent=char;
+   el.classList.remove('is-flipping');
+   if(!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){void el.offsetWidth;el.classList.add('is-flipping')}
+  }
+ }
+ if(clock){clock.dateTime=now.iso;clock.setAttribute('aria-label',now.time)}
+ if(date&&date.textContent!==now.date)date.textContent=now.date;
+ const next=resolveTheme(state.themeMode);if(next!==state.theme){state.theme=next;render()}
+}
 
 const ACCENT_KEY='pickpack1291_office_light_accent_v08';
 const FONT_MIGRATED_KEY='pickpack1291_office_font_boost_v08';
@@ -133,7 +150,7 @@ const href=(view=state.view,record='',theme=state.theme)=>`app.html?view=${encod
 const badge=(v)=>{const s=String(v);const type=/Chờ|Cần kiểm tra|Chưa/.test(s)?'warn':/Đã lưu|Đã xác nhận|Sẵn sàng|Đã ra/.test(s)?'neutral':/Trong ca|Đang|Tạm tính/.test(s)?'good':'neutral';return `<span class="status ${type}"><span class="status-dot"></span>${escape(s)}</span>`};
 const avatar=(x,big=false)=>/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(x.photo||'')?`<img class="person-avatar ${big?'big':''}" src="${x.photo}" alt="">`:`<span class="person-avatar ${big?'big':''}" aria-hidden="true">${escape(x.initial || String(x.name||'A').slice(-2).toUpperCase())}</span>`;
 function side(){return `<aside class="sidebar ${state.sidebar?'is-open':''}" aria-label="Điều hướng PickPack"><div class="side-top"><img class="brand-logo" src="assets/supra-mark.png" alt="The Supra"><div><strong class="corporate-brand"><span>CÔNG TY CỔ PHẦN THE SUPRA</span><span>DC HƯNG YÊN</span></strong></div><button class="mobile-hide" data-action="close-nav" aria-label="Đóng menu">×</button></div><div class="sidebar-scroll"><nav class="side-group nav-flat" aria-label="Nghiệp vụ">${SIDEBAR.map(([view,ic])=>`<div class="side-link ${state.view===view||(state.view==='categories'&&view==='people')?'selected':''}"><a class="nav-main" href="${href(view)}" data-nav="${view}" title="${PAGES[view].title}" aria-current="${state.view===view?'page':'false'}"><span class="nav-icon">${ICONS[ic]}</span><span class="nav-label">${NAV_LABELS[view]}</span></a></div>`).join('')}</nav></div><div class="side-bottom"><span class="web-version" title="Phiên bản Web Office">Web v${WEB_VERSION}</span><footer class="site-footer">Phát triển hệ thống - tamnv2 | Pick Pack 1291</footer></div></aside>`}
-function top(){return `<header class="topbar"><div class="top-left"><button class="icon-button menu-button" data-action="toggle-nav" aria-label="Mở danh mục" title="Mở danh mục">${icon('grid',17)}<span>Mục</span></button><div class="profile-area"><button type="button" class="top-profile" data-action="profile-menu" aria-expanded="${state.profileMenu}" aria-haspopup="menu" aria-label="Tài khoản và tùy chọn cá nhân">${avatar({initial:'AD'})}<span class="profile-name"><strong>Quản trị viên</strong><small>Office Admin</small></span><span class="caret">⌄</span></button>${state.profileMenu?`<div class="profile-dropdown" role="menu"><div class="profile-role">Tài khoản kiểm thử · Admin</div><button type="button" role="menuitem" data-action="settings">${icon('settings',16)} Tùy chọn hiển thị</button><button type="button" role="menuitem" data-action="logout">${icon('logout',16)} Đăng xuất</button></div>`:''}</div></div><div class="top-right">${state.view==='dashboard'||state.view==='categories'?'':`<div class="top-search">${icon('search',17)}<input id="global-search" type="search" placeholder="Tìm trong ${PAGES[state.view].title.toLowerCase()}..." value="${escape(state.search)}" aria-label="Tìm nhanh"></div>`}<button class="icon-button notif" data-action="notifications" title="Thông báo" aria-label="Thông báo">${icon("bell",19)}${notificationItems().length?'<i></i>':''}</button>${clockMarkup()}</div></header>`}
+function top(){return `<header class="topbar"><div class="top-left"><button class="icon-button menu-button" data-action="toggle-nav" aria-label="Mở danh mục" title="Mở danh mục">${icon('grid',17)}<span>Mục</span></button><div class="profile-area"><button type="button" class="top-profile" data-action="profile-menu" aria-expanded="${state.profileMenu}" aria-haspopup="menu" aria-label="Tài khoản và tùy chọn cá nhân">${avatar({initial:'AD'})}<span class="profile-name"><strong>Quản trị viên</strong><small>Office Admin</small></span><span class="caret">⌄</span></button>${state.profileMenu?`<div class="profile-dropdown" role="menu"><div class="profile-role">Tài khoản kiểm thử · Admin</div><button type="button" role="menuitem" data-action="settings">${icon('settings',16)} Tùy chọn hiển thị</button><button type="button" role="menuitem" data-action="logout">${icon('logout',16)} Đăng xuất</button></div>`:''}</div></div><div class="top-right">${state.view==='categories'?'':`<div class="top-search">${icon('search',17)}<input id="global-search" type="search" placeholder="Tìm trong ${PAGES[state.view].title.toLowerCase()}..." value="${escape(state.search)}" aria-label="Tìm nhanh"></div>`}<button class="icon-button notif" data-action="notifications" title="Thông báo" aria-label="Thông báo">${icon("bell",19)}${notificationItems().length?'<i></i>':''}</button>${clockMarkup()}</div></header>`}
 function pageHead(action='',other=''){return action||other?`<div class="page-header"><div class="header-actions">${other}${action}</div></div>`:''}
 function stat(label,value,small,accent='blue',ic='grid'){return `<div class="metric-card"><div class="metric-top"><span>${label}</span><span class="metric-icon ${accent}">${icon(({'♙':'users','◷':'clock','▯':'device','▤':'file','≡':'list','▦':'grid'})[ic]||ic,20)}</span></div><div class="metric-number">${value}</div><div class="metric-foot">${small}</div></div>`}
 function activity(){
@@ -161,6 +178,12 @@ function coveragePanel(){
  ];
  return `<section class="panel coverage-panel"><div class="panel-title"><div><h2>Trạng thái toàn hệ thống</h2><p>Tổng hợp trực tiếp từ 6 phân hệ nghiệp vụ</p></div></div><div class="coverage-list">${sets.map(([name,total,part,desc])=>`<div class="coverage-row"><strong>${escape(name)}</strong><span>${escape(desc)}</span><b>${part} / ${total}</b><div class="coverage-track"><span style="width:${total?Math.min(100,Math.round(part/total*100)):0}%"></span></div></div>`).join('')}</div></section>`;
 }
+function dashboardSearchResults(){
+ const query=state.search.trim().toLocaleLowerCase('vi');if(!query)return '';
+ const all=SIDEBAR.filter(([view])=>view!=='dashboard').flatMap(([view])=>(store[view]||[]).filter(row=>Object.entries(row).some(([key,value])=>key!=='photo'&&typeof value!=='object'&&String(value??'').toLocaleLowerCase('vi').includes(query))).map(row=>({view,row})));
+ const hits=all.slice(0,12);
+ return `<section class="panel dashboard-search-panel" aria-label="Kết quả tìm kiếm toàn hệ thống"><div class="dashboard-search-head"><strong>Kết quả tìm kiếm</strong><span>${all.length} bản ghi${all.length>hits.length?' · Hiển thị 12 đầu tiên':''}</span></div>${hits.length?`<div class="dashboard-search-list">${hits.map(({view,row})=>`<a class="dashboard-search-hit" href="${href(view,row.id)}" title="Mở ${escape(PAGES[view].title)}: ${escape(row.name||row.id)}"><span class="search-module">${escape(PAGES[view].title)}</span><strong>${escape(row.name||row.staff||row.id)}</strong><small>${escape(row.staff||row.id)}</small><span class="search-hit-open" aria-hidden="true">›</span></a>`).join('')}</div>`:'<div class="dashboard-no-results">Không tìm thấy bản ghi phù hợp trong 6 phân hệ.</div>'}</section>`;
+}
 function dashboard(){
  const todayDate=new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
  const inShift=store.shifts.filter(r=>r.state==='Trong ca').length;
@@ -169,7 +192,7 @@ function dashboard(){
  const flaggedAssets=store.assets.filter(r=>r.state==='Cần kiểm tra').length;
  const borrowed=new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size;
  const todayScans=store.shifts.filter(r=>r.date===todayDate&&r.checkin!=='—').length;
- return `<div class="page-content overview-page">${pageHead()}<div class="metrics overview-metrics">${stat('Tổng nhân sự',store.people.length,'Hồ sơ đang quản lý','blue','users')}${stat('Đã phân ca',store.people.filter(r=>r.shift).length,'Nhân sự có thông tin ca','green','calendar')}${stat('Đang trong ca',inShift,'Lượt ra/vào chưa kết thúc','green','clock')}${stat('Vào ca hôm nay',todayScans,todayDate,'blue','clock')}${stat('Công nhật chưa chốt',pendingLabor,'Chưa xác nhận','orange','calendar')}${stat('Biên bản chờ duyệt',pendingMinutes,'Chờ xác nhận','orange','file')}${stat('CCDC cần kiểm tra',flaggedAssets,'Theo tình trạng thiết bị','purple','boxes')}${stat('PDA đang mượn',`${borrowed} / ${store.pdaDevices.length}`,'Thiết bị hiện quản lý','purple','device')}</div><div class="overview-sections">${coveragePanel()}${panelAttention()}</div><div class="two-col lower">${workload()}${activity()}</div></div>`;
+ return `<div class="page-content overview-page">${pageHead()}<div id="dashboard-search-results" aria-live="polite">${dashboardSearchResults()}</div><div class="metrics overview-metrics">${stat('Tổng nhân sự',store.people.length,'Hồ sơ đang quản lý','blue','users')}${stat('Đã phân ca',store.people.filter(r=>r.shift).length,'Nhân sự có thông tin ca','green','calendar')}${stat('Đang trong ca',inShift,'Lượt ra/vào chưa kết thúc','green','clock')}${stat('Vào ca hôm nay',todayScans,todayDate,'blue','clock')}${stat('Công nhật chưa chốt',pendingLabor,'Chưa xác nhận','orange','calendar')}${stat('Biên bản chờ duyệt',pendingMinutes,'Chờ xác nhận','orange','file')}${stat('CCDC cần kiểm tra',flaggedAssets,'Theo tình trạng thiết bị','purple','boxes')}${stat('PDA đang mượn',`${borrowed} / ${store.pdaDevices.length}`,'Thiết bị hiện quản lý','purple','device')}</div><div class="overview-sections">${coveragePanel()}${panelAttention()}</div><div class="two-col lower">${workload()}${activity()}</div></div>`;
 }
 function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong>${view==='people'?`<small>${escape(row.user)}</small>`:''}</div></div>`;if(key==='state')return badge(row[key]);if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key])}
 function filtered(){const set=store[state.view]||[];let rows=set.filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);return rows}
@@ -521,7 +544,9 @@ root.addEventListener('input',function(e){
   const preview=root.querySelector('#pda-device-preview');if(preview)preview.innerHTML=pdaDevicePreview(resolvePda(e.target.value));return;
  }
  if(e.target.id==='global-search'){
-  const input=e.target;state.search=input.value;const pos=input.selectionStart;render();
+  const input=e.target;state.search=input.value;
+  if(state.view==='dashboard'){const target=root.querySelector('#dashboard-search-results');if(target)target.innerHTML=dashboardSearchResults();return}
+  const pos=input.selectionStart;render();
   const newInput=root.querySelector('#global-search');if(newInput){newInput.focus();newInput.setSelectionRange(pos,pos)}
  }
 });
