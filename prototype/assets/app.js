@@ -96,8 +96,7 @@ function seedRecords(){
  }});
  const labor=Array.from({length:42},(_,i)=>{const p=people[(i*7)%people.length];return{
    id:`CN-${String(261101+i)}`,name:p.name,date:`${String(14-Math.floor(i/9)).padStart(2,'0')}/11/2026`,
-   shift:p.shift,work:p.position,staff:p.id,user:p.user,scannedAt:'—',hours:['8,0','8,0','8,5','9,0','7,5','10,0'][i%6],
-   state:['Đã xác nhận','Đã xác nhận','Tạm tính','Chưa chấm'][i%4]
+   shift:p.shift,work:p.position,staff:p.id,startTime:`${String(5+i%5).padStart(2,'0')}:30:00`,endTime:i%4===3?'—':`${String(13+i%5).padStart(2,'0')}:30:00`
  }});
  const topics=['Bàn giao ca khu Pick','Kiểm tra thiết bị đầu ca','Bàn giao vật tư Pack','Ghi nhận tình trạng dụng cụ','Xác nhận hoàn trả CCDC','Ghi nhận sai lệch bàn giao','Kiểm tra an toàn khu vực','Bàn giao PDA cuối ca','Kiểm tra khu đóng gói','Bàn giao khu Auto'];
  const types=['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'];
@@ -145,7 +144,7 @@ function updateRecord(key,id,changes){const row=store[key]?.find(r=>r.id===id);i
 const columns={
  people:[['name','Họ và tên'],['id','Mã nhân viên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['updatedBy','Cập nhật bởi']],
  shifts:[['name','Họ và tên'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['state','Trạng thái']],
- labor:[['name','Nhân sự'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['user','User làm việc'],['work','Công việc'],['scannedAt','Giờ ghi nhận'],['hours','Giờ công'],['state','Trạng thái']],
+ labor:[['name','Nhân sự'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['work','Công việc công nhật'],['startTime','Giờ bắt đầu'],['endTime','Giờ kết thúc']],
  minutes:[['name','Tên biên bản'],['id','Mã'],['type','Loại'],['date','Ngày'],['owner','Người lập'],['state','Trạng thái']],
  assets:[['name','Tên CCDC'],['id','Mã'],['type','Loại'],['qty','Số lượng'],['holder','Vị trí'],['state','Trạng thái']],
  pda:[['name','Thiết bị'],['holder','Người mượn'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['returner','Người trả'],['state','Trạng thái']]
@@ -197,7 +196,7 @@ function dashboardSearchResults(){
 function dashboard(){
  const todayDate=new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
  const inShift=store.shifts.filter(r=>r.state==='Trong ca').length;
- const pendingLabor=store.labor.filter(r=>r.state!=='Đã xác nhận').length;
+ const pendingLabor=store.labor.filter(r=>!r.endTime||r.endTime==='—').length;
  const pendingMinutes=store.minutes.filter(r=>r.state==='Chờ xác nhận').length;
  const flaggedAssets=store.assets.filter(r=>r.state==='Cần kiểm tra').length;
  const borrowed=new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size;
@@ -279,30 +278,26 @@ function compactPersonPreview(person){
 }
 function laborScanPanel(){
  const result=state.laborScan,person=result?.code?store.people.find(p=>p.id===result.code):null;
- return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('calendar',20)}</span><div><h2>Quét mã công nhật</h2><p>Quét mã nhân viên để xác định hồ sơ, ca và user. Giờ công được chấm sau khi có căn cứ.</p></div></div><form id="labor-scan-form" autocomplete="off"><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên</label><div class="scan-form-row"><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div></section>`;
+ return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('calendar',20)}</span><div><h2>Quét mã công nhật</h2><p>Quét lần đầu ghi giờ bắt đầu; quét lần sau ghi giờ kết thúc cùng bản ghi.</p></div></div><form id="labor-scan-form" autocomplete="off"><div class="labor-scan-fields"><label class="scan-code-label">Công việc công nhật<select id="labor-work" name="work" required><option value="">— Chọn công việc —</option>${catalogs.laborWork.map(value=>`<option value="${escape(value)}">${escape(value)}</option>`).join('')}</select></label><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên<input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"></label><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div></section>`;
 }
-function scanLabor(code){
- const staff=String(code||'').trim(),p=store.people.find(row=>row.id===staff),now=new Date();
+
+function scanLabor(code,work){
+ const staff=String(code||'').trim(),person=store.people.find(p=>p.id===staff),now=new Date();
  const date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
- const time=now.toLocaleTimeString('vi-VN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const time=now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
  const result=(ok,message)=>{state.laborScan={ok,code:staff,message};render();root.querySelector('#labor-staff-code')?.focus();return ok};
- if(!p)return result(false,'Không tìm thấy mã nhân viên.');
- if(!p.shift)return result(false,`Nhân viên ${p.name} chưa được phân ca.`);
- if(store.labor.some(row=>row.date===date&&row.staff===p.id))return result(false,`Đã có bản ghi công nhật ngày ${date} của ${p.name}. Không tạo trùng.`);
- store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:p.name,staff:p.id,user:p.user||'—',date,shift:p.shift,work:'—',scannedAt:time,hours:'—',state:'Tạm tính'});
- persist();return result(true,`Đã ghi nhận công nhật · ${p.name} · ${p.shift} · ${date} ${time}. Giờ công chờ xác nhận.`);
+ if(!person)return result(false,'Không tìm thấy mã nhân viên.');
+ const existing=store.labor.find(r=>r.staff===staff&&r.date===date&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
+ if(existing){
+  updateRecord('labor',existing.id,{endTime:time});
+  return result(true,`Đã kết thúc công nhật · ${person.name} · ${existing.work} · ${time}`);
+ }
+ if(!catalogs.laborWork.includes(work))return result(false,'Cần chọn Công việc công nhật hợp lệ.');
+ const shift=store.shifts.find(r=>r.staff===staff&&r.state==='Trong ca')?.shift||'—';
+ store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:person.name,staff,date,shift,work,startTime:time,endTime:'—'});
+ persist();return result(true,`Đã bắt đầu công nhật · ${person.name} · ${work} · ${time}`);
 }
-function resolvePda(code){
- const key=String(code||'').trim().toUpperCase();
- if(!key)return null;
- const exact=store.pdaDevices.filter(d=>[d.id,d.serial,d.last5].some(v=>String(v).toUpperCase()===key));
- return exact.length===1?exact[0]:null;
-}
-function pdaDevicePreview(device){
- if(!device)return '<div class="scan-empty">Nhập hoặc quét QR/seri PDA để nhận diện thiết bị.</div>';
- const active=store.pda.find(r=>r.name===device.id&&r.state==='Đang mượn');
- return `<div class="scan-device"><strong>${escape(device.id)} · ${escape(device.serial)}</strong><span>${active?`Đang mượn: ${escape(active.holder)}`:'Sẵn sàng cho mượn'}</span></div>`;
-}
+
 function pdaScanPanel(){
  const result=state.pdaScan,person=result?.staff?store.people.find(p=>p.id===result.staff):null,device=result?.device?resolvePda(result.device):null,mode=state.pdaMode;
  return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('device',20)}</span><div><h2>Quét mã mượn / trả PDA</h2><p>Quét mã nhân viên, sau đó QR/seri PDA. Mỗi thiết bị chỉ có một lượt mượn đang mở.</p></div></div><div class="scan-mode-wrapper"><span class="scan-code-label">Thao tác</span><div class="scan-mode" role="group" aria-label="Chế độ mượn trả PDA"><button type="button" class="${mode==='borrow'?'active':''}" data-pda-mode="borrow" aria-pressed="${mode==='borrow'}">Mượn PDA</button><button type="button" class="${mode==='return'?'active':''}" data-pda-mode="return" aria-pressed="${mode==='return'}">Trả PDA</button></div></div><form id="pda-scan-form" autocomplete="off"><div class="scan-code-grid"><label class="scan-code-label" for="pda-staff-code">Mã nhân viên / QR nhân viên<input id="pda-staff-code" name="employeeCode" maxlength="30" placeholder="Quét mã nhân viên" required autocomplete="off"></label><label class="scan-code-label" for="pda-device-code">Mã PDA / QR / seri / 5 số cuối<input id="pda-device-code" name="deviceCode" maxlength="120" placeholder="Quét mã PDA" required autocomplete="off"></label><button class="btn primary" type="submit">Ghi nhận ${mode==='borrow'?'mượn':'trả'} PDA</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-pair-preview"><div id="pda-person-preview">${compactPersonPreview(person)}</div><div id="pda-device-preview">${pdaDevicePreview(device)}</div></div></section>`;
@@ -349,6 +344,7 @@ function fieldInput(key,label,value,editing=false){
  const opts=key==='state'?STATES_BY_MODULE[state.view==='dashboard'?'minutes':state.view]:FIELD_OPTIONS[key];
  if(opts)return `<label>${escape(label)}<select name="${key}" ${key==='shift'?'':'required'}><option value="">${key==='shift'?'Chưa phân ca':'— Chọn —'}</option>${[...new Set([...opts,v])].filter(Boolean).map(x=>`<option value="${escape(x)}" ${x===v?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`;
  if(key==='startDate'){const parts=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v),iso=parts?`${parts[3]}-${parts[2]}-${parts[1]}`:v;return `<label>${escape(label)}<input type="date" name="startDate" value="${escape(iso)}" autocomplete="off"></label>`}
+ if(key==='startTime'||key==='endTime')return `<label>${escape(label)}<input name="${key}" type="time" step="1" value="${v==='—'?'':escape(v)}" ${key==='startTime'?'required':''}></label>`;
  if(key==='qty')return `<label>${escape(label)}<input type="number" min="0" max="99999" name="${key}" value="${escape(v)}" required></label>`;
  if(key==='note')return `<label class="wide-field">${escape(label)}<textarea name="note" rows="2" maxlength="500">${escape(v)}</textarea></label>`;
  return `<label>${escape(label)}<input name="${key}" maxlength="120" value="${escape(v)}" placeholder="${escape(label)}" ${key==='name'?'minlength="2" required':''} ${key==='phone'?'type="tel"':''} autocomplete="off"></label>`;
@@ -372,7 +368,7 @@ async function preparePortrait(file){
  }finally{URL.revokeObjectURL(url)}
 }
 function notificationItems(){return [
- {view:'labor',title:'Công nhật chưa xác nhận',count:store.labor.filter(r=>r.state!=='Đã xác nhận').length,ic:'calendar'},
+ {view:'labor',title:'Công nhật chưa kết thúc',count:store.labor.filter(r=>!r.endTime||r.endTime==='—').length,ic:'calendar'},
 {view:'minutes',title:'Biên bản chờ xác nhận',count:store.minutes.filter(r=>r.state==='Chờ xác nhận').length,ic:'file'},
 {view:'assets',title:'CCDC cần kiểm tra',count:store.assets.filter(r=>r.state==='Cần kiểm tra').length,ic:'boxes'},
 {view:'shifts',title:'Nhân sự chờ vào ca',count:store.shifts.filter(r=>r.state==='Chờ vào ca').length,ic:'clock'}
@@ -392,7 +388,7 @@ function modal(){
  const existing=store[key]?.find(r=>r.id===state.editId);
  const editing=state.modal==='edit'&&!!existing;
  const title=editing?`Sửa ${PAGES[key].title.toLowerCase()}`:`Thêm ${PAGES[key].title.toLowerCase()}`;
- const fields=key==='people'?PERSON_EDITOR:key==='labor'?[['work','Công việc'],['hours','Giờ công'],['state','Trạng thái']]:columns[key].filter(([k])=>k!=='id');
+ const fields=key==='people'?PERSON_EDITOR:key==='labor'?[['work','Công việc công nhật'],['startTime','Giờ bắt đầu'],['endTime','Giờ kết thúc']]:columns[key].filter(([k])=>k!=='id');
  return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>QUẢN LÝ DỮ LIỆU</span><h2 id="modal-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><form id="record-form">${key==='people'?photoEditor(existing):''}<div class="form-grid">${fields.map(([k,l])=>fieldInput(k,l,editing?existing[k]:k==='state'?INITIAL_STATE[key]:'',editing)).join('')}</div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu chỉnh sửa':'Tạo bản ghi'}</button></div></form></section></div>`;
 }
 function toast(){if(!state.notice)return '';const fail=/không|trùng|lỗi|vượt|chưa hợp lệ|phải có/i.test(state.notice);return `<div class="toast ${fail?'toast-error':'toast-success'}" role="${fail?'alert':'status'}"><span class="toast-symbol">${fail?'!':'✓'}</span><span>${escape(state.notice)}</span><button data-action="clear-notice" aria-label="Đóng thông báo">×</button></div>`}
@@ -407,12 +403,11 @@ function saveForm(form){
  const fd=new FormData(form),editing=state.modal==='edit'&&!!state.editId;
  if(key==='labor'){
   if(!editing)return;
-  const work=String(fd.get('work')||'').trim(),hours=String(fd.get('hours')||'').trim(),newState=String(fd.get('state')||'').trim();
-  const hoursNum=Number(hours.replace(',','.'));
-  if(!STATES_BY_MODULE.labor.includes(newState)||(newState==='Đã xác nhận'&&(!FIELD_OPTIONS.work.includes(work)||!/^[0-9]{1,2}([,.][0-9]{1,2})?$/.test(hours)||!Number.isFinite(hoursNum)||hoursNum>24))){
-   state.notice='Cần chọn công việc và giờ công hợp lệ trước khi xác nhận';render();return;
+  const work=String(fd.get('work')||'').trim(),startTime=String(fd.get('startTime')||'').trim(),endTime=String(fd.get('endTime')||'').trim()||'—';
+  if(!catalogs.laborWork.includes(work)||!/^\d{2}:\d{2}(:\d{2})?$/.test(startTime)||(endTime!=='—'&&!/^\d{2}:\d{2}(:\d{2})?$/.test(endTime))){
+   state.notice='Công việc hoặc giờ bắt đầu/kết thúc không hợp lệ';render();return;
   }
-  updateRecord('labor',state.editId,{work,hours,state:newState});
+  updateRecord('labor',state.editId,{work,startTime,endTime});
   state.notice='Đã cập nhật công nhật';state.modal='';state.editId='';render();return;
  }
  if(key==='people'){
@@ -500,7 +495,7 @@ root.addEventListener('submit',function(e){
   const fd=new FormData(e.target),op=state.scanMode;
   scanShift(fd.get('employeeCode'),op,root.querySelector('#scan-shift-choice')?.value||state.scanShift);return;
  }
- if(e.target.id==='labor-scan-form'){e.preventDefault();scanLabor(new FormData(e.target).get('employeeCode'));return}
+ if(e.target.id==='labor-scan-form'){e.preventDefault();const values=new FormData(e.target);scanLabor(values.get('employeeCode'),values.get('work'));return}
  if(e.target.id==='pda-scan-form'){e.preventDefault();const fd=new FormData(e.target);scanPda(fd.get('employeeCode'),fd.get('deviceCode'));return}
  if(e.target.id==='record-form'){e.preventDefault();saveForm(e.target)}
  if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
