@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.2'
+assert version=='0.8.3'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -47,12 +47,14 @@ try:
         assert page.locator('.coverage-row').count() == 6
         assert page.locator('.breadcrumb').count() == 0
         assert page.locator('.page-header .eyebrow').count() == 0
-        assert page.locator('.page-header h1').count() == 1
+        assert page.locator('.page-header h1').count() == 0
+        assert page.locator('.location-chip,.group-title').count() == 0
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--text-scale').trim()") == '1.1'
         assert page.locator('.corporate-brand span').all_inner_texts() == ['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
         assert page.locator('.shortcut-panel').count() == 0
         assert page.locator('.overview-page [data-action="add"]').count() == 0
         assert page.locator('.overview-page [data-action="export"]').count() == 0
+        page.locator('.top-profile').click()
         page.locator('button[data-action="settings"]').click()
         assert page.locator('.font-steps output').inner_text() == '100%'
         assert page.locator('[data-accent-choice]').count() == 7
@@ -71,14 +73,28 @@ try:
         assert second.locator('.records-label b').inner_text() == '36'
         assert 'view=dashboard' in page.url
 
+        # Categories are browser-local, persist across tabs and feed the employee form.
+        second.locator('a[data-nav="categories"]').click()
+        assert second.locator('[data-category-tab]').count() == 5
+        second.locator('button[data-action="category-add"]').click()
+        second.locator('#catalog-form input[name="value"]').fill('Điều phối thử')
+        second.locator('#catalog-form button[type="submit"]').click()
+        assert 'Điều phối thử' in second.locator('.catalog-panel').inner_text()
+        assert 'Điều phối thử' in second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v083')).position")
+        second.locator('a[data-nav="people"]').click()
         second.locator('button[data-action="add"]').click()
         second.locator('#record-form input[name="id"]').fill('90009999')
         second.locator('#record-form input[name="name"]').fill('Nhân viên kiểm thử liên tab')
-        second.locator('#record-form input[name="position"]').fill('Pick')
+        second.locator('#record-form select[name="position"]').select_option('Điều phối thử')
+        second.locator('#record-form select[name="supplier"]').select_option('Nội bộ')
+        second.locator('#record-form select[name="department"]').select_option('Pick Pack')
+        second.locator('#record-form select[name="site"]').select_option('1291')
+        second.locator('#record-form select[name="warehouse"]').select_option('1291')
         second.locator('#record-form select[name="shift"]').select_option('Ca 1')
         second.locator('#record-form input[name="user"]').fill('pp1291.pk99')
         second.locator('#record-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text() == '37'
+        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').position")=='Điều phối thử'
         # The other open tab receives a native storage event and updates the dashboard.
         page.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim() === '37'", timeout=5000)
 
@@ -138,6 +154,7 @@ try:
         mobile.locator('#login-form button[type="submit"]').click()
         mobile.wait_for_url('**/app.html?view=dashboard*')
         assert mobile.locator('button.menu-button').is_visible()
+        assert mobile.locator('.top-profile').is_visible()
         assert mobile.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
         mobile.locator('button.menu-button').click()
@@ -146,7 +163,7 @@ try:
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: base font 110 at setting 100, single title and tables, labor/PDA QR scan, Ctrl-tab storage, XLSX, mobile, no external requests')
+        print('HOSTED_SMOKE_PASS: compact nav and profile, local catalog CRUD/select, QR labor/PDA, Ctrl-tab storage, XLSX, mobile, no external requests')
         browser.close()
 finally:
     server.shutdown()
