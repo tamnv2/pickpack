@@ -122,3 +122,8 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 - **APPROVED UI only:** sticky header displays a six-digit, two-colon split-flap clock in Vietnam time. At each tick, animate only changing digits; preserve weekday/date and avoid full-page rerender. Respect reduced-motion system setting; no remote time/API.
 - **APPROVED functionality:** show same top search control on dashboard; type-to-search all synthetic records in six business modules, show up to 12 matches and total count, with native detail anchors/right-click new-tab and explicit no-result state. Dashboard KPIs remain complete/unfiltered and no provider/API usage.
 - No real data, backend/RBAC, Production/provider resource or Inventory source changes; PR remains unmerged pending Owner review.
+
+## Web Office preview v0.8.7 — Owner correction 14/11/2026
+- **APPROVED UI-only:** fix the user-observed toolbar positional variance across Overview and other modules using invariant search / notification / time slots at the same viewport, including Categories search; retain responsive behavior.
+- **APPROVED UI-only:** replace static digits with genuinely hinged split-flap animation: old top half rotates out, next bottom half rotates in; only changed digits animate; fixed display, accessibility label and reduced-motion fallback. No external widget/network or provider changes.
+- Same static synthetic demo boundary; no Production/merge authorization.
