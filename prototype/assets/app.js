@@ -152,7 +152,7 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['shift','Ca được phân'],['user','User làm việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',laborScan:null,pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people'};
+const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',laborScan:null,pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',confirmData:null};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -252,8 +252,7 @@ function saveCatalog(form){
 function deleteCatalog(index){
  const field=state.categoryTab,value=catalogs[field]?.[index];if(value===undefined)return;
  const owner=catalogOwner(field);if(store[owner.records].some(p=>p[owner.property]===value)){state.notice='Không thể xóa: danh mục đang được sử dụng';render();return}
- if(!window.confirm(`Xóa danh mục "${value}"?`))return;
- catalogs[field].splice(index,1);persistCatalogs();state.notice='Đã xóa danh mục';render();
+ confirmDialog('Xóa danh mục',`Xóa danh mục "${value}"?`,()=>{catalogs[field].splice(index,1);persistCatalogs();state.notice='Đã xóa danh mục'});
 }
 function scanPreview(person){
  if(!person)return '<div class="scan-empty">Nhập hoặc quét mã nhân viên để xem hồ sơ.</div>';
@@ -389,8 +388,29 @@ function prefsModal(){
  return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Chế độ Tự động: sáng 06:00–17:59, tối 18:00–05:59 (giờ Việt Nam)</small></div><div class="theme-steps"><button class="${state.themeMode==='auto'?'active':''}" data-theme-choice="auto" aria-pressed="${state.themeMode==='auto'}">${icon('clock',15)} Tự động</button><button class="${state.themeMode==='light'?'active':''}" data-theme-choice="light" aria-pressed="${state.themeMode==='light'}">${icon('sun',15)} Sáng</button><button class="${state.themeMode==='dark'?'active':''}" data-theme-choice="dark" aria-pressed="${state.themeMode==='dark'}">${icon('moon',15)} Tối</button></div></div>${accentRow}<div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn mới</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
 }
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
+
+let pendingConfirmation=null;
+function confirmDialog(title,message,onApprove,requiresPassword=true){
+ pendingConfirmation=onApprove;
+ state.confirmData={title,message,requiresPassword};
+ state.modal='confirm';render();
+}
+function confirmModal(){
+ const data=state.confirmData;if(!data)return '';
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message"><div class="modal-head"><div><h2 id="confirm-title">${escape(data.title)}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="confirm-form" autocomplete="off"><p id="confirm-message">${escape(data.message)}</p>${data.requiresPassword?`<label class="confirm-password">Mật khẩu xác nhận<input id="confirm-password" type="password" name="password" required autocomplete="off" placeholder="Nhập mật khẩu kiểm thử"></label><small class="demo-security-note">Bản kiểm thử: xác nhận mô phỏng với mật khẩu admin. Không có bảo mật backend.</small>`:''}<div id="confirm-error" class="confirm-error" role="alert"></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn danger">${data.requiresPassword?'Xác nhận thao tác':'Đồng ý'}</button></div></form></section></div>`;
+}
+function finishConfirmation(form){
+ if(!state.confirmData)return;
+ if(state.confirmData.requiresPassword&&new FormData(form).get('password')!=='admin'){
+  const error=root.querySelector('#confirm-error');if(error)error.textContent='Mật khẩu không đúng';return;
+ }
+ const action=pendingConfirmation;pendingConfirmation=null;state.confirmData=null;state.modal='';
+ if(typeof action==='function')action();
+ render();
+}
 function modal(){
  if(!state.modal)return '';
+ if(state.modal==='confirm')return confirmModal();
  if(state.modal==='settings')return prefsModal();
  if(state.modal==='notifications')return noticesModal();
  if(state.modal==='category-new'||state.modal==='category-edit')return catalogModal();
@@ -442,7 +462,7 @@ function saveForm(form){
  else{const id=`${key.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;store[key].unshift({id,...changes});persist();state.notice='Tạo mới thành công'}
  state.modal='';state.editId='';state.search='';state.filter='all';render();
 }
-function deleteIds(ids){const key=state.view;if(key==='shifts')return;const matches=store[key].filter(r=>ids.includes(r.id));if(!matches.length)return;if(!window.confirm(`Xóa ${matches.length} bản ghi khỏi ${PAGES[key].title}?`))return;store[key]=store[key].filter(r=>!ids.includes(r.id));persist();state.selected.clear();state.drawer='';safeHistory('replaceState',href());state.notice=`Đã xóa ${matches.length} bản ghi`;render()}
+function deleteIds(ids){const key=state.view;if(key==='shifts')return;const matches=store[key].filter(r=>ids.includes(r.id));if(!matches.length)return;confirmDialog('Xác nhận xóa',`Xóa ${matches.length} bản ghi khỏi ${PAGES[key].title}?`,()=>{store[key]=store[key].filter(r=>!ids.includes(r.id));persist();state.selected.clear();state.drawer='';safeHistory('replaceState',href());state.notice=`Đã xóa ${matches.length} bản ghi`})}
 function quickChange(id){const key=state.view;const row=store[key]?.find(x=>x.id===id);if(!row)return;let c={};if(['shifts','labor','pda'].includes(key))return;else if(key==='pda'){const borrowed=row.state==='Đang mượn';if(!borrowed&&store.pda.some(x=>x.name===row.name&&x.state==='Đang mượn'&&x.id!==id)){state.notice='Thiết bị đang được mượn, vui lòng trả trước';render();return}const time=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false});c={state:borrowed?'Đã trả':'Đang mượn',return:borrowed?time:'—',borrow:borrowed?row.borrow:time}}else if(key==='minutes')c={state:'Đã xác nhận'};else if(key==='labor')c={state:'Đã xác nhận'};else if(key==='assets')c={state:row.state==='Sẵn sàng'?'Đang sử dụng':'Sẵn sàng'};updateRecord(key,id,c);state.notice=`Đã thay đổi trạng thái ${row.id}`;render()}
 function xmlText(v){return String(v??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[ch]))}
 function crc32(bytes){let c=0xFFFFFFFF;for(const byte of bytes){c^=byte;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xEDB88320:0)}return(c^0xFFFFFFFF)>>>0}
@@ -508,6 +528,7 @@ root.addEventListener('submit',function(e){
  }
  if(e.target.id==='labor-scan-form'){e.preventDefault();const values=new FormData(e.target);scanLabor(values.get('employeeCode'),values.get('work'));return}
  if(e.target.id==='pda-scan-form'){e.preventDefault();const fd=new FormData(e.target);scanPda(fd.get('employeeCode'),fd.get('deviceCode'));return}
+ if(e.target.id==='confirm-form'){e.preventDefault();finishConfirmation(e.target);return}
  if(e.target.id==='record-form'){e.preventDefault();saveForm(e.target)}
  if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
 });
@@ -516,20 +537,20 @@ root.addEventListener('click',e=>{
  const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())saveForm(form);else form.querySelectorAll('input,select').forEach(el=>{el.dataset.touched='1';markField(el)});return}
  const submitCategory=e.target.closest('#catalog-form button[type="submit"]');if(submitCategory){e.preventDefault();const form=submitCategory.form;if(form?.reportValidity())saveCatalog(form);else form.querySelectorAll('input').forEach(el=>{el.dataset.touched='1';markField(el)});return}
  const categoryTab=e.target.closest('[data-category-tab]');if(categoryTab){state.categoryTab=categoryTab.dataset.categoryTab;state.notice='';render();return}
- const categoryEdit=e.target.closest('[data-category-edit]');if(categoryEdit){state.categoryEdit=catalogs[state.categoryTab]?.[Number(categoryEdit.dataset.categoryEdit)]||'';state.modal='category-edit';render();return}
+ const categoryEdit=e.target.closest('[data-category-edit]');if(categoryEdit){const value=catalogs[state.categoryTab]?.[Number(categoryEdit.dataset.categoryEdit)]||'';confirmDialog('Xác nhận sửa danh mục',`Nhập mật khẩu trước khi sửa ${value}`,()=>{state.categoryEdit=value;state.modal='category-edit'});return}
  const categoryDelete=e.target.closest('[data-category-delete]');if(categoryDelete){deleteCatalog(Number(categoryDelete.dataset.categoryDelete));return}
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(nav.dataset.nav==='categories'){state.catalogScope=nav.dataset.catalogScope||'people';state.categoryTab=catalogFields(state.catalogScope)[0][0]}setView(nav.dataset.nav)}return}
  const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
- const edit=e.target.closest('[data-edit]');if(edit){if(state.view==='shifts')return;state.editId=edit.dataset.edit;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===state.editId)?.photo||''):'';state.modal='edit';render();return}
+ const edit=e.target.closest('[data-edit]');if(edit){if(state.view==='shifts')return;const record=edit.dataset.edit;confirmDialog('Xác nhận sửa dữ liệu',`Nhập mật khẩu trước khi sửa bản ghi ${record}`,()=>{state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;state.modal='edit'});return}
  const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
- const quick=e.target.closest('[data-quick]');if(quick){quickChange(quick.dataset.quick);return}
+ const quick=e.target.closest('[data-quick]');if(quick){const id=quick.dataset.quick;confirmDialog('Xác nhận thay đổi',`Nhập mật khẩu trước khi thay đổi bản ghi ${id}`,()=>quickChange(id));return}
  const scanMode=e.target.closest('[data-scan-mode]');if(scanMode){state.scanMode=scanMode.dataset.scanMode==='exit'?'exit':'enter';state.scanOutcome=null;render();root.querySelector('#shift-code')?.focus();return}
  const pdaMode=e.target.closest('[data-pda-mode]');if(pdaMode){state.pdaMode=pdaMode.dataset.pdaMode==='return'?'return':'borrow';state.pdaScan=null;render();root.querySelector('#pda-staff-code')?.focus();return}
  const accent=e.target.closest('[data-accent-choice]');if(accent){const chosen=accent.dataset.accentChoice;if(!ACCENTS.some(([key])=>key===chosen))return;state.accent=chosen;storageSet(ACCENT_KEY,chosen);render();return}
  const font=e.target.closest('[data-font]');if(font){state.fontPct=Math.max(90,Math.min(120,state.fontPct+Number(font.dataset.font)));storageSet(FONT_KEY,String(state.fontPct));render();return}const choice=e.target.closest('[data-theme-choice]');if(choice){const mode=choice.dataset.themeChoice;if(!['auto','light','dark'].includes(mode))return;state.themeMode=mode;state.theme=resolveTheme(mode);storageSet(THEME_KEY,mode);safeHistory('replaceState',href(state.view,state.drawer));render();return}const btn=e.target.closest('[data-action]');if(!btn)return;const act=btn.dataset.action;if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
  switch(act){case'profile-menu':state.profileMenu=!state.profileMenu;break;case'category-add':state.categoryEdit='';state.modal='category-new';break;case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
  case'theme':state.themeMode=state.theme==='light'?'dark':'light';state.theme=state.themeMode;storageSet(THEME_KEY,state.themeMode);safeHistory('replaceState',document.body.dataset.screen==='app'?href(state.view,state.drawer):'index.html?theme='+state.theme);break;
- case'add':if(['shifts','dashboard','labor','pda'].includes(state.view))return;state.editId='';state.photoDraft='';state.modal='new';break;case'close-modal':state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
+ case'add':if(['shifts','dashboard','labor','pda'].includes(state.view))return;state.editId='';state.photoDraft='';state.photoOriginalFile=null;state.modal='new';break;case'close-modal':if(state.modal==='confirm'){pendingConfirmation=null;state.confirmData=null}state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
  case'notifications':state.profileMenu=false;state.modal='notifications';break;case'settings':state.profileMenu=false;state.modal='settings';break;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
  case'clear-notice':notices.length=0;state.notice='';refreshToasts();break;
  case'show-password':{const form=root.querySelector('#login-form');const username=form?.querySelector('#demo-user')?.value||'';const password=form?.querySelector('#demo-password')?.value||'';state.loginVisible=!state.loginVisible;render();root.querySelector('#demo-user').value=username;root.querySelector('#demo-password').value=password;return}
