@@ -105,3 +105,9 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 - Single-level compact sidebar: remove warehouse chip and grouping, shorten labels without losing full tooltip, remove duplicated page heading, personal settings moved to top-left account dropdown.
 - Add local editable five personnel catalogs (position, supplier, department, site, warehouse) feeding employee form selects; reject case-insensitive duplicate names; update referenced synthetic profiles upon rename; block deletion while in use.
 - Animated meaningful success/error/input/scan/login/logout feedback, responsive and reduced-motion accessibility. No Production or provider changes.
+
+## Web Office preview v0.8.4 — Owner correction, 14/11/2026
+- Sidebar footer `Phát triển hệ thống - tamnv2 | Pick Pack 1291` moved directly below Web version; no viewport-fixed credit.
+- Seven menu names now **five or six Vietnamese words each**, with automatic wrapping: Tổng quan hoạt động vận hành; Quản lý hồ sơ nhân sự; Ghi nhận ra vào ca; Quản lý công nhật nhân sự; Quản lý biên bản sự việc; Quản lý công cụ dụng cụ; Ghi nhận mượn trả PDA.
+- Desktop nonfunctional three-line toggle removed; mobile-only functional `Mục` button preserves narrow-screen navigation. Same mock-only auth/data/provider and CODE ONLY boundaries.
+
