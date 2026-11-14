@@ -152,7 +152,7 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['shift','Ca được phân'],['user','User làm việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',laborScan:null,pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',confirmData:null};
+const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',laborScan:null,pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',confirmData:null};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -341,7 +341,7 @@ function drawer(){
  if(!state.drawer)return '';
  const row=store[state.view]?.find(x=>x.id===state.drawer);if(!row)return '';
  const fields=state.view==='people'?PERSON_DETAILS:columns[state.view].slice(1);
- return `<div class="drawer-shade" data-action="close-drawer"></div><aside class="detail-drawer" role="dialog" aria-modal="true" aria-label="Chi tiết ${escape(row.id)}"><div class="detail-head"><div><small>CHI TIẾT HỒ SƠ</small><h2>${escape(row.name)}</h2></div><button class="icon-button" data-action="close-drawer" aria-label="Đóng chi tiết">×</button></div><div class="detail-content"><div class="detail-hero">${state.view==='people'?avatar(row,true):`<span class="detail-icon">${icon(state.view==='pda'?'device':'file',23)}</span>`}<div><strong>${escape(row.name)}</strong><small>${escape(row.id)}</small></div></div>${row.state?badge(row.state):''}<div class="detail-fields">${fields.filter(([k])=>k!=='name').map(([k,label])=>`<div><span>${escape(label)}</span><b>${escape(row[k]||'—')}</b></div>`).join('')}</div><div class="drawer-actions">${state.view==='shifts'?'':`${state.view==='pda'?'':`<button class="btn primary" data-edit="${escape(row.id)}">${icon('edit',16)} Chỉnh sửa</button>`}${['people','labor','pda'].includes(state.view)?'':`<button class="btn ghost" data-quick="${escape(row.id)}">${quickLabel()}</button>`}<button class="btn danger" data-delete="${escape(row.id)}">Xóa</button>`}</div></div></aside>`;
+ return `<div class="drawer-shade" data-action="close-drawer"></div><aside class="detail-drawer" role="dialog" aria-modal="true" aria-label="Chi tiết ${escape(row.id)}"><div class="detail-head"><div><small>CHI TIẾT HỒ SƠ</small><h2>${escape(row.name)}</h2></div><button class="icon-button" data-action="close-drawer" aria-label="Đóng chi tiết">×</button></div><div class="detail-content"><div class="detail-hero">${state.view==='people'?avatar(row,true):`<span class="detail-icon">${icon(state.view==='pda'?'device':'file',23)}</span>`}<div><strong>${escape(row.name)}</strong><small>${escape(row.id)}</small></div></div>${state.view==='people'?`<div class="portrait-original" id="portrait-original"><div class="portrait-placeholder">${avatar(row,true)}<p>Chưa có ảnh gốc trong trình duyệt này.</p></div></div>`:''}${row.state?badge(row.state):''}<div class="detail-fields">${fields.filter(([k])=>k!=='name').map(([k,label])=>`<div><span>${escape(label)}</span><b>${escape(row[k]||'—')}</b></div>`).join('')}</div><div class="drawer-actions">${state.view==='shifts'?'':`${state.view==='pda'?'':`<button class="btn primary" data-edit="${escape(row.id)}">${icon('edit',16)} Chỉnh sửa</button>`}${['people','labor','pda'].includes(state.view)?'':`<button class="btn ghost" data-quick="${escape(row.id)}">${quickLabel()}</button>`}<button class="btn danger" data-delete="${escape(row.id)}">Xóa</button>`}</div></div></aside>`;
 }
 const FIELD_OPTIONS={team:['Pick','Pack thường','Pack Auto','Điều phối'],shift:['Ca 1','Ca 2'],state:['Đang làm việc','Chờ vào ca','Nghỉ ca','Trong ca','Đã ra ca','Tạm tính','Đã xác nhận','Chưa chấm','Chờ xác nhận','Đã lưu','Sẵn sàng','Đang sử dụng','Cần kiểm tra','Đang mượn','Đã trả'],type:['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'],work:['Pick','Pack thường','Pack Auto','Điều phối']};
 const STATES_BY_MODULE={people:['Đang làm việc','Chờ vào ca','Nghỉ ca'],shifts:['Chờ vào ca','Trong ca','Đã ra ca'],labor:['Chưa chấm','Tạm tính','Đã xác nhận'],minutes:['Chờ xác nhận','Đã lưu','Đã xác nhận'],assets:['Sẵn sàng','Đang sử dụng','Cần kiểm tra'],pda:['Đang mượn','Đã trả']};
@@ -359,9 +359,48 @@ function fieldInput(key,label,value,editing=false){
  if(key==='note')return `<label class="wide-field">${escape(label)}<textarea name="note" rows="2" maxlength="500">${escape(v)}</textarea></label>`;
  return `<label>${escape(label)}<input name="${key}" maxlength="120" value="${escape(v)}" placeholder="${escape(label)}" ${key==='name'?'minlength="2" required':''} ${key==='phone'?'type="tel"':''} autocomplete="off"></label>`;
 }
+
+/* Full-resolution portraits are browser-local blobs; never added to the public repository or localStorage. */
+let portraitObjectUrl='',portraitObjectId='';
+function portraitDB(){
+ return new Promise((resolve,reject)=>{
+  if(!('indexedDB' in window))return reject(new Error('Trình duyệt không hỗ trợ lưu ảnh gốc'));
+  const req=indexedDB.open('pickpack1291_demo_portraits_v1',1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('portraits'))req.result.createObjectStore('portraits')};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Không mở được kho ảnh'));
+ });
+}
+async function portraitTransaction(id,mode,blob){
+ const db=await portraitDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction('portraits',mode),store=tx.objectStore('portraits');
+  const req=blob===undefined&&mode==='readonly'?store.get(id):blob===null?store.delete(id):store.put(blob,id);
+  let answer=null;req.onsuccess=()=>{answer=req.result};
+  tx.oncomplete=()=>{db.close();resolve(answer)};
+  tx.onerror=()=>{db.close();reject(tx.error||new Error('Không lưu được ảnh'))};
+  tx.onabort=()=>{db.close();reject(tx.error||new Error('Thao tác ảnh bị hủy'))};
+ });
+}
+function releasePortraitUrl(){if(portraitObjectUrl)URL.revokeObjectURL(portraitObjectUrl);portraitObjectUrl='';portraitObjectId=''}
+async function renderFullPortrait(){
+ const target=root.querySelector('#portrait-original');if(!target||state.view!=='people'||!state.drawer)return;
+ const id=state.drawer;
+ if(portraitObjectId!==id){
+  releasePortraitUrl();
+  try{
+   const blob=await portraitTransaction(id,'readonly');
+   if(!(blob instanceof Blob)||!root.querySelector('#portrait-original')||state.drawer!==id)return;
+   portraitObjectUrl=URL.createObjectURL(blob);portraitObjectId=id;
+  }catch{return}
+ }
+ if(portraitObjectUrl&&root.querySelector('#portrait-original')){
+  target.innerHTML=`<button type="button" class="portrait-open" data-action="zoom-portrait" aria-label="Phóng to ảnh chân dung"><img src="${portraitObjectUrl}" alt="Ảnh chân dung gốc của ${escape(store.people.find(p=>p.id===id)?.name||'nhân sự')}"></button><small>Chạm vào ảnh để xem nguyên bản · Chỉ lưu trên trình duyệt này</small>`;
+ }
+}
+function portraitModal(){return `<div class="modal-overlay" data-action="close-modal"><section class="modal portrait-lightbox" role="dialog" aria-modal="true" aria-label="Ảnh chân dung"><button class="icon-button portrait-close" data-action="close-modal" aria-label="Đóng ảnh">×</button><img src="${portraitObjectUrl}" alt="Ảnh chân dung kích thước gốc"></section></div>`}
 function photoEditor(person){
  const x={name:person?.name||'',photo:state.photoDraft||'',initial:person?.initial||''};
- return `<section class="photo-editor"><div id="photo-preview">${avatar(x,true)}</div><div class="photo-editor-info"><strong>Ảnh đại diện</strong><div class="photo-editor-actions"><label class="btn ghost photo-picker">Chọn ảnh<input id="staff-photo" type="file" accept="image/jpeg,image/png,image/webp"></label><button class="btn ghost" data-action="remove-photo" type="button">Xóa ảnh</button></div><small>JPEG, PNG, WebP · tối đa 5 MB</small></div></section>`;
+ return `<section class="photo-editor"><div id="photo-preview">${avatar(x,true)}</div><div class="photo-editor-info"><strong>Ảnh đại diện</strong><div class="photo-editor-actions"><label class="btn ghost photo-picker">Chụp / Chọn ảnh<input id="staff-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="user"></label><button class="btn ghost" data-action="remove-photo" type="button">Xóa ảnh</button></div><small>JPEG, PNG, WebP · ảnh gốc tối đa 5 MB, lưu cục bộ, không tải lên server</small></div></section>`;
 }
 async function preparePortrait(file){
  if(!file||!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>5*1024*1024)throw Error('Ảnh không hợp lệ hoặc vượt 5 MB');
@@ -411,6 +450,7 @@ function finishConfirmation(form){
 function modal(){
  if(!state.modal)return '';
  if(state.modal==='confirm')return confirmModal();
+ if(state.modal==='portrait')return portraitModal();
  if(state.modal==='settings')return prefsModal();
  if(state.modal==='notifications')return noticesModal();
  if(state.modal==='category-new'||state.modal==='category-edit')return catalogModal();
@@ -423,7 +463,7 @@ function modal(){
  return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>QUẢN LÝ DỮ LIỆU</span><h2 id="modal-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><form id="record-form">${key==='people'?photoEditor(existing):''}<div class="form-grid">${fields.map(([k,l])=>fieldInput(k,l,editing?existing[k]:k==='state'?INITIAL_STATE[key]:'',editing)).join('')}</div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu chỉnh sửa':'Tạo bản ghi'}</button></div></form></section></div>`;
 }
 function toast(){return `<div id="toast-stack" class="toast-stack" aria-live="polite">${toastItems()}</div>`}
-function render(){document.documentElement.setAttribute('data-theme',state.theme);document.documentElement.setAttribute('data-accent',state.accent);document.documentElement.style.setProperty('--text-scale',String(state.fontPct/100*1.1));if(document.body.dataset.screen==='login'){renderLogin();return}if(!demoSession()){root.innerHTML=`<main class="auth-required"><img src="assets/supra-mark.png" alt="The Supra"><h2>Vui lòng đăng nhập</h2><p>Đăng nhập Quản trị viên trước khi sử dụng giao diện và các tab nghiệp vụ.</p><a class="btn primary" href="index.html">Đăng nhập</a></main>`;return}root.innerHTML=`${side()}<div class="screen-shade ${state.sidebar?'show':''}" data-action="close-nav"></div><div class="app-main">${top()}${state.view==='dashboard'?dashboard():state.view==='categories'?categoriesPage():modulePage()}</div>${drawer()}${modal()}${toast()}`}
+function render(){document.documentElement.setAttribute('data-theme',state.theme);document.documentElement.setAttribute('data-accent',state.accent);document.documentElement.style.setProperty('--text-scale',String(state.fontPct/100*1.1));if(document.body.dataset.screen==='login'){renderLogin();return}if(!demoSession()){root.innerHTML=`<main class="auth-required"><img src="assets/supra-mark.png" alt="The Supra"><h2>Vui lòng đăng nhập</h2><p>Đăng nhập Quản trị viên trước khi sử dụng giao diện và các tab nghiệp vụ.</p><a class="btn primary" href="index.html">Đăng nhập</a></main>`;return}root.innerHTML=`${side()}<div class="screen-shade ${state.sidebar?'show':''}" data-action="close-nav"></div><div class="app-main">${top()}${state.view==='dashboard'?dashboard():state.view==='categories'?categoriesPage():modulePage()}</div>${drawer()}${modal()}${toast()}`;if(state.view==='people'&&state.drawer)requestAnimationFrame(renderFullPortrait)}
 function renderLogin(){root.innerHTML=`<main class="login-screen"><div class="login-panel"><div class="login-left"><div class="login-brand"><img class="brand-logo" src="assets/supra-mark.png" alt="The Supra"><span class="login-corporate"><span>CÔNG TY CỔ PHẦN THE SUPRA</span><span>DC HƯNG YÊN</span></span></div><div class="login-art"><div class="art-greeting">QUẢN LÝ VẬN HÀNH</div><h1>Quản lý Pick & Pack tập trung.</h1><p>Nhân sự, công ca, hồ sơ và thiết bị trong cùng một hệ thống.</p><div class="art-metrics"><div><strong>07</strong><span>Phân hệ</span></div><div><strong>03</strong><span>Thiết bị PDA</span></div><div><strong>05</strong><span>Phiên Web</span></div></div></div></div><div class="login-right"><span class="login-kicker">PICKPACK OFFICE</span><h2>Đăng nhập hệ thống</h2><p>Nhập thông tin tài khoản để tiếp tục.</p><form id="login-form" autocomplete="off" class="login-form"><label>Tên đăng nhập<input id="demo-user" name="username" value="" placeholder="Nhập tên đăng nhập" autocomplete="off" required></label><label>Mật khẩu<div class="password-wrap"><input id="demo-password" name="password" type="${state.loginVisible?'text':'password'}" placeholder="Nhập mật khẩu" autocomplete="off" required><button type="button" class="password-toggle" data-action="show-password" aria-label="${state.loginVisible?'Ẩn':'Hiện'} mật khẩu">${state.loginVisible?'Ẩn':'Hiện'}</button></div></label>${state.loginError?`<div class="login-error" role="alert">${escape(state.loginError)}</div>`:''}<button class="btn primary login-submit" type="submit">Đăng nhập <span>→</span></button></form><div class="login-links"><button data-action="theme" class="text-button">${state.theme==='dark'?'☼ Sáng':'☾ Tối'}</button><span class="web-version">Web v${WEB_VERSION}</span></div></div></div></main>`}
 function safeHistory(method,url){try{history[method](null,'',url)}catch{ /* Browser file:// history restrictions do not block UI. */ }}
 function closeStuff(){state.sidebar=false;state.modal='';state.drawer='';state.editId='';state.profileMenu=false}
@@ -452,7 +492,10 @@ function saveForm(form){
   changes.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});
   if(editing){const row=store.people.find(p=>p.id===state.editId);if(!row)return;Object.assign(row,changes);state.notice='Đã cập nhật hồ sơ nhân sự'}
   else{store.people.unshift({id,...changes});state.notice='Đã thêm nhân sự'}
-  persist();state.photoDraft='';state.modal='';state.editId='';state.search='';state.filter='all';render();return;
+  persist();
+  if(state.photoOriginalFile){const image=state.photoOriginalFile;portraitTransaction(id,'readwrite',image).then(()=>{if(portraitObjectId===id)releasePortraitUrl();if(state.drawer===id)renderFullPortrait()}).catch(()=>{state.notice='Không lưu được ảnh gốc trong trình duyệt';refreshToasts()})}
+  else if(state.photoRemoveOriginal){portraitTransaction(id,'readwrite',null).then(()=>{if(portraitObjectId===id)releasePortraitUrl()}).catch(()=>{state.notice='Không xóa được ảnh gốc';refreshToasts()})}
+  state.photoOriginalFile=null;state.photoRemoveOriginal=false;state.photoDraft='';state.modal='';state.editId='';state.search='';state.filter='all';render();return;
  }
  const changes={};
  for(const [k] of columns[key]){if(k==='id')continue;const value=String(fd.get(k)??'').trim();changes[k]=k==='qty'?Number(value):value||'—'}
@@ -462,7 +505,7 @@ function saveForm(form){
  else{const id=`${key.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;store[key].unshift({id,...changes});persist();state.notice='Tạo mới thành công'}
  state.modal='';state.editId='';state.search='';state.filter='all';render();
 }
-function deleteIds(ids){const key=state.view;if(key==='shifts')return;const matches=store[key].filter(r=>ids.includes(r.id));if(!matches.length)return;confirmDialog('Xác nhận xóa',`Xóa ${matches.length} bản ghi khỏi ${PAGES[key].title}?`,()=>{store[key]=store[key].filter(r=>!ids.includes(r.id));persist();state.selected.clear();state.drawer='';safeHistory('replaceState',href());state.notice=`Đã xóa ${matches.length} bản ghi`})}
+function deleteIds(ids){const key=state.view;if(key==='shifts')return;const matches=store[key].filter(r=>ids.includes(r.id));if(!matches.length)return;confirmDialog('Xác nhận xóa',`Xóa ${matches.length} bản ghi khỏi ${PAGES[key].title}?`,()=>{store[key]=store[key].filter(r=>!ids.includes(r.id));if(key==='people')for(const id of ids)portraitTransaction(id,'readwrite',null).catch(()=>{state.notice='Không xóa được ảnh gốc cục bộ'});persist();state.selected.clear();state.drawer='';safeHistory('replaceState',href());state.notice=`Đã xóa ${matches.length} bản ghi`})}
 function quickChange(id){const key=state.view;const row=store[key]?.find(x=>x.id===id);if(!row)return;let c={};if(['shifts','labor','pda'].includes(key))return;else if(key==='pda'){const borrowed=row.state==='Đang mượn';if(!borrowed&&store.pda.some(x=>x.name===row.name&&x.state==='Đang mượn'&&x.id!==id)){state.notice='Thiết bị đang được mượn, vui lòng trả trước';render();return}const time=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false});c={state:borrowed?'Đã trả':'Đang mượn',return:borrowed?time:'—',borrow:borrowed?row.borrow:time}}else if(key==='minutes')c={state:'Đã xác nhận'};else if(key==='labor')c={state:'Đã xác nhận'};else if(key==='assets')c={state:row.state==='Sẵn sàng'?'Đang sử dụng':'Sẵn sàng'};updateRecord(key,id,c);state.notice=`Đã thay đổi trạng thái ${row.id}`;render()}
 function xmlText(v){return String(v??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[ch]))}
 function crc32(bytes){let c=0xFFFFFFFF;for(const byte of bytes){c^=byte;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xEDB88320:0)}return(c^0xFFFFFFFF)>>>0}
@@ -550,8 +593,8 @@ root.addEventListener('click',e=>{
  const font=e.target.closest('[data-font]');if(font){state.fontPct=Math.max(90,Math.min(120,state.fontPct+Number(font.dataset.font)));storageSet(FONT_KEY,String(state.fontPct));render();return}const choice=e.target.closest('[data-theme-choice]');if(choice){const mode=choice.dataset.themeChoice;if(!['auto','light','dark'].includes(mode))return;state.themeMode=mode;state.theme=resolveTheme(mode);storageSet(THEME_KEY,mode);safeHistory('replaceState',href(state.view,state.drawer));render();return}const btn=e.target.closest('[data-action]');if(!btn)return;const act=btn.dataset.action;if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
  switch(act){case'profile-menu':state.profileMenu=!state.profileMenu;break;case'category-add':state.categoryEdit='';state.modal='category-new';break;case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
  case'theme':state.themeMode=state.theme==='light'?'dark':'light';state.theme=state.themeMode;storageSet(THEME_KEY,state.themeMode);safeHistory('replaceState',document.body.dataset.screen==='app'?href(state.view,state.drawer):'index.html?theme='+state.theme);break;
- case'add':if(['shifts','dashboard','labor','pda'].includes(state.view))return;state.editId='';state.photoDraft='';state.photoOriginalFile=null;state.modal='new';break;case'close-modal':if(state.modal==='confirm'){pendingConfirmation=null;state.confirmData=null}state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
- case'notifications':state.profileMenu=false;state.modal='notifications';break;case'settings':state.profileMenu=false;state.modal='settings';break;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
+ case'add':if(['shifts','dashboard','labor','pda'].includes(state.view))return;state.editId='';state.photoDraft='';state.photoOriginalFile=null;state.modal='new';break;case'close-modal':if(state.modal==='confirm'){pendingConfirmation=null;state.confirmData=null}state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';state.photoOriginalFile=null;state.photoRemoveOriginal=true;{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
+ case'zoom-portrait':if(portraitObjectUrl){state.modal='portrait';break}return;case'notifications':state.profileMenu=false;state.modal='notifications';break;case'settings':state.profileMenu=false;state.modal='settings';break;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
  case'clear-notice':notices.length=0;state.notice='';refreshToasts();break;
  case'show-password':{const form=root.querySelector('#login-form');const username=form?.querySelector('#demo-user')?.value||'';const password=form?.querySelector('#demo-password')?.value||'';state.loginVisible=!state.loginVisible;render();root.querySelector('#demo-user').value=username;root.querySelector('#demo-password').value=password;return}
  case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
@@ -593,7 +636,7 @@ root.addEventListener('change',async function(e){
   try{
    const photo=await preparePortrait(file);
    if(state.modal!=='new'&&state.modal!=='edit')return;
-   state.photoDraft=photo;
+   state.photoDraft=photo;state.photoOriginalFile=file;state.photoRemoveOriginal=false;
    const target=root.querySelector('#photo-preview');if(target)target.innerHTML=avatar({photo,initial:''},true);
   }catch(err){state.notice=err?.message||'Không đọc được ảnh';const box=root.querySelector('.photo-editor-info small');if(box)box.textContent=state.notice}
   return;
