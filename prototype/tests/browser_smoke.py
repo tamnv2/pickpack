@@ -19,6 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.1'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -32,6 +33,11 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.1'
+ assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
+ assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).position")=='fixed'
+ assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).textAlign")=='right'
+ assert float(app.locator('.site-footer').evaluate("el => getComputedStyle(el).opacity"))<=0.70
  assert app.locator('.corporate-brand').inner_text()=='CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN'
  assert app.locator('.top-profile').get_by_text('Quản trị viên').count()==1
  assert app.locator('.side-bottom').get_by_text('Quản trị viên').count()==0
