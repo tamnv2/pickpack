@@ -1,6 +1,6 @@
 {
-  "name": "pickpack-ui-five-concepts",
-  "version": "0.2.0",
+  "name": "pickpack-ui-architecture-review",
+  "version": "0.3.0",
   "private": true,
   "description": "PickPack 1291 buildable static UI review (no backend)",
   "type": "module",
