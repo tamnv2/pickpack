@@ -328,14 +328,16 @@ th:first-child,td:first-child{padding-left:12px}
 @media(prefers-reduced-motion:reduce){.nav-flat .side-link,.nav-flat .nav-main{transition:none}}
 
 
-/* v0.8.5 — compact enterprise navigation, content-sized staff columns and pinned live clock */
+/* v0.8.10 — unobtrusive, theme-native time; no flip cards, date, or clock animation. */
 .topbar{position:sticky;top:0;z-index:40;isolation:isolate;box-shadow:0 2px 10px rgba(23,36,48,.07)}
-.header-clock{display:flex;align-items:center;gap:9px;min-width:184px;padding:0 4px 0 14px;border-left:1px solid var(--border);color:var(--text);flex:none}
-.clock-values{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0}
-#clock-time{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:calc(15px * var(--text-scale));font-weight:750;line-height:1.1;letter-spacing:.035em;white-space:nowrap}
-#clock-date{display:block;font-size:calc(10px * var(--text-scale));line-height:1.2;color:var(--muted);white-space:nowrap}
-.clock-pulse{width:7px;height:7px;border-radius:50%;background:var(--primary);flex:none;box-shadow:0 0 0 3px var(--primary-soft);animation:clock-breathe 2.8s ease-in-out infinite}
-@keyframes clock-breathe{0%,100%{box-shadow:0 0 0 3px var(--primary-soft);opacity:.85}50%{box-shadow:0 0 0 5px var(--primary-soft);opacity:1}}
+html{scrollbar-gutter:stable}
+.topbar .top-right{display:grid;grid-template-columns:242px 36px 170px;gap:10px;align-items:center;flex:none;margin-left:auto}
+.topbar .top-search{width:100%;min-width:0;max-width:none;margin:0}
+.topbar .notif{justify-self:center}
+.topbar .header-clock{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:170px;min-width:170px;max-width:170px;padding:0 8px 0 14px;margin:0;border-left:1px solid var(--border);color:var(--text)}
+.office-clock{display:inline-flex;align-items:baseline;justify-content:center;white-space:nowrap;line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.office-clock-main{font-size:calc(20px * var(--text-scale));font-weight:700;letter-spacing:-.035em;color:var(--text)}
+.office-clock-seconds{font-size:calc(14px * var(--text-scale));font-weight:550;letter-spacing:-.02em;color:var(--muted)}
 .theme-steps{flex-wrap:wrap;justify-content:flex-end}
 .theme-steps button{min-width:62px;padding:0 9px;white-space:nowrap}
 .people-table{width:max-content;min-width:100%;table-layout:auto}
@@ -346,13 +348,6 @@ th:first-child,td:first-child{padding-left:12px}
 .people-table td .mono{white-space:nowrap}
 .people-table tbody tr:hover{background:color-mix(in srgb,var(--primary) 4%,var(--card))}
 .table-panel .table-scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-@media(max-width:1180px){.header-clock{min-width:126px;padding-left:9px;gap:7px}#clock-date{font-size:calc(9px * var(--text-scale))}.top-search{width:175px}}
-@media(max-width:980px){.header-clock{min-width:110px}#clock-date{display:none}#clock-time{font-size:calc(13px * var(--text-scale))}}
-@media(max-width:600px){.header-clock{min-width:0;border-left:0;padding:0 3px}.clock-pulse{width:5px;height:5px;box-shadow:none}#clock-time{font-size:calc(11px * var(--text-scale));letter-spacing:0}.topbar{padding-inline:8px}.top-right{gap:5px}.theme-steps{justify-content:flex-start}}
-@media(prefers-reduced-motion:reduce){.clock-pulse{animation:none}}
-
-
-/* v0.8.7 — actual hinged split-flap panels, consistent toolbar */
 .dashboard-search-panel{margin-bottom:10px;animation:pp-pop .18s ease-out}
 .dashboard-search-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border-bottom:1px solid var(--border);font-size:calc(11.5px * var(--text-scale))}
 .dashboard-search-head>span{color:var(--muted);font-size:calc(10.5px * var(--text-scale))}
@@ -365,170 +360,29 @@ th:first-child,td:first-child{padding-left:12px}
 .dashboard-search-hit .search-module{font-size:calc(10px * var(--text-scale));color:var(--primary);font-weight:650}
 .dashboard-search-hit .search-hit-open{color:var(--primary);font-size:18px}
 .dashboard-no-results{padding:17px 13px;font-size:calc(11.5px * var(--text-scale));color:var(--muted)}
-@media(max-width:1180px){.header-clock:has(.flip-clock){min-width:156px}.flip-digit{width:15px;height:23px;line-height:23px;font-size:calc(12px * var(--text-scale))}}
-@media(max-width:900px){.dashboard-search-list{grid-template-columns:1fr}.dashboard-search-hit:nth-child(odd){border-right:0}.header-clock:has(.flip-clock){min-width:130px}}
-@media(max-width:600px){.header-clock:has(.flip-clock){min-width:0}.flip-clock{gap:1px}.flip-digit{width:12px;height:21px;line-height:21px;font-size:calc(10px * var(--text-scale));border-radius:2px}.flip-separator{width:4px;font-size:calc(10px * var(--text-scale))}.dashboard-search-hit{grid-template-columns:84px minmax(0,1fr) auto 8px;gap:5px;padding:10px 8px}.dashboard-search-panel{margin-bottom:8px}}
-@media(prefers-reduced-motion:reduce){.flip-digit.is-flipping::before,.flip-digit.is-flipping::after,.dashboard-search-panel{animation:none}.flip-digit.is-flipping::before,.flip-digit.is-flipping::after{display:none}.dashboard-search-hit{transition:none}}
-
-
-/* Shared grid slots: same search, notification and clock geometry in every module. */
-html{scrollbar-gutter:stable}
-.topbar .top-right{display:grid;grid-template-columns:242px 36px 211px;gap:10px;align-items:center;flex:none;margin-left:auto}
-.topbar .top-search{width:100%;min-width:0;max-width:none;margin:0}
-.topbar .notif{justify-self:center}
-.topbar .header-clock,.header-clock:has(.flip-clock){display:flex;width:211px;min-width:211px;max-width:211px;gap:7px;padding:0 0 0 11px;margin:0;box-sizing:border-box;border-left:1px solid var(--border)}
-.header-clock .clock-values{min-width:0;align-items:center;width:100%}
-.flip-clock{display:flex;align-items:center;gap:2px;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:inherit;letter-spacing:normal}
-.flip-digit{--tile-w:21px;--tile-h:29px;position:relative;display:block;isolation:isolate;flex:0 0 var(--tile-w);width:var(--tile-w);height:var(--tile-h);color:#f7fafc;font-size:16px;font-weight:800;line-height:1;letter-spacing:0;perspective:250px;transform-style:preserve-3d;border-radius:4px;box-shadow:0 2px 4px #0002}
-.flip-pane,.flip-flap{position:absolute;left:0;width:100%;height:50%;overflow:hidden;display:block;backface-visibility:hidden;transform-style:preserve-3d}
-.flip-upper,.flip-out{top:0;background:linear-gradient(180deg,#41516a,#303f55);border-radius:4px 4px 0 0;border:1px solid #192638;border-bottom:0}
-.flip-lower,.flip-in{bottom:0;background:linear-gradient(180deg,#253247,#344359);border-radius:0 0 4px 4px;border:1px solid #192638;border-top:0}
-.flip-pane::before,.flip-flap::before{content:attr(data-digit);position:absolute;top:0;left:0;right:0;width:100%;height:var(--tile-h);line-height:var(--tile-h);text-align:center;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;font-weight:800;color:#f7fafc;text-shadow:0 1px 1px #0005;pointer-events:none}
-.flip-lower::before,.flip-in::before{top:calc(var(--tile-h) * -.5)}
-.flip-upper{z-index:1}
-.flip-lower{z-index:1}
-.flip-out{z-index:4;visibility:hidden;transform-origin:center bottom}
-.flip-in{z-index:3;visibility:hidden;transform-origin:center top}
-.flip-digit.is-flipping .flip-out{visibility:visible;animation:pp-flap-out .24s cubic-bezier(.45,0,.87,.45) both}
-.flip-digit.is-flipping .flip-in{visibility:visible;animation:pp-flap-in .24s .24s cubic-bezier(.12,.52,.36,1) both}
-@keyframes pp-flap-out{0%{transform:rotateX(0);filter:brightness(1)}100%{transform:rotateX(-90deg);filter:brightness(.65)}}
-@keyframes pp-flap-in{0%{transform:rotateX(90deg);filter:brightness(.7)}100%{transform:rotateX(0);filter:brightness(1)}}
-.flip-digit::after,.flip-digit.is-flipping::after{content:"";position:absolute;inset:auto;left:0;right:0;top:calc(50% - 1px);height:2px;width:100%;background:#14203288;z-index:6;display:block;animation:none;border-radius:0;transform:none;filter:none;pointer-events:none}
-.flip-digit.is-flipping::before{content:none;display:none;animation:none}
-.flip-separator{display:inline-flex;justify-content:center;align-items:center;flex:0 0 7px;width:7px;min-width:7px;color:var(--muted);font-size:15px;font-weight:800;transform:translateY(-1px)}
-#clock-time{font-size:inherit;letter-spacing:0}
-#clock-date{font-size:calc(9px * var(--text-scale));white-space:nowrap}
 @media(max-width:1200px){
- .topbar .top-right{grid-template-columns:175px 33px 201px;gap:7px}
- .topbar .header-clock,.header-clock:has(.flip-clock){width:201px;min-width:201px;max-width:201px}
+ .topbar .top-right{grid-template-columns:175px 33px 158px;gap:7px}
+ .topbar .header-clock{width:158px;min-width:158px;max-width:158px;padding-left:9px}
 }
 @media(max-width:1020px){
- .topbar .top-right{grid-template-columns:145px 32px 183px;gap:6px}
- .topbar .header-clock,.header-clock:has(.flip-clock){width:183px;min-width:183px;max-width:183px;padding-left:7px}
- .flip-digit{--tile-w:18px;--tile-h:26px}
- .flip-pane::before,.flip-flap::before{font-size:14px}
+ .topbar .top-right{grid-template-columns:145px 32px 144px;gap:6px}
+ .topbar .header-clock{width:144px;min-width:144px;max-width:144px;padding-left:7px}
+ .office-clock-main{font-size:calc(18px * var(--text-scale))}
+ .office-clock-seconds{font-size:calc(13px * var(--text-scale))}
 }
-@media(max-width:800px){
- .topbar .top-right{grid-template-columns:145px 32px 183px;gap:6px}
+@media(max-width:900px){
+ .dashboard-search-list{grid-template-columns:1fr}
+ .dashboard-search-hit:nth-child(odd){border-right:0}
 }
 @media(max-width:600px){
- .topbar .top-right{grid-template-columns:0px 27px 116px;gap:4px}
+ .topbar .top-right{grid-template-columns:0px 27px 99px;gap:4px}
  .topbar .top-search{display:none}
- .topbar .header-clock,.header-clock:has(.flip-clock){width:116px;min-width:116px;max-width:116px;padding:0;border:0;gap:2px}
- .header-clock .clock-pulse{display:none}
- .flip-clock{gap:1px}
- .flip-digit{--tile-w:13px;--tile-h:22px}
- .flip-pane::before,.flip-flap::before{font-size:10px}
- .flip-separator{width:4px;min-width:4px;flex-basis:4px;font-size:10px}
- #clock-date{display:none}
+ .topbar .header-clock{width:99px;min-width:99px;max-width:99px;padding:0;border:0}
+ .office-clock-main{font-size:calc(15px * var(--text-scale))}
+ .office-clock-seconds{font-size:calc(11px * var(--text-scale))}
+ .topbar{padding-inline:8px}
+ .theme-steps{justify-content:flex-start}
+ .dashboard-search-hit{grid-template-columns:84px minmax(0,1fr) auto 8px;gap:5px;padding:10px 8px}
+ .dashboard-search-panel{margin-bottom:8px}
 }
-@media(prefers-reduced-motion:reduce){
- .flip-digit.is-flipping .flip-out,.flip-digit.is-flipping .flip-in{animation:none;visibility:hidden}
-}
-
-
-/* v0.8.8 — visualtimer-style retro mechanical flip, authored locally without external assets. */
-.topbar .header-clock .clock-pulse{display:none}
-.flip-clock{gap:2px}
-.flip-digit{
- --tile-w:26px;--tile-h:38px;
- width:var(--tile-w);height:var(--tile-h);flex:0 0 var(--tile-w);
- border:1px solid #1b1d23;border-radius:5px;background:#22252c;
- box-shadow:0 2px 0 #191b20,inset 0 1px 0 #ffffff1b,0 4px 7px #10151f30;
- perspective:350px;perspective-origin:50% 50%;
- font-variant-numeric:tabular-nums;
-}
-.flip-pane,.flip-flap{box-sizing:border-box;border:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.flip-upper,.flip-out{
- top:0;
- background:linear-gradient(180deg,#393c45 0%,#292c34 100%);
- border:0;border-radius:4px 4px 0 0;
- box-shadow:inset 0 1px 0 #ffffff18;
-}
-.flip-lower,.flip-in{
- bottom:0;
- background:linear-gradient(180deg,#1e2128 0%,#30343c 100%);
- border:0;border-radius:0 0 4px 4px;
- box-shadow:inset 0 -1px 0 #ffffff0b;
-}
-.flip-pane::before,.flip-flap::before{
- height:var(--tile-h);line-height:var(--tile-h);
- font-family:Arial,Helvetica,sans-serif;
- font-size:25px;font-weight:800;
- letter-spacing:-.02em;color:#f6f7f8;
- text-shadow:0 1px 1px #0008;
-}
-.flip-lower::before,.flip-in::before{top:calc(var(--tile-h) * -.5)}
-.flip-upper{z-index:1}.flip-lower{z-index:1}
-.flip-out{z-index:4;visibility:hidden;transform-origin:center bottom}
-.flip-in{z-index:3;visibility:hidden;transform-origin:center top}
-.flip-digit.is-flipping .flip-out{
- visibility:visible;will-change:transform;
- animation:pp-retro-flap-out .27s cubic-bezier(.48,.04,.80,.39) both;
-}
-.flip-digit.is-flipping .flip-in{
- visibility:visible;will-change:transform;
- animation:pp-retro-flap-in .32s .27s cubic-bezier(.12,.54,.28,1) both;
-}
-@keyframes pp-retro-flap-out{
- 0%{transform:rotateX(0);filter:brightness(1)}
- 65%{filter:brightness(.76)}
- 100%{transform:rotateX(-90deg);filter:brightness(.4)}
-}
-@keyframes pp-retro-flap-in{
- 0%{transform:rotateX(90deg);filter:brightness(.5)}
- 72%{transform:rotateX(-12deg);filter:brightness(.88)}
- 100%{transform:rotateX(0);filter:brightness(1)}
-}
-/* Mechanical hinge: consistent narrow seam and dark end pins, without obscuring numerals. */
-.flip-digit::after,.flip-digit.is-flipping::after{
- content:"";display:block;position:absolute;top:calc(50% - 1px);left:0;right:0;
- width:100%;height:2px;z-index:6;border:0;border-radius:0;
- background:linear-gradient(180deg,#0d1015b8,#5a5d6359);
- box-shadow:0 1px 0 #ffffff14;transform:none;animation:none;filter:none;pointer-events:none;
-}
-.flip-digit::before,.flip-digit.is-flipping::before{
- content:"";display:block;position:absolute;left:0;right:0;top:calc(50% - 2px);
- width:100%;height:4px;z-index:7;background:linear-gradient(90deg,#11151c 0 7%,transparent 7% 93%,#11151c 93% 100%);
- border:0;animation:none;pointer-events:none;
-}
-.flip-separator{font-size:18px;color:var(--muted);padding-bottom:0}
-.header-clock .clock-values{gap:3px}
-@media(max-width:1200px){
- .flip-digit{--tile-w:24px;--tile-h:35px}
- .flip-pane::before,.flip-flap::before{font-size:23px}
-}
-@media(max-width:1020px){
- .flip-digit{--tile-w:21px;--tile-h:30px}
- .flip-pane::before,.flip-flap::before{font-size:20px}
- .flip-separator{font-size:15px}
-}
-@media(max-width:600px){
- .flip-clock{gap:1px}
- .flip-digit{--tile-w:13px;--tile-h:22px;border-radius:2px}
- .flip-upper,.flip-out{border-radius:2px 2px 0 0}
- .flip-lower,.flip-in{border-radius:0 0 2px 2px}
- .flip-pane::before,.flip-flap::before{font-size:11px;letter-spacing:0}
- .flip-separator{font-size:11px}
-}
-@media(prefers-reduced-motion:reduce){
- .flip-digit.is-flipping .flip-out,.flip-digit.is-flipping .flip-in{animation:none;visibility:hidden;will-change:auto}
-}
-
-
-/* v0.8.9 — time-only clock uses the full existing toolbar slot; no date row. */
-.header-clock .clock-values{gap:0;justify-content:center}
-.flip-digit{--tile-w:28px;--tile-h:44px}
-.flip-pane::before,.flip-flap::before{font-size:30px}
-@media(max-width:1200px){
- .flip-digit{--tile-w:26px;--tile-h:40px}
- .flip-pane::before,.flip-flap::before{font-size:27px}
-}
-@media(max-width:1020px){
- .flip-digit{--tile-w:24px;--tile-h:36px}
- .flip-pane::before,.flip-flap::before{font-size:24px}
-}
-@media(max-width:600px){
- .flip-digit{--tile-w:15px;--tile-h:26px}
- .flip-pane::before,.flip-flap::before{font-size:14px}
-}
+@media(prefers-reduced-motion:reduce){.dashboard-search-panel{animation:none}.dashboard-search-hit{transition:none}}
