@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "OFFICE_UI_V06_OWNER_REVIEW_PENDING",
-  "application_code": "OFFICE_UI_V06_DRAFT_PR_TESTED_NOT_BUILD_VERIFIED",
-  "technical_ci": "V06_V8_SYNTAX_16_RENDER_6_BEHAVIOR_PASS_CHROMIUM_BUILD_CI_NOT_RUN",
+  "phase": "OFFICE_UI_V07_OWNER_REVIEW_PENDING",
+  "application_code": "OFFICE_UI_V07_DRAFT_PR_V8_TESTED_NOT_BUILD_VERIFIED",
+  "technical_ci": "V07_V8_SYNTAX_28_SIMULATED_DOM_ASSERTIONS_PASS_CHROMIUM_BUILD_CI_NOT_RUN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V06_WEB_OFFICE_REVIEW_PENDING",
+  "owner_business_acceptance": "V07_SHEET_SCHEMA_PERSONNEL_PHOTO_SHIFT_SCAN_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,12 @@
     "realtime": true
   },
   "pending": [
-    "Owner browser review/test v0.6, including navigation/right-click new-tab, forms, responsive, CSV and multi-tab storage",
-    "V0.6 build/real Chromium/CI not verified this session",
-    "Production-grade Firebase Auth/shared roles, server-side RBAC, OpsCore, API, realtime and APK remain separate deferred gates"
+    "Owner review of v0.7 employee/PDA source-schema fields, portrait editor and barcode clock-in/out zone",
+    "Live Sheet does not verify employee→assigned shift→work user mapping; real auto assignment needs authoritative roster/API or approved rule",
+    "V0.7 npm check/build, real Chromium, portrait upload, hardware scanner, CSV/multitab and CI not verified",
+    "Production Firebase shared identity/roles, backend RBAC, OpsCore/API/realtime and APK remain separate authorization gates"
   ],
-  "latest_checkpoint": "PP-20261114-007",
+  "latest_checkpoint": "PP-20261114-008",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -47,7 +48,7 @@
     "provider_usage": "ZERO_RUNTIME_API_CALLS",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -65,6 +66,11 @@
     "sidebar_theme": "LIGHT_IN_LIGHT_DARK_IN_DARK",
     "notifications": "DERIVED_FROM_SYNTHETIC_DATA",
     "chart": "DERIVED_FROM_SYNTHETIC_SHIFTS",
-    "verification_v06": "V8_JS_SYNTAX_16_STRUCTURE_6_SIMULATED_BEHAVIOR_PASS_NO_REAL_BROWSER_OR_BUILD"
+    "source_reference": "OWNER_COMMON_DATA_GOOGLE_SHEET_READ_ONLY_HEADER_SCHEMA_ONLY_NO_PERSONAL_DATA_COPIED",
+    "personnel_fields": "EMPLOYEE_CODE_NAME_PHONE_POSITION_SUPPLIER_DEPARTMENT_SITE_WAREHOUSE_START_DATE_NOTE_UPDATE_AUDIT_PLUS_DEMO_ASSIGNED_SHIFT_WORK_USER",
+    "avatar": "BROWSER_LOCAL_FILE_TO_JPEG_192PX_NO_REAL_PHOTOS",
+    "shift_scan": "EXACT_CODE_LOOKUP_ASSIGNED_SHIFT_USER_BROWSER_TIME_IN_OUT_GUARDS_READ_ONLY_HISTORY",
+    "pda_inventory": "SERIAL_LAST5_SOURCE_STATUS_NOTES_SYNTHETIC",
+    "verified_v07": "V8_SYNTAX_17_SCAN_RENDER_PLUS_11_PERSONNEL_ASSIGNMENT_FAKE_DOM_PASS"
   }
 }
