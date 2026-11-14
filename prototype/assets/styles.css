@@ -258,3 +258,55 @@ th:first-child,td:first-child{padding-left:12px}
 @media(max-width:1150px){.scan-code-grid{grid-template-columns:1fr 1fr}.scan-code-grid .btn{grid-column:1/-1;justify-self:start}}
 @media(max-width:780px){.topbar{height:51px;min-height:51px}.page-content{padding:9px 10px 25px}.overview-metrics{gap:7px}.scan-pair-preview{grid-template-columns:1fr}}
 @media(max-width:560px){.scan-code-grid{grid-template-columns:1fr}.scan-code-grid .btn{grid-column:auto;width:100%}.scan-mode-wrapper{gap:6px}.table-controls{padding:7px 9px;gap:5px}.table-control-left,.table-control-right{flex-wrap:wrap;justify-content:flex-start}.page-header{min-height:29px;margin-bottom:8px}.page-header h1{font-size:calc(19px * var(--text-scale))}.metrics .metric-card{min-height:95px;padding:9px}.site-footer{font-size:calc(8px * var(--text-scale))}}
+
+
+/* Office v0.8.3 — one compact navigation, profile menu, personnel catalogs and interactive states */
+.sidebar-scroll{padding:8px 0}.nav-flat{margin:0;padding:0}.nav-flat .side-link{margin-block:3px;height:40px}
+.side-bottom{min-height:34px;padding:5px 10px}.side-bottom .web-version{padding:2px 7px}
+.topbar{gap:10px}.top-left{display:flex;align-items:center;gap:8px;min-width:0}.top-right{margin-left:auto}
+.profile-area{position:relative;flex:none}
+.top-profile{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid transparent;border-radius:8px;color:var(--text);padding:3px 9px;cursor:pointer;min-height:43px;transition:background .18s ease,border-color .18s ease}
+.top-profile:hover,.top-profile[aria-expanded=true]{background:var(--chip);border-color:var(--border)}
+.top-profile .caret{transition:transform .2s ease}
+.top-profile[aria-expanded=true] .caret{transform:rotate(180deg)}
+.profile-dropdown{position:absolute;top:calc(100% + 4px);left:0;z-index:110;background:var(--card);border:1px solid var(--border);border-radius:10px;min-width:214px;padding:7px;box-shadow:0 12px 35px #0a213326;animation:pp-pop .18s ease-out;transform-origin:top left}
+.profile-dropdown .profile-role{font-size:calc(10px * var(--text-scale));font-weight:650;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--border);margin-bottom:5px}
+.profile-dropdown button{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:0;border-radius:6px;padding:11px 10px;color:var(--text);font-size:calc(12px * var(--text-scale));text-align:left;transition:background .16s ease}
+.profile-dropdown button:hover{background:var(--primary-soft);color:var(--primary)}
+.page-header{justify-content:flex-end;min-height:0}.page-header .header-actions{justify-content:flex-end}
+.catalog-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 10px}
+.catalog-heading strong{font-size:calc(15px * var(--text-scale))}
+.catalog-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+.catalog-tabs button{border:1px solid var(--border);border-radius:7px;padding:10px 12px;background:var(--card);color:var(--text);font-weight:650;font-size:calc(11px * var(--text-scale));transition:background .17s,border-color .17s,transform .17s}
+.catalog-tabs button:hover{transform:translateY(-1px);border-color:var(--primary)}
+.catalog-tabs button.active{background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
+.catalog-tabs small{color:var(--muted);margin-left:5px}
+.catalog-panel table{min-width:510px}.catalog-panel td:first-child,.catalog-panel th:first-child{width:auto;padding-left:14px}
+.catalog-editor{padding:18px;display:grid;gap:9px}
+.catalog-editor label{display:grid;gap:8px;font-size:calc(12px * var(--text-scale));font-weight:650}
+.catalog-editor input{width:100%;height:42px;border-radius:7px;background:var(--control);color:var(--text);border:1px solid var(--border);padding:0 12px}
+.catalog-editor small{color:var(--muted);line-height:1.5}
+#record-form :is(input,select).is-valid,#catalog-form input.is-valid{border-color:var(--green);box-shadow:0 0 0 2px color-mix(in srgb,var(--green) 12%,transparent);transition:border-color .18s,box-shadow .18s}
+#record-form :is(input,select).is-invalid,#catalog-form input.is-invalid{border-color:#d75353;box-shadow:0 0 0 2px #d753531b;animation:pp-shake .22s ease-in-out}
+.toast{display:flex;align-items:center;gap:10px;max-width:min(430px,calc(100vw - 26px));background:var(--card);color:var(--text);border:1px solid var(--border);padding:12px 13px;border-radius:9px;box-shadow:0 10px 32px #0a21332b;animation:pp-toast .25s ease-out;overflow:hidden}
+.toast::after{content:"";position:absolute;bottom:0;left:0;height:3px;width:100%;background:var(--green);animation:pp-progress 5s linear forwards;transform-origin:left}
+.toast-error::after{background:#d75353}
+.toast-symbol{display:grid;place-items:center;width:24px;height:24px;flex:none;border-radius:50%;color:#fff;font-size:calc(12px * var(--text-scale));font-weight:800;background:var(--green)}
+.toast-error .toast-symbol{background:#d75353}
+.toast>span:nth-child(2){flex:1}
+.toast button{color:var(--muted);margin:0}
+.scan-outcome{animation:pp-pop .2s ease-out}
+.scan-success{box-shadow:inset 3px 0 0 var(--green)}
+.scan-error{box-shadow:inset 3px 0 0 #d75353}
+.scan-mode button,.btn,.row-open{transition:background-color .18s,border-color .18s,transform .18s,box-shadow .18s}
+.scan-mode button.active{animation:pp-pop .2s ease-out}
+.login-error{animation:pp-shake .25s ease-in-out}
+.login-panel{animation:pp-pop .3s ease-out}
+.is-logging-out .app-main,.is-logging-out .sidebar{opacity:.4;transform:scale(.997);transition:opacity .18s,transform .18s}
+@keyframes pp-pop{from{opacity:0;transform:translateY(-7px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes pp-toast{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pp-shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-3px)}65%{transform:translateX(3px)}}
+@keyframes pp-progress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(max-width:740px){.profile-name{display:none}.top-profile .caret{display:none}.top-profile{padding:3px 5px}.top-search{width:min(215px,38vw)}.profile-dropdown{min-width:205px}}
+@media(max-width:440px){.topbar{padding:0 9px}.top-left{gap:4px}.top-right{gap:5px}.top-search{width:min(160px,38vw)}.catalog-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-tabs button{padding:9px 7px}.page-header .header-actions{flex-wrap:wrap}.catalog-heading strong{font-size:calc(13px * var(--text-scale))}}
+@media(prefers-reduced-motion:reduce){.profile-dropdown,.scan-outcome,.login-error,.login-panel,.toast,.scan-mode button.active{animation:none}.toast::after{animation:none}.catalog-tabs button:hover{transform:none}.is-logging-out .app-main,.is-logging-out .sidebar{transition:none}}
