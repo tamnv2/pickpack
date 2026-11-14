@@ -1,7 +1,7 @@
 import {cpSync, mkdirSync, readFileSync, rmSync, statSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 const dir=resolve(import.meta.dirname,'..');
-const files=['index.html','app.html','assets/styles.css','assets/app.js'];
+const files=['index.html','app.html','assets/styles.css','assets/app.js','assets/supra-mark.png','assets/favicon.png','assets/favicon.ico'];
 for(const file of files){
  const c=readFileSync(join(dir,file),'utf8');
  if(!c.trim() || (file.endsWith('.html') && !c.includes('assets/app.js')))throw Error(`Invalid file: ${file}`);

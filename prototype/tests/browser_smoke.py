@@ -1,81 +1,99 @@
-"""Isolated Chromium UI smoke; hosted navigation blocked by sandbox, inspect real anchors."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from PIL import Image, ImageDraw
-from urllib.parse import parse_qs, urlparse
-ROOT=Path(__file__).resolve().parents[1]
-CSS=(ROOT/'dist/assets/styles.css').read_text(encoding='utf-8')
-JS=(ROOT/'dist/assets/app.js').read_text(encoding='utf-8')
-previews=ROOT/'previews';previews.mkdir(exist_ok=True)
-shots=[]
-def doc(pg, d=1,theme='light',module='overview',record=None,screen='app'):
- src=(ROOT/('dist/index.html' if screen=='gallery' else 'dist/app.html')).read_text(encoding='utf-8')
- src=src.replace('<link rel="stylesheet" href="assets/styles.css">',f'<style>{CSS}</style>')
- q=f'?design={d}&mode={theme}&page={module}'+(f'&record={record}' if record else '')
- j=JS.replace('const params=new URLSearchParams(location.search);',f'const params=new URLSearchParams("{q}");')
- src=src.replace('<script defer src="assets/app.js"></script>','').replace('</body>',f'<script>{j}</script></body>')
- pg.set_content(src,wait_until='load')
+root=Path(__file__).resolve().parents[1]
+js=(root/'assets/app.js').read_text(encoding='utf-8')
+css=(root/'assets/styles.css').read_text(encoding='utf-8')
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
- for width,height in [(1440,900),(390,844)]:
-  pg=browser.new_page(viewport={'width':width,'height':height})
-  errors=[];external=[];pg.on('pageerror',lambda err:errors.append(str(err)))
-  pg.on('request',lambda req:external.append(req.url))
-  doc(pg,screen='gallery')
-  assert pg.locator('.choice-card').count()==5
-  assert pg.locator('.choice-actions a').count()==10
-  assert all(t=='_blank' for t in pg.locator('.choice-actions a').evaluate_all('(e)=>e.map(x=>x.target)'))
-  for d in range(1,6):
-   for theme in ('light','dark'):
-    doc(pg,d,theme)
-    assert pg.locator('h1').inner_text()=='Tổng quan'
-    assert pg.locator('html').get_attribute('data-theme')==theme
-    assert pg.locator('html').get_attribute('data-design')==str(d)
-    assert (pg.locator('.field-bottom a').count()==4 if d==5 else pg.locator('.nav-item').count()>=7),(d,pg.locator('.nav-item').count())
-    assert pg.locator('a[target="_blank"]').count()>=7
-    assert pg.locator('.app').count()==1
-    assert not pg.evaluate('document.documentElement.scrollWidth > innerWidth + 1'),(width,d,theme,'overflow',pg.evaluate('document.documentElement.scrollWidth'))
-    layout=['enterprise','tower','workflow','workbench','field'][d-1]
-    assert pg.locator(f'.app.{layout}').count()==1
-    assert pg.locator('main').count()==1
-    if d==1:assert pg.locator('.e-aside .nav-item').count()==7
-    if d==2:assert pg.locator('.tower-alerts .alert-box').count()==3
-    if d==3:assert pg.locator('.kanban .lane').count()==3
-    if d==4:assert pg.locator('.wb-inspector').count()==1
-    if d==5:assert pg.locator('.scan-action').count()==1
-    links=pg.locator('a[target="_blank"]').evaluate_all('(els)=>els.map(x=>({href:x.getAttribute("href"),rel:x.rel,target:x.target}))')
-    assert all(l['href'].startswith('app.html?') and 'noopener' in l['rel'] and l['target']=='_blank' for l in links)
-    assert any(parse_qs(urlparse(l['href']).query).get('page')==['people'] for l in links)
-    assert all(parse_qs(urlparse(l['href']).query).get('design')==[str(d)] for l in links)
-    if width==1440:
-     target=previews/f'concept-{d}-{theme}.png';pg.screenshot(path=str(target),full_page=False);shots.append(target)
-   doc(pg,d,'light','people')
-   assert pg.locator('h1').inner_text()=='Nhân sự'
-   assert pg.locator('input#search-records').count()==1
-   pg.locator('#search-records').fill('NV-MAU-003')
-   selector='.table-shell tbody tr,.module-kanban .task-card,.field-record-grid .field-record'
-   assert pg.locator(selector).count()==1,(d,'search',pg.locator(selector).count())
-   pg.locator('#search-records').fill('')
-   pg.locator('#filter-records').select_option('warning')
-   assert pg.locator(selector).count()==2,(d,'filter',pg.locator(selector).count())
-   pg.locator('#filter-records').select_option('all')
-   pg.locator('#add-row').click()
-   assert pg.locator(selector).count()==7,(d,'add',pg.locator(selector).count())
-   doc(pg,d,'light','people')
-   assert pg.locator(selector).count()==6,(d,'reset')
-   doc(pg,d,'dark','people','NV-MAU-001')
-   assert pg.locator('.detail-panel').count()==1
-   assert 'NV-MAU-001' in pg.locator('.detail-panel').inner_text()
-  assert not errors,(width,errors)
-  assert not external,(width,external)
-  print(f'PASS viewport {width}x{height}: 5x2 layouts, 7 modules, anchor targets/deep-links, search/filter/add/reset, no requests/pageerrors')
-  pg.close()
+ ctx=browser.new_context(viewport={'width':1440,'height':900},accept_downloads=True)
+ ctx.set_default_timeout(2000)
+ def new_screen(screen='app',mobile=False):
+  pg=(browser.new_context(viewport={'width':390,'height':844},is_mobile=True) if mobile else ctx).new_page()
+  pg.set_default_timeout(2000)
+  pg.set_content(f'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body data-screen="{screen}"><div id="root"></div></body></html>')
+  pg.evaluate("""() => {let m = new Map([['pickpack1291_demo_session_v05','demo-admin-only']]);Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}})}""")
+  pg.add_style_tag(content=css)
+  pg.add_script_tag(content=js)
+  return pg
+ login=new_screen('login')
+ assert login.locator('form#login-form').count()==1
+ login.locator('input[name="username"]').fill('bad')
+ login.locator('input[name="password"]').fill('bad')
+ login.locator('button[type="submit"]').click()
+ assert login.get_by_text('Sai tên đăng nhập hoặc mật khẩu mẫu').count()==1
+ login.locator('input[name="username"]').fill('admin')
+ login.locator('input[name="password"]').fill('admin')
+ login.locator('button[data-action="show-password"]').click()
+ assert login.locator('input[name="password"]').input_value()=='admin'
+ assert login.locator('input[name="password"]').get_attribute('type')=='text'
+ login.screenshot(path=str(root/'preview-login.png'),full_page=True)
+ app=new_screen()
+ errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
+ assert app.locator('a.nav-main').count()==7
+ assert app.locator('.nav-external').count()==0
+ assert app.locator('a.nav-main').first.get_attribute('href').startswith('app.html?')
+ app.screenshot(path=str(root/'preview-dashboard.png'),full_page=True)
+ expected={'people':36,'shifts':42,'labor':42,'minutes':30,'assets':30,'pda':30}
+ print('testing modules',flush=True)
+ for module,n in expected.items():
+  app.locator(f'a.nav-main[href*="view={module}"]').click()
+  assert app.locator('.records-label b').inner_text()==str(n),(module,app.locator('.records-label b').inner_text())
+  assert app.locator('table tbody tr').count()==n
+  assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}')
+ app.locator('a.nav-main[href*="view=people"]').click()
+ app.screenshot(path=str(root/'preview-people.png'),full_page=True)
+ print('testing create',flush=True)
+ app.locator('button[data-action="add"]').click()
+ assert app.locator('form#record-form').count()==1
+ app.locator('input[name="name"]').fill('Nhân viên giả lập bổ sung')
+ app.locator('select[name="team"]').select_option('Pick')
+ app.locator('select[name="shift"]').select_option('Ca 1')
+ app.locator('#record-form button[type="submit"]').click()
+ assert app.locator('.records-label b').inner_text()=='37'
+ print('testing edit',flush=True)
+ app.locator('table tbody tr').first.locator('[data-edit]').click()
+ app.locator('#record-form input[name="name"]').fill('Nhân viên giả lập đã chỉnh sửa')
+ app.locator('#record-form button[type="submit"]').click()
+ assert 'đã chỉnh sửa' in app.locator('table tbody tr').first.inner_text()
+ app.once('dialog',lambda d:d.accept())
+ print('testing delete',flush=True)
+ app.locator('table tbody tr').first.locator('[data-delete]').click()
+ assert app.locator('.records-label b').inner_text()=='36'
+ print('testing search',flush=True)
+ app.locator('input#global-search').fill('KhôngCóTrongDanhSách_TEST')
+ assert app.get_by_text('Không tìm thấy bản ghi phù hợp').count()==1
+ app.locator('input#global-search').fill('')
+ print('testing cards',flush=True)
+ app.locator('button[data-action="layout-cards"]').click()
+ assert app.locator('.record-card').count()==36
+ app.locator('button[data-action="layout-table"]').click()
+ print('testing bulk',flush=True)
+ app.locator('table tbody tr').first.locator('[data-select]').check()
+ assert 'Xóa đã chọn (1)' in app.locator('button[data-action="bulk-delete"]').inner_text()
+ app.once('dialog',lambda d:d.accept())
+ app.locator('button[data-action="bulk-delete"]').click()
+ assert app.locator('.records-label b').inner_text()=='35'
+ app.once('dialog',lambda d:d.accept())
+ app.locator('button[data-action="reset"]').click()
+ assert app.locator('.records-label b').inner_text()=='36'
+ print('testing PDA',flush=True)
+ app.locator('a.nav-main[href*="view=pda"]').click()
+ app.locator('table tbody tr').first.locator('[data-record]').click()
+ assert app.locator('.detail-drawer').count()==1
+ app.locator('.detail-drawer button[data-quick]').click()
+ assert app.locator('.detail-drawer').count()==1
+ app.locator('button[data-action="close-drawer"]').click()
+ app.locator('button[data-action="theme"]').click()
+ assert app.locator('html').count()==0 or app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
+ assert not errs,errs
+ print('testing mobile',flush=True)
+ mobile=new_screen(mobile=True)
+ assert mobile.locator('button.menu-button').is_visible()
+ mobile.screenshot(path=str(root/'preview-mobile.png'),full_page=True)
+ assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth+3')
+ mobile.locator('button.menu-button').click()
+ mobile.locator('a.nav-main[href*="view=people"]').click()
+ assert mobile.locator('.records-label b').inner_text()=='36'
+ assert not mobile.locator('.nav-external').count()
+ print('PASS: login form validation/password visibility; 6 datasets 30-42 rows; native anchors; CRUD, search, card/table, bulk, reset, PDA status, theme; mobile')
  browser.close()
-montage=Image.new('RGB',(1440,1790),'#f2f5f9')
-for i,path in enumerate(shots):
- im=Image.open(path).convert('RGB');im.thumbnail((698,327))
- tile=Image.new('RGB',(720,358),'#fff')
- ImageDraw.Draw(tile).text((16,7),f'MAU {i//2+1} - {"SANG" if i%2==0 else "TOI"}',fill='#2a425a')
- tile.paste(im,((720-im.width)//2,28));montage.paste(tile,((i%2)*720,(i//2)*358))
-montage.save(previews/'so-sanh-5-bo-cuc-sang-toi.png',optimize=True)
-print('PASS montage 10 screens')

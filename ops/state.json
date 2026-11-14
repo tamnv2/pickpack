@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "UI_HORILLA_INSPIRED_OWNER_REVIEW",
-  "application_code": "HORILLA_INSPIRED_WEB_UI_CODE_READY",
-  "technical_ci": "LOCAL_BUILD_AND_BROWSER_SMOKE_PASS_CI_NOT_RUN",
+  "phase": "HORILLA_UI_STYLE_APPROVED_V05_FUNCTION_REVIEW",
+  "application_code": "HORILLA_ADMIN_DEMO_V05_CODE_READY",
+  "technical_ci": "LOCAL_BUILD_INLINE_CHROMIUM_PASS_CI_NOT_RUN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "HORILLA_STYLE_UI_REVIEW_PENDING",
+  "owner_business_acceptance": "HORILLA_STYLE_APPROVED_V04_V05_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,10 @@
     "realtime": true
   },
   "pending": [
-    "Owner review and accept or revise Horilla-inspired PickPack UI before workflows, permissions, database, API or APK",
-    "Real authenticated Horilla demo post-login view was not inspected; source-based public screenshots/docs used",
-    "Real browser multi-tab opening needs Owner-side verification due Chromium sandbox restriction"
+    "Owner review/test v0.5 login, CRUD and native browser right-click new-tab on Chrome/Edge",
+    "Actual Firebase Auth/Inventory roles, server RBAC, OpsCore, API, realtime, PDA app remain deferred until separately approved"
   ],
-  "latest_checkpoint": "PP-20261114-005",
+  "latest_checkpoint": "PP-20261114-006",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -46,6 +45,20 @@
     "demo_admin": "MOCK_ONLY",
     "provider_usage": "ZERO_RUNTIME_API_CALLS",
     "authenticated_horilla_demo": "NOT_VERIFIED",
-    "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK"
+    "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
+    "version": "0.5.0",
+    "login": "admin/admin MOCK_CLIENT_ONLY",
+    "fixtures": {
+      "people": 36,
+      "shifts": 42,
+      "labor": 42,
+      "minutes": 30,
+      "assets": 30,
+      "pda_history": 30,
+      "pda_device_ids": 3
+    },
+    "admin_actions": "LOCAL_FAKE_CRUD_BULK_CSV_RESET_STATUS",
+    "navigation": "NATIVE_ANCHORS_NO_NEW_TAB_BUTTON",
+    "storage": "LOCALSTORAGE_FAKE_DATA_ONLY"
   }
 }
