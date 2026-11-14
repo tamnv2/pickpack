@@ -140,3 +140,13 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 ## Web Office preview v0.8.10 — Clean clock
 - **APPROVED (15/11/2026):** remove the rejected split-flap clock and all dedicated 3D animation logic/styles. Display unboxed 24-hour Vietnam `HH:mm:ss` in the same sticky toolbar, with prominent hour/minute and smaller muted seconds, adapting to light/dark theme. No calendar date.
 - Update clock text in place every second without whole-page rerender or provider calls; keep identical search/bell/clock positions across modules, responsive/mobile support, and existing automatic theme switching. No backend, inventory or production changes.
+
+## Web Office preview v0.9.0 — Owner-approved 10 UI workflows (15/11/2026)
+- **APPROVED:** 12-hour `hh:mm:ss AM/PM` clock; toast max 5 seconds and 5 newest concurrently (nonblocking); centered consistent confirmation modal; UI demo password recheck before edit/delete; unmodified business provider quota.
+- **APPROVED:** high-resolution employee portrait selected/captured once: 192px avatar + original binary for large detail/zoom. Demo uses browser-local IndexedDB only; **public CDN/shared origin is unsuitable for real staff images**. Production must use private authorized storage, real reauthentication and backend RBAC.
+- **APPROVED:** labor shows one row per started job with employee/date/shift/job/start/end. First scan starts, next open scan closes; work dropdown supplied by editable catalog. Remove hours/status/work-user columns, don't fabricate timestamps for historical rows. No independent labor cost/quota API.
+- **APPROVED:** shift entry: select Ca 1, Ca 2 or Ca HC next to operation; exit hides shift and closes matched open scan, not sourced from employee's predefined shift.
+- **APPROVED:** employee/biên bản/CCDC actions and catalogs next to Export Excel, eliminate redundant header row. Catalog scopes: personnel fields, labor work, minutes type, CCDC type. Rename updates demo references; deletion blocked while used.
+- **VERIFIED DEMO BOUNDARY:** static CDN/HTML/CSS/JS, synthetic localStorage + IndexedDB per browser only; no Firebase Auth/Cloudflare Worker/OpsCore business API or cross-device realtime. Standard GitHub Actions runner in public repo is free (subject to GitHub policy); rawcdn.githack.com is third-party free CDN without availability SLA. Git/release traffic/storage and browser space are not zero resources; none implies production zero-cost guarantee.
+- Real identity/password, privacy, shared storage and field/API integration remain **BLOCKED until approved and verified backend**, not fulfilled by demo.
+
