@@ -80,7 +80,7 @@ try:
         with ZipFile(download.path()) as archive:
             assert archive.testzip() is None
             assert {'[Content_Types].xml', 'xl/workbook.xml', 'xl/styles.xml', 'xl/worksheets/sheet1.xml'} <= set(archive.namelist())
-        workbook = load_workbook(download.path(), read_only=True, data_only=True)
+        workbook = load_workbook(open(download.path(), 'rb'), read_only=True, data_only=True)
         sheet = workbook.active
         assert sheet['A1'].value == 'Họ và tên'
         assert sheet['B1'].value == 'Mã nhân viên'
