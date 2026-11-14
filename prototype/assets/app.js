@@ -44,12 +44,13 @@ function seedRecords(){
  const last=['An','Bình','Châu','Dũng','Giang','Hà','Hải','Hạnh','Hiếu','Huy','Khánh','Lan','Linh','Long','Mai','Nam','Nhi','Phúc','Quân','Sơn','Trang','Vy','Yến','Thảo','Tiến','Đạt','Phương','Nhung'];
  const teams=['Pick','Pack thường','Pack Auto','Điều phối'];
  const pick=(arr)=>arr[Math.floor(rand()*arr.length)];
- const people=Array.from({length:36},(_,i)=>{const name=`${pick(first)} ${pick(second)} ${pick(last)}`,team=teams[i%4];return{
-   id:`NV-${String(260301+i)}`,name,team,shift:i%3===0?'Ca 2':'Ca 1',
-   user:`pp1291.${['pk','pa','au','dc'][i%4]}${String(Math.floor(i/4)+1).padStart(2,'0')}`,
-   state:['Đang làm việc','Đang làm việc','Chờ vào ca','Nghỉ ca'][i%4],
-   email:`office.${String(i+1).padStart(2,'0')}@example.invalid`,initial:name.split(' ').at(-1).slice(0,2)
- }});
+ const people=Array.from({length:36},(_,i)=>{const name=`${pick(first)} ${pick(second)} ${pick(last)}`,position=teams[i%4];return{
+   id:String(90000001+i),name,phone:'000'+String(1000000+i).slice(-7),position,supplier:['Nội bộ','Đối tác A','Đối tác B'][i%3],
+   department:'Pick Pack',site:'1291',warehouse:'1291',startDate:`${String(1+i%27).padStart(2,'0')}/${String(1+i%11).padStart(2,'0')}/2026`,
+   note:'',updatedBy:'Quản trị viên',updatedAt:'14/11/2026 08:00:00',photo:'',
+   shift:i%3===0?'Ca 2':'Ca 1',user:`pp1291.${['pk','pa','au','dc'][i%4]}${String(Math.floor(i/4)+1).padStart(2,'0')}`,
+   state:'Đang làm việc',initial:name.split(' ').at(-1).slice(0,2)
+  }});
  const shifts=Array.from({length:42},(_,i)=>{const p=people[(i*13)%people.length],day=14-Math.floor(i/7),pending=i%9===0,ended=i>7||i%5===0;return{
   id:`CA-${String(261101+i)}`,name:p.name,staff:p.id,date:`${String(day).padStart(2,'0')}/11/2026`,shift:p.shift,
   checkin:pending?'—':`${p.shift==='Ca 1'?'05':'13'}:${String(26+(i*7)%32).padStart(2,'0')}`,
@@ -76,30 +77,34 @@ function seedRecords(){
    state:['Sẵn sàng','Đang sử dụng','Sẵn sàng','Cần kiểm tra'][i%4]
  }));
  const pda=Array.from({length:30},(_,i)=>{const p=people[(i*7+3)%people.length],active=i<2;return{
-   id:`MT-${String(261101+i)}`,name:`PDA-${String(i%3+1).padStart(2,'0')}`,
-   holder:p.name,user:p.user,borrow:`${String(5+(i%5)).padStart(2,'0')}:${String(15+(i*7)%42).padStart(2,'0')}`,
-   return:active?'—':`${14+i%4}:${String(10+(i*9)%39).padStart(2,'0')}`,state:active?'Đang mượn':'Đã trả'
- }});
- return {people,shifts,labor,minutes,assets,pda};
+    id:`MT-${String(261101+i)}`,name:`PDA-${String(i%3+1).padStart(2,'0')}`,staff:p.id,
+    holder:p.name,user:p.user,borrow:`${String(5+(i%5)).padStart(2,'0')}:${String(15+(i*7)%42).padStart(2,'0')}`,
+    return:active?'—':`${14+i%4}:${String(10+(i*9)%39).padStart(2,'0')}`,state:active?'Đang mượn':'Đã trả'
+  }});
+  const pdaDevices=Array.from({length:3},(_,i)=>({id:`PDA-${String(i+1).padStart(2,'0')}`,serial:`SYNTHETIC-1291-${String(i+1).padStart(5,'0')}`,last5:String(i+1).padStart(5,'0'),source:'Thiết bị kiểm thử',state:i<2?'Đang sử dụng':'Sẵn sàng',note:''}));
+ return {people,shifts,labor,minutes,assets,pda,pdaDevices};
 }
 function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(seedRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500))return data}catch{}return seedRecords()}
 const store=readRecords();
 function persist(){storageSet(STORAGE_KEY,JSON.stringify(store))}
 function updateRecord(key,id,changes){const row=store[key]?.find(r=>r.id===id);if(!row)return false;Object.assign(row,changes);persist();return true}
 const columns={
- people:[['name','Nhân sự'],['id','Mã NV'],['team','Bộ phận'],['shift','Ca'],['user','User làm việc'],['state','Trạng thái']],
- shifts:[['name','Nhân sự'],['date','Ngày'],['shift','Ca'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['state','Trạng thái']],
+ people:[['name','Họ và tên'],['id','Mã nhân viên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho']],
+ shifts:[['name','Họ và tên'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['state','Trạng thái']],
  labor:[['name','Nhân sự'],['date','Ngày'],['shift','Ca'],['work','Công việc'],['hours','Giờ công'],['state','Trạng thái']],
  minutes:[['name','Tên biên bản'],['id','Mã'],['type','Loại'],['date','Ngày'],['owner','Người lập'],['state','Trạng thái']],
  assets:[['name','Tên CCDC'],['id','Mã'],['type','Loại'],['qty','Số lượng'],['holder','Vị trí'],['state','Trạng thái']],
  pda:[['name','Thiết bị'],['holder','Người mượn'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['state','Trạng thái']]
 };
+const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày bắt đầu làm việc'],['shift','Ca được phân'],['user','User làm việc'],['note','Ghi chú']];
+const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Người cập nhật'],['updatedAt','Thời gian cập nhật']];
+
 const state={view:'dashboard',theme:'light',fontPct:100,search:'',filter:'all',layout:'table',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false};
 const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const qs=new URLSearchParams(location.search);state.view=PAGES[qs.get('view')]?qs.get('view'):'dashboard';state.theme=qs.has('theme')?(qs.get('theme')==='dark'?'dark':'light'):(storageGet(THEME_KEY)==='dark'?'dark':'light');state.fontPct=Math.max(90,Math.min(120,Number(storageGet(FONT_KEY))||100));state.drawer=qs.get('record')||'';
 const href=(view=state.view,record='',theme=state.theme)=>`app.html?view=${encodeURIComponent(view)}&theme=${theme}`+(record?`&record=${encodeURIComponent(record)}`:'')+(location.protocol==='file:'?'&demo=1':'');
 const badge=(v)=>{const s=String(v);const type=/Chờ|Cần kiểm tra|Chưa/.test(s)?'warn':/Đã lưu|Đã xác nhận|Sẵn sàng|Đã ra/.test(s)?'neutral':/Trong ca|Đang|Tạm tính/.test(s)?'good':'neutral';return `<span class="status ${type}"><span class="status-dot"></span>${escape(s)}</span>`};
-const avatar=(x,big=false)=>`<span class="person-avatar ${big?'big':''}" aria-hidden="true">${escape(x.initial || String(x.name||'A').slice(-2).toUpperCase())}</span>`;
+const avatar=(x,big=false)=>/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(x.photo||'')?`<img class="person-avatar ${big?'big':''}" src="${x.photo}" alt="">`:`<span class="person-avatar ${big?'big':''}" aria-hidden="true">${escape(x.initial || String(x.name||'A').slice(-2).toUpperCase())}</span>`;
 function side(){return `<aside class="sidebar ${state.sidebar?'is-open':''}" aria-label="Điều hướng PickPack"><div class="side-top"><img class="brand-logo" src="assets/supra-mark.png" alt="The Supra"><div><strong>PickPack 1291</strong><small>QUẢN LÝ VẬN HÀNH</small></div><button class="mobile-hide" data-action="close-nav" aria-label="Đóng menu">×</button></div><div class="sidebar-scroll"><div class="location-chip"><span class="location-icon">${icon("boxes",17)}</span><div><strong>Kho 1291</strong><small>Trung tâm vận hành</small></div><span class="caret">⌄</span></div>${SIDEBAR.map(group=>`<div class="side-group"><span class="group-title">${group.name}</span>${group.items.map(([view,icon])=>`<div class="side-link ${state.view===view?'selected':''}"><a class="nav-main" href="${href(view)}" data-nav="${view}" aria-current="${state.view===view?'page':'false'}" ><span class="nav-icon">${ICONS[icon]}</span><span>${PAGES[view].title}</span></a></div>`).join('')}</div>`).join('')}</div><div class="side-bottom"><span class="online-dot"></span><div><strong>Quản trị viên</strong><small>Quản trị hệ thống</small></div><button class="side-logout" data-action="logout" title="Đăng xuất" aria-label="Đăng xuất">${icon("logout",18)}</button></div></aside>`}
 function top(){return `<header class="topbar"><div class="top-left"><button class="icon-button menu-button" data-action="toggle-nav" aria-label="Mở menu">${icon("list",20)}</button><div class="breadcrumb">Hệ thống <span>›</span><strong>${PAGES[state.view].title}</strong></div></div><div class="top-right"><div class="top-search">${icon("search",17)}<input id="global-search" type="search" placeholder="Tìm nhanh trong ${PAGES[state.view].title.toLowerCase()}..." value="${escape(state.search)}" aria-label="Tìm nhanh"></div><span class="top-divider"></span><button class="icon-button" data-action="theme" title="Chuyển sáng/tối" aria-label="Chuyển chế độ màu">${icon(state.theme==="light"?"moon":"sun",19)}</button><button class="icon-button" data-action="settings" title="Cài đặt" aria-label="Cài đặt">${icon("settings",19)}</button><button class="icon-button notif" data-action="notifications" title="Thông báo" aria-label="Thông báo">${icon("bell",19)}${notificationItems().length?"<i></i>":""}</button><div class="top-profile">${avatar({initial:'AD'})}<div><strong>Quản trị viên</strong><small>Office Admin</small></div><span class="caret">⌄</span></div></div></header>`}
 function pageHead(action='',other=''){return `<div class="page-header"><div><div class="eyebrow">PICK PACK 1291 / <span>${PAGES[state.view].title.toUpperCase()}</span></div><h1>${PAGES[state.view].title}</h1><p>${PAGES[state.view].desc}. </p></div><div class="header-actions">${other}${action}</div></div>`}
