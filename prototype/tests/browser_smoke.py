@@ -298,5 +298,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.8.5 sidebar credit under version, 5–6-word nav labels, desktop toggle removed, mobile navigation, CRUD/QR/Excel')
+ print('PASS: v0.8.5 exact seven module labels, personnel columns/auto sizing, sticky live clock, theme modes, QR, CRUD, XLSX, mobile')
  browser.close()
