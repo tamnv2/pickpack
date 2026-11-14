@@ -99,7 +99,7 @@ const columns={
  labor:[['name','Nhân sự'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['user','User làm việc'],['work','Công việc'],['scannedAt','Giờ ghi nhận'],['hours','Giờ công'],['state','Trạng thái']],
  minutes:[['name','Tên biên bản'],['id','Mã'],['type','Loại'],['date','Ngày'],['owner','Người lập'],['state','Trạng thái']],
  assets:[['name','Tên CCDC'],['id','Mã'],['type','Loại'],['qty','Số lượng'],['holder','Vị trí'],['state','Trạng thái']],
- pda:[['name','Thiết bị'],['holder','Người mượn'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['state','Trạng thái']]
+ pda:[['name','Thiết bị'],['holder','Người mượn'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['returner','Người trả'],['state','Trạng thái']]
 };
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày bắt đầu làm việc'],['shift','Ca được phân'],['user','User làm việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Người cập nhật'],['updatedAt','Thời gian cập nhật']];
@@ -214,7 +214,7 @@ function scanLabor(code){
  if(!p)return result(false,'Không tìm thấy mã nhân viên.');
  if(!p.shift)return result(false,`Nhân viên ${p.name} chưa được phân ca.`);
  if(store.labor.some(row=>row.date===date&&row.staff===p.id))return result(false,`Đã có bản ghi công nhật ngày ${date} của ${p.name}. Không tạo trùng.`);
- store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:p.name,staff:p.id,user:p.user||'—',date,shift:p.shift,work:p.position||'—',scannedAt:time,hours:'—',state:'Tạm tính'});
+ store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:p.name,staff:p.id,user:p.user||'—',date,shift:p.shift,work:'—',scannedAt:time,hours:'—',state:'Tạm tính'});
  persist();return result(true,`Đã ghi nhận công nhật · ${p.name} · ${p.shift} · ${date} ${time}. Giờ công chờ xác nhận.`);
 }
 function resolvePda(code){
@@ -242,13 +242,12 @@ function scanPda(employeeCode,deviceCode){
  const open=store.pda.find(row=>row.name===device.id&&row.state==='Đang mượn');
  if(state.pdaMode==='borrow'){
   if(open)return out(false,`${device.id} đang được mượn bởi ${open.holder}. Không được mượn trùng.`);
-  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:device.id,staff:p.id,holder:p.name,user:p.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',state:'Đang mượn'});
+  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:device.id,staff:p.id,holder:p.name,user:p.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',returner:'—',state:'Đang mượn'});
   persist();return out(true,`Đã mượn ${device.id} · ${p.name} · ${date} ${time}`);
  }
  if(state.pdaMode==='return'){
   if(!open)return out(false,`${device.id} chưa có lượt mượn đang mở.`);
-  if(open.staff!==p.id)return out(false,`Người trả không khớp lượt mượn của ${device.id}.`);
-  updateRecord('pda',open.id,{return:time,returnAt:now.toISOString(),state:'Đã trả'});
+  updateRecord('pda',open.id,{return:time,returnAt:now.toISOString(),returner:p.name,returnStaff:p.id,state:'Đã trả'});
   return out(true,`Đã trả ${device.id} · ${p.name} · ${date} ${time}`);
  }
  return out(false,'Thao tác không hợp lệ.');
