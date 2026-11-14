@@ -1,10 +1,12 @@
 from pathlib import Path
+import os
+import base64
 from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 js=(root/'assets/app.js').read_text(encoding='utf-8')
 css=(root/'assets/styles.css').read_text(encoding='utf-8')
 with sync_playwright() as p:
- browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=p.chromium.launch(headless=True,executable_path=os.environ['CHROMIUM_PATH'] if os.environ.get('CHROMIUM_PATH') else None,args=['--no-sandbox'])
  ctx=browser.new_context(viewport={'width':1440,'height':900},accept_downloads=True)
  ctx.set_default_timeout(2000)
  def new_screen(screen='app',mobile=False):
@@ -47,23 +49,23 @@ with sync_playwright() as p:
  print('testing modules',flush=True)
  for module,n in expected.items():
   app.locator(f'a.nav-main[href*="view={module}"]').click()
-  assert app.locator('.records-label b').inner_text()==str(n),(module,app.locator('.records-label b').inner_text())
+  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()==str(n),(module,app.locator('.table-panel').last.locator('.records-label b').inner_text())
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}')
  app.locator('a.nav-main[href*="view=shifts"]').click()
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
+ assert app.locator('button[data-scan-mode="enter"]').get_attribute('aria-pressed')=='true'
  assert app.locator('button[data-action="add"]').count()==0
  app.locator('input#shift-code').fill('90000001')
  assert app.locator('#scan-preview').get_by_text('Mã nhân viên:',exact=False).count()>=1
  app.locator('input#shift-code').press('Enter')
- assert app.locator('.records-label b').inner_text()=='43'
+ assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
  assert 'Đã vào ca' in app.locator('.scan-outcome').inner_text()
  app.locator('input#shift-code').fill('90000001')
  app.locator('input#shift-code').press('Enter')
- assert app.locator('.records-label b').inner_text()=='43'
+ assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
  assert 'không ghi nhận vào ca lần hai' in app.locator('.scan-outcome').inner_text()
- app.locator('input#shift-code').fill('90000001')
  app.locator('button[data-scan-mode="exit"]').click()
  assert app.locator('button[data-scan-mode="exit"]').get_attribute('aria-pressed')=='true'
  app.locator('input#shift-code').fill('90000001')
@@ -85,8 +87,14 @@ with sync_playwright() as p:
  app.locator('input[name="position"]').fill('Pick')
  app.locator('input[name="phone"]').fill('0001234567')
  app.locator('select[name="shift"]').select_option('Ca 1')
+ # Tiny PNG fixture is fully synthetic; assert local avatar conversion from image.
+ png=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aB6YAAAAASUVORK5CYII=')
+ app.locator('#staff-photo').set_input_files({'name':'portrait.png','mimeType':'image/png','buffer':png})
+ app.locator('#photo-preview img').wait_for()
+ assert app.locator('#photo-preview img').get_attribute('src').startswith('data:image/jpeg;base64,')
  app.locator('#record-form button[type="submit"]').click()
  assert app.locator('.records-label b').inner_text()=='37'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
  print('testing edit',flush=True)
  app.locator('table tbody tr').first.locator('[data-edit]').click()
  app.locator('#record-form input[name="name"]').fill('Nhân viên giả lập đã chỉnh sửa')
