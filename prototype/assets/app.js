@@ -28,7 +28,7 @@ logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/
 function icon(name,size=18){return `<svg class="ui-svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name]||PATHS.grid}</svg>`}
 const ICONS=Object.fromEntries(['grid','users','clock','calendar','file','boxes','device'].map(k=>[k,icon(k)]));
 // Completely synthetic, reproducible operational examples. No real employee or device records.
-const STORAGE_KEY='pickpack1291_office_records_v06';
+const STORAGE_KEY='pickpack1291_office_records_v07';
 const FONT_KEY='pickpack1291_office_font_v06';
 const THEME_KEY='pickpack1291_office_theme_v06';
 const SESSION_KEY='pickpack1291_office_session_v06';
@@ -258,17 +258,30 @@ function saveForm(form){
 function deleteIds(ids){const key=state.view;const matches=store[key].filter(r=>ids.includes(r.id));if(!matches.length)return;if(!window.confirm(`Xóa ${matches.length} bản ghi khỏi ${PAGES[key].title}?`))return;store[key]=store[key].filter(r=>!ids.includes(r.id));persist();state.selected.clear();state.drawer='';safeHistory('replaceState',href());state.notice=`Đã xóa ${matches.length} bản ghi`;render()}
 function quickChange(id){const key=state.view;const row=store[key]?.find(x=>x.id===id);if(!row)return;let c={};if(key==='shifts'){const entered=row.state==='Trong ca';c={state:entered?'Đã ra ca':'Trong ca',checkin:entered?row.checkin:new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false}),checkout:entered?new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false}):'—'}}else if(key==='pda'){const borrowed=row.state==='Đang mượn';if(!borrowed&&store.pda.some(x=>x.name===row.name&&x.state==='Đang mượn'&&x.id!==id)){state.notice='Thiết bị đang được mượn, vui lòng trả trước';render();return}const time=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false});c={state:borrowed?'Đã trả':'Đang mượn',return:borrowed?time:'—',borrow:borrowed?row.borrow:time}}else if(key==='minutes')c={state:'Đã xác nhận'};else if(key==='labor')c={state:'Đã xác nhận'};else if(key==='people')c={state:row.state==='Đang làm việc'?'Nghỉ ca':'Đang làm việc'};else if(key==='assets')c={state:row.state==='Sẵn sàng'?'Đang sử dụng':'Sẵn sàng'};updateRecord(key,id,c);state.notice=`Đã thay đổi trạng thái ${row.id}`;render()}
 function exportCSV(){const rows=filtered(),fields=columns[state.view];const quote=s=>'"'+String(s??'').replaceAll('"','""')+'"';const csv='\ufeff'+[fields.map(([,label])=>quote(label)).join(','),...rows.map(r=>fields.map(([k])=>quote(r[k])).join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`pickpack-${state.view}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);state.notice=`Đã xuất ${rows.length} bản ghi`;render()}
-root.addEventListener('submit',e=>{if(e.target.id==='login-form'){e.preventDefault();const fd=new FormData(e.target);const ok=String(fd.get('username')||'').trim()==='admin'&&String(fd.get('password')||'')==='admin';if(!ok){state.loginError='Tên đăng nhập hoặc mật khẩu không đúng';render();return}storageSet(SESSION_KEY,'demo-admin-only');state.loginError='';location.href=href('dashboard');return}if(e.target.id==='record-form'){e.preventDefault();saveForm(e.target)}});
+root.addEventListener('submit',function(e){
+ if(e.target.id==='login-form'){
+  e.preventDefault();const fd=new FormData(e.target);
+  const ok=String(fd.get('username')||'').trim()==='admin'&&String(fd.get('password')||'')==='admin';
+  if(!ok){state.loginError='Tên đăng nhập hoặc mật khẩu không đúng';render();return}
+  storageSet(SESSION_KEY,'demo-admin-only');state.loginError='';location.href=href('dashboard');return;
+ }
+ if(e.target.id==='shift-scan-form'){
+  e.preventDefault();
+  const fd=new FormData(e.target),op=e.submitter?.value==='exit'?'exit':'enter';
+  scanShift(fd.get('employeeCode'),op);return;
+ }
+ if(e.target.id==='record-form'){e.preventDefault();saveForm(e.target)}
+});
 root.addEventListener('click',e=>{
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();setView(nav.dataset.nav)}return}
  const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
- const edit=e.target.closest('[data-edit]');if(edit){state.editId=edit.dataset.edit;state.modal='edit';render();return}
+ const edit=e.target.closest('[data-edit]');if(edit){if(state.view==='shifts')return;state.editId=edit.dataset.edit;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===state.editId)?.photo||''):'';state.modal='edit';render();return}
  const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
  const quick=e.target.closest('[data-quick]');if(quick){quickChange(quick.dataset.quick);return}
  const font=e.target.closest('[data-font]');if(font){state.fontPct=Math.max(90,Math.min(120,state.fontPct+Number(font.dataset.font)));storageSet(FONT_KEY,String(state.fontPct));render();return}const choice=e.target.closest('[data-theme-choice]');if(choice){state.theme=choice.dataset.themeChoice;storageSet(THEME_KEY,state.theme);safeHistory('replaceState',href(state.view,state.drawer));render();return}const btn=e.target.closest('[data-action]');if(!btn)return;const act=btn.dataset.action;if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
  switch(act){case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
  case'theme':state.theme=state.theme==='light'?'dark':'light';storageSet(THEME_KEY,state.theme);safeHistory('replaceState',document.body.dataset.screen==='app'?href(state.view,state.drawer):'index.html?theme='+state.theme);break;
- case'add':state.editId='';state.modal='new';break;case'close-modal':state.modal='';state.editId='';break;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
+ case'add':if(state.view==='shifts')return;state.editId='';state.photoDraft='';state.modal='new';break;case'close-modal':state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
  case'notifications':state.modal='notifications';break;case'settings':state.modal='settings';break;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
  case'layout-table':state.layout='table';break;case'layout-cards':state.layout='cards';break;case'clear-notice':state.notice='';break;
  case'show-password':{const form=root.querySelector('#login-form');const username=form?.querySelector('#demo-user')?.value||'';const password=form?.querySelector('#demo-password')?.value||'';state.loginVisible=!state.loginVisible;render();root.querySelector('#demo-user').value=username;root.querySelector('#demo-password').value=password;return}
@@ -279,8 +292,32 @@ root.addEventListener('click',e=>{
  }
  render();
 });
-root.addEventListener('input',e=>{if(e.target.id==='global-search'){const input=e.target;state.search=input.value;const pos=input.selectionStart;render();const newInput=root.querySelector('#global-search');if(newInput){newInput.focus();newInput.setSelectionRange(pos,pos)}}});
-root.addEventListener('change',e=>{if(e.target.id==='status-filter'){state.filter=e.target.value;state.selected.clear();render();return}if(e.target.id==='select-all'){const ids=filtered().map(x=>x.id);if(e.target.checked)ids.forEach(id=>state.selected.add(id));else ids.forEach(id=>state.selected.delete(id));render();return}if(e.target.matches('[data-select]')){if(e.target.checked)state.selected.add(e.target.dataset.select);else state.selected.delete(e.target.dataset.select);render()}});
+root.addEventListener('input',function(e){
+ if(e.target.id==='shift-code'){
+  const code=e.target.value.trim(),person=store.people.find(p=>p.id===code),preview=root.querySelector('#scan-preview');
+  if(preview)preview.innerHTML=code&&!person?'<div class="scan-empty">Chưa tìm thấy mã nhân viên phù hợp.</div>':scanPreview(person);
+  return;
+ }
+ if(e.target.id==='global-search'){
+  const input=e.target;state.search=input.value;const pos=input.selectionStart;render();
+  const newInput=root.querySelector('#global-search');if(newInput){newInput.focus();newInput.setSelectionRange(pos,pos)}
+ }
+});
+root.addEventListener('change',async function(e){
+ if(e.target.id==='staff-photo'){
+  const file=e.target.files?.[0];if(!file)return;
+  try{
+   const photo=await preparePortrait(file);
+   if(state.modal!=='new'&&state.modal!=='edit')return;
+   state.photoDraft=photo;
+   const target=root.querySelector('#photo-preview');if(target)target.innerHTML=avatar({photo,initial:''},true);
+  }catch(err){state.notice=err?.message||'Không đọc được ảnh';const box=root.querySelector('.photo-editor-info small');if(box)box.textContent=state.notice}
+  return;
+ }
+ if(e.target.id==='status-filter'){state.filter=e.target.value;state.selected.clear();render();return}
+ if(e.target.id==='select-all'){const ids=filtered().map(x=>x.id);if(e.target.checked)ids.forEach(id=>state.selected.add(id));else ids.forEach(id=>state.selected.delete(id));render();return}
+ if(e.target.matches('[data-select]')){if(e.target.checked)state.selected.add(e.target.dataset.select);else state.selected.delete(e.target.dataset.select);render()}
+});
 window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY){const fresh=readRecords();for(const key of Object.keys(store))store[key]=fresh[key];state.notice='Dữ liệu đã được đồng bộ từ tab khác';render()}if(e.key===SESSION_KEY)render()});
 window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);state.view=PAGES[p.get('view')]?p.get('view'):'dashboard';state.theme=p.get('theme')==='dark'?'dark':'light';storageSet(THEME_KEY,state.theme);state.drawer=p.get('record')||'';state.search='';state.filter='all';state.selected.clear();render()});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeStuff();render()}});
