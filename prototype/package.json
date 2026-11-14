@@ -1,12 +1,12 @@
 {
-  "name": "pickpack-ui-architecture-review",
-  "version": "0.3.0",
+  "name": "pickpack-horilla-inspired-ui-review",
+  "version": "0.4.0",
   "private": true,
-  "description": "PickPack 1291 buildable static UI review (no backend)",
   "type": "module",
+  "description": "Independent offline UI review for PickPack 1291, inspired by Horilla patterns",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "check": "node scripts/build.mjs --check"
+    "check": "node scripts/build.mjs --check",
+    "build": "node scripts/build.mjs"
   },
   "engines": {"node": ">=18"}
 }
