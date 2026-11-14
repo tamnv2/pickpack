@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.4'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.5'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.4'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.5'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -42,9 +42,18 @@ with sync_playwright() as p:
  assert float(app.locator('.site-footer').evaluate("el => getComputedStyle(el).opacity"))<=0.75
  assert not app.locator('button.menu-button').is_visible()
  labels=app.locator('.nav-flat .nav-label').all_inner_texts()
- assert len(labels)==7 and all(5<=len(label.split())<=6 for label in labels),labels
- assert labels==['Tổng quan hoạt động vận hành','Quản lý hồ sơ nhân sự','Ghi nhận ra vào ca','Quản lý công nhật nhân sự','Quản lý biên bản sự việc','Quản lý công cụ dụng cụ','Ghi nhận mượn trả PDA']
+ assert len(labels)==7,labels
+ assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC']
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
+ assert app.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
+ assert app.locator('#clock-time').count()==1 and app.locator('#clock-date').count()==1
+ assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.textContent)")
+ assert '/' in app.locator('#clock-date').inner_text()
+ old_clock=app.locator('#clock-time').inner_text()
+ app.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
+ app.wait_for_timeout(1250)
+ assert app.locator('#clock-time').inner_text()!=old_clock
+ assert app.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
  app.set_viewport_size({'width':1024,'height':768})
  assert not app.locator('button.menu-button').is_visible()
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
@@ -271,5 +280,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.8.4 sidebar credit under version, 5–6-word nav labels, desktop toggle removed, mobile navigation, CRUD/QR/Excel')
+ print('PASS: v0.8.5 sidebar credit under version, 5–6-word nav labels, desktop toggle removed, mobile navigation, CRUD/QR/Excel')
  browser.close()
