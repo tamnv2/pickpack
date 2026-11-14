@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.1'
+assert version=='0.8.2'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -45,12 +45,16 @@ try:
         assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='fixed'
         assert page.locator('.metrics .metric-card').count() == 8
         assert page.locator('.coverage-row').count() == 6
-        assert page.locator('.corporate-brand').inner_text() == 'CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN'
+        assert page.locator('.breadcrumb').count() == 0
+        assert page.locator('.page-header .eyebrow').count() == 0
+        assert page.locator('.page-header h1').count() == 1
+        assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--text-scale').trim()") == '1.1'
+        assert page.locator('.corporate-brand span').all_inner_texts() == ['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
         assert page.locator('.shortcut-panel').count() == 0
         assert page.locator('.overview-page [data-action="add"]').count() == 0
         assert page.locator('.overview-page [data-action="export"]').count() == 0
         page.locator('button[data-action="settings"]').click()
-        assert page.locator('.font-steps output').inner_text() == '110%'
+        assert page.locator('.font-steps output').inner_text() == '100%'
         assert page.locator('[data-accent-choice]').count() == 7
         page.locator('[data-accent-choice="violet"]').click()
         assert page.evaluate("document.documentElement.dataset.accent") == 'violet'
@@ -105,6 +109,27 @@ try:
         second.locator('#shift-code').press('Enter')
         assert 'Đã ra ca' in second.locator('.scan-outcome').inner_text()
 
+        second.locator('a.nav-main[href*="view=labor"]').click()
+        assert second.locator('#labor-scan-form').count() == 1
+        assert second.locator('[data-action="layout-cards"],[data-action="layout-table"]').count() == 0
+        assert second.locator('.module-summary').count() == 0
+        second.locator('#labor-staff-code').fill('90000034')
+        second.locator('#labor-staff-code').press('Enter')
+        assert 'Đã ghi nhận công nhật' in second.locator('.scan-outcome').inner_text()
+        assert second.locator('.records-label b').inner_text() == '43'
+        second.locator('a.nav-main[href*="view=pda"]').click()
+        second.locator('#pda-staff-code').fill('90000034')
+        second.locator('#pda-staff-code').press('Enter')
+        assert second.locator('#pda-device-code').evaluate("(el)=>document.activeElement===el")
+        second.locator('#pda-device-code').fill('SYNTHETIC-1291-00003')
+        second.locator('#pda-device-code').press('Enter')
+        assert 'Đã mượn PDA-03' in second.locator('.scan-outcome').inner_text()
+        second.locator('[data-pda-mode="return"]').click()
+        second.locator('#pda-staff-code').fill('90000034')
+        second.locator('#pda-device-code').fill('PDA-03')
+        second.locator('#pda-device-code').press('Enter')
+        assert 'Đã trả PDA-03' in second.locator('.scan-outcome').inner_text()
+        assert second.locator('.table-panel').last.locator('.records-label b').inner_text() == '31'
         mobile_context = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True)
         mobile = mobile_context.new_page()
         assert mobile.goto(base + '/index.html').ok
@@ -121,7 +146,7 @@ try:
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: full dashboard read-only, 7 light themes, font 110, login, Ctrl+tab, storage sync, valid Excel XLSX via openpyxl, scanning, mobile, no external requests')
+        print('HOSTED_SMOKE_PASS: base font 110 at setting 100, single title and tables, labor/PDA QR scan, Ctrl-tab storage, XLSX, mobile, no external requests')
         browser.close()
 finally:
     server.shutdown()
