@@ -3,6 +3,7 @@
 No real data and no external host. This validates navigation that inline-DOM smoke cannot.
 """
 from contextlib import closing
+from datetime import datetime, timezone
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -76,6 +77,18 @@ try:
         assert page.evaluate("document.documentElement.dataset.accent") == 'violet'
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()") == '#823eab'
         page.locator('[data-action="close-modal"]').last.click()
+        # Check the exact 18:00 Vietnam transition with Playwright's deterministic browser clock.
+        page.locator('.top-profile').click()
+        page.locator('button[data-action="settings"]').click()
+        page.locator('button[data-theme-choice="auto"]').click()
+        page.locator('[data-action="close-modal"]').last.click()
+        probe=context.new_page()
+        probe.clock.install(time=datetime(2026,11,14,10,59,58,tzinfo=timezone.utc))
+        assert probe.goto(base + '/app.html?view=dashboard').ok
+        assert probe.evaluate("document.documentElement.dataset.theme")=='light'
+        probe.clock.fast_forward(3000)
+        assert probe.evaluate("document.documentElement.dataset.theme")=='dark'
+        probe.close()
 
         link = page.locator('a.nav-main[href*="view=people"]')
         assert link.get_attribute('href').startswith('app.html?view=people')
@@ -204,7 +217,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.5 5-6 word sidebar labels and credit, mobile-only menu, CRUD/catalogs/QR/XLSX no external calls')
+        print('HOSTED_SMOKE_PASS: v0.8.5 personnel metadata/XLSX, 18h auto theme transition, pinned clock, exact nav, QR, mobile, no external calls')
         browser.close()
 finally:
     server.shutdown()
