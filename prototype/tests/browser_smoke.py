@@ -87,6 +87,11 @@ with sync_playwright() as p:
  assert app.evaluate("document.documentElement.dataset.accent")=='green'
  assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()")=='#198056'
  assert app.evaluate("localStorage.getItem('pickpack1291_office_light_accent_v08')")=='green'
+ assert app.locator('[data-theme-choice="auto"]').count()==1
+ app.locator('button[data-theme-choice="auto"]').click()
+ assert app.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')")=='auto'
+ vn_hour=app.evaluate("Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',hourCycle:'h23'}).format(new Date()))")
+ assert app.evaluate("document.documentElement.dataset.theme")==('light' if 6<=vn_hour<18 else 'dark')
  app.locator('button[data-theme-choice="dark"]').click()
  assert app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
  assert app.locator('button[data-accent-choice]').count()==0
@@ -214,6 +219,13 @@ with sync_playwright() as p:
  app.locator('button[data-category-tab="supplier"]').click()
  assert app.locator('.catalog-panel tbody tr').count()==3
  app.locator('.catalog-heading a[data-nav="people"]').click()
+ print('testing staff columns',flush=True)
+ head=app.locator('.people-table thead th').all_inner_texts()
+ assert head[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác'],head
+ assert app.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
+ assert app.locator('.table-scroll').last.evaluate("el=>el.scrollWidth>=el.clientWidth")
+ app.evaluate('window.scrollTo(0, 600)')
+ assert abs(app.locator('.topbar').bounding_box()['y'])<2
  print('testing create',flush=True)
  app.locator('button[data-action="add"]').click()
  assert app.locator('form#record-form').count()==1
@@ -226,6 +238,8 @@ with sync_playwright() as p:
  app.locator('select[name="warehouse"]').select_option('1291')
  app.locator('input[name="phone"]').fill('0001234567')
  app.locator('select[name="shift"]').select_option('Ca 1')
+ assert app.locator('input[name="startDate"]').get_attribute('type')=='date'
+ app.locator('input[name="startDate"]').fill('2026-12-01')
  # Tiny PNG fixture is fully synthetic; assert local avatar conversion from image.
  png=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aB6YAAAAASUVORK5CYII=')
  app.locator('#staff-photo').set_input_files({'name':'portrait.png','mimeType':'image/png','buffer':png})
@@ -233,6 +247,8 @@ with sync_playwright() as p:
  assert app.locator('#photo-preview img').get_attribute('src').startswith('data:image/jpeg;base64,')
  app.locator('#record-form button[type="submit"]').click()
  assert app.locator('.records-label b').inner_text()=='37'
+ assert '01/12/2026' in app.locator('.people-table tbody tr').first.inner_text()
+ assert 'Quản trị viên' in app.locator('.people-table tbody tr').first.inner_text()
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
  print('testing edit',flush=True)
  app.locator('table tbody tr').first.locator('[data-edit]').click()
