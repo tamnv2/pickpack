@@ -33,6 +33,22 @@ jobs:
         run: python tests/browser_smoke.py
       - name: Validate hosted browser navigation and cross-tab business flows
         run: python tests/hosted_smoke.py
+      - name: Verify public static test preview (read-only CDN)
+        continue-on-error: true
+        env:
+          PREVIEW_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python - <<'PY'
+          import os, urllib.request
+          base = 'https://rawcdn.githack.com/tamnv2/pickpack/'+os.environ['PREVIEW_SHA']+'/prototype/'
+          for path, needle in [('index.html',b'assets/app.js'),('assets/app.js',b'WEB_VERSION'),('assets/styles.css',b'.site-footer')]:
+              with urllib.request.urlopen(urllib.request.Request(base+path,headers={'User-Agent':'PickPack-Preview-Check/1.0'}),timeout=25) as response:
+                  body=response.read()
+                  mime=response.headers.get('Content-Type','')
+                  assert response.status==200 and needle in body, (path,response.status)
+                  print('PREVIEW_FILE_OK',path,'bytes',len(body),'mime',mime)
+          print('PUBLIC_PREVIEW_HTTP_PASS',base+'index.html')
+          PY
       - name: Preserve browser evidence on failure
         if: failure()
         uses: actions/upload-artifact@v4
