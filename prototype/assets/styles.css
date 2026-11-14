@@ -310,3 +310,19 @@ th:first-child,td:first-child{padding-left:12px}
 @media(max-width:740px){.profile-name{display:none}.top-profile .caret{display:none}.top-profile{padding:3px 5px}.top-search{width:min(215px,38vw)}.profile-dropdown{min-width:205px}}
 @media(max-width:440px){.topbar{padding:0 9px}.top-left{gap:4px}.top-right{gap:5px}.top-search{width:min(160px,38vw)}.catalog-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-tabs button{padding:9px 7px}.page-header .header-actions{flex-wrap:wrap}.catalog-heading strong{font-size:calc(13px * var(--text-scale))}}
 @media(prefers-reduced-motion:reduce){.profile-dropdown,.scan-outcome,.login-error,.login-panel,.toast,.scan-mode button.active{animation:none}.toast::after{animation:none}.catalog-tabs button:hover{transform:none}.is-logging-out .app-main,.is-logging-out .sidebar{transition:none}}
+
+
+/* v0.8.4 — complete five-to-six-word navigation labels and sidebar attribution */
+.nav-flat .side-link{height:auto;min-height:51px;margin-block:3px}
+.nav-flat .nav-main{height:auto;min-height:51px;padding:8px 10px 8px 12px;line-height:1.35;align-items:center;gap:10px}
+.nav-flat .nav-icon{flex:0 0 21px;width:21px}
+.nav-flat .nav-label{display:block;flex:1;min-width:0;white-space:normal;overflow-wrap:normal;line-height:1.4}
+.side-bottom{gap:3px;padding:8px 11px}
+.side-bottom .site-footer{position:static;inset:auto;display:block;width:100%;max-width:100%;margin:0;padding:3px 7px 4px;border-radius:0;background:transparent;color:var(--nav-muted);text-align:left;opacity:.7;font-size:calc(9.5px * var(--text-scale));line-height:1.4;overflow-wrap:break-word;pointer-events:none;white-space:normal}
+.menu-button{display:none!important}
+@media(max-width:800px){
+ .menu-button{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;width:auto;min-width:58px;height:35px;padding:4px 8px;font-size:calc(11px * var(--text-scale));font-weight:650}
+ .menu-button span{display:inline}
+ .nav-flat .side-link,.nav-flat .nav-main{min-height:49px}
+}
+@media(prefers-reduced-motion:reduce){.nav-flat .side-link,.nav-flat .nav-main{transition:none}}
