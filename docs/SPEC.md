@@ -36,3 +36,8 @@ Platforms: Android APK and Web, realtime; sizing target **3 PDA + 5 Web concurre
 
 ## Before implementation
 Verify identity-source interoperability and read-only API, identify exact allowed provider resources, then obtain Owner approval for business permission matrix, data fields, retention, and verification plan. Do not assume these details are approved.
+
+## UI-first prototype gate — Owner, 14/11/2026
+- **APPROVED:** build and review Web UI first, with mock `Admin Demo` unrelated to real users/roles; business workflows, permission matrix, storage, Firebase integration, API, realtime and APK remain deferred until Owner accepts UI.
+- Prototype is offline static HTML with fictional records; any add/filter/search interaction is local and nonpersistent. Demo access is not an authentication or authorization mechanism; it must never ship into production.
+- No new provider resource, worker, site, DNS, public test link or Production deployment is authorized. Source-only branch/PR, then separate Owner decision for next phase and release.
