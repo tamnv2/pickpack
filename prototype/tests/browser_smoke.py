@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.2'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.3'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.2'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.3'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).position")=='fixed'
  assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).textAlign")=='right'
@@ -43,7 +43,7 @@ with sync_playwright() as p:
  assert app.locator('.side-bottom').get_by_text('Quản trị viên').count()==0
  assert app.locator('.breadcrumb').count()==0
  assert app.locator('.page-header .eyebrow').count()==0
- assert app.locator('.page-header h1').count()==1
+ assert app.locator('.page-header h1').count()==0
  assert app.locator('.metrics.overview-metrics .metric-card').count()==8
  assert app.locator('.coverage-row').count()==6
  assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
@@ -51,8 +51,12 @@ with sync_playwright() as p:
  assert app.locator('.overview-page button[data-action="add"]').count()==0
  assert app.locator('.overview-page button[data-action="export"]').count()==0
  assert app.locator('.demo-note').count()==0
- assert app.locator('button[data-action="settings"]').count()==1
+ assert app.locator('button[data-action="settings"]').count()==0
+ assert app.locator('.location-chip,.group-title').count()==0
+ assert app.locator('.side-link').count()==7
  assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--text-scale').trim()")=='1.1'
+ app.locator('.top-profile').click()
+ assert app.locator('.profile-dropdown button[data-action="settings"]').count()==1
  app.locator('button[data-action="settings"]').click()
  assert app.get_by_text('Cỡ chữ',exact=True).count()==1
  assert app.locator('.font-steps output').inner_text()=='100%'
@@ -83,7 +87,7 @@ with sync_playwright() as p:
   assert app.locator('.table-panel').last.locator('button[data-action="export"]').inner_text().strip().endswith('Xuất Excel')
   assert app.locator('.record-card').count()==0
   assert app.locator('[data-action="layout-cards"],[data-action="layout-table"]').count()==0
-  assert app.locator('.page-header h1').count()==1
+  assert app.locator('.page-header h1').count()==0
   assert app.locator('.module-summary').count()==0
  print('testing labor QR scan',flush=True)
  app.locator('a.nav-main[href*="view=labor"]').click()
@@ -155,12 +159,43 @@ with sync_playwright() as p:
  assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
  app.locator('a.nav-main[href*="view=people"]').click()
  app.screenshot(path=str(root/'preview-people.png'),full_page=True)
+ print('testing catalogs',flush=True)
+ app.locator('a[data-nav="categories"]').click()
+ assert app.locator('.catalog-tabs [data-category-tab]').count()==5
+ assert app.locator('.catalog-panel tbody tr').count()==4
+ app.locator('.catalog-panel [data-category-edit="0"]').click()
+ app.locator('#catalog-form input[name="value"]').fill('Pick thử')
+ assert 'is-valid' in app.locator('#catalog-form input[name="value"]').get_attribute('class')
+ app.locator('#catalog-form button[type="submit"]').click()
+ assert app.get_by_text('Pick thử',exact=True).count()==1
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people[0].position")=='Pick thử'
+ app.locator('.catalog-panel [data-category-delete="0"]').click()
+ assert 'Không thể xóa' in app.locator('.toast').inner_text()
+ app.locator('button[data-action="category-add"]').click()
+ app.locator('#catalog-form input[name="value"]').fill('Vị trí thử')
+ app.locator('#catalog-form button[type="submit"]').click()
+ assert app.locator('.catalog-panel tbody tr').count()==5
+ app.locator('button[data-action="category-add"]').click()
+ app.locator('#catalog-form input[name="value"]').fill('vị trí thử')
+ app.locator('#catalog-form button[type="submit"]').click()
+ assert 'đã tồn tại' in app.locator('.toast').inner_text()
+ app.locator('.modal [data-action="close-modal"]').first.click()
+ app.once('dialog',lambda d:d.accept())
+ app.locator('.catalog-panel [data-category-delete="4"]').click()
+ assert app.locator('.catalog-panel tbody tr').count()==4
+ app.locator('button[data-category-tab="supplier"]').click()
+ assert app.locator('.catalog-panel tbody tr').count()==3
+ app.locator('a[data-nav="people"]').click()
  print('testing create',flush=True)
  app.locator('button[data-action="add"]').click()
  assert app.locator('form#record-form').count()==1
  app.locator('input[name="id"]').fill('90009999')
  app.locator('input[name="name"]').fill('Nhân viên giả lập bổ sung')
- app.locator('input[name="position"]').fill('Pick')
+ app.locator('select[name="position"]').select_option('Pick thử')
+ app.locator('select[name="supplier"]').select_option('Nội bộ')
+ app.locator('select[name="department"]').select_option('Pick Pack')
+ app.locator('select[name="site"]').select_option('1291')
+ app.locator('select[name="warehouse"]').select_option('1291')
  app.locator('input[name="phone"]').fill('0001234567')
  app.locator('select[name="shift"]').select_option('Ca 1')
  # Tiny PNG fixture is fully synthetic; assert local avatar conversion from image.
@@ -199,8 +234,11 @@ with sync_playwright() as p:
  assert app.locator('.detail-drawer').count()==1
  assert app.locator('.detail-drawer button[data-quick]').count()==0
  app.locator('button[data-action="close-drawer"]').click()
- app.locator('button[data-action="theme"]').click()
- assert app.locator('html').count()==0 or app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
+ app.locator('.top-profile').click()
+ app.locator('button[data-action="settings"]').click()
+ app.locator('button[data-theme-choice="dark"]').click()
+ assert app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
+ app.locator('button[data-action="close-modal"]').last.click()
  assert not errs,errs
  print('testing mobile',flush=True)
  mobile=new_screen(mobile=True)
