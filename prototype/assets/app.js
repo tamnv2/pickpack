@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.8.10';
+ const WEB_VERSION='0.9.0';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes']];
@@ -37,20 +37,21 @@ const LEGACY_FONT_KEY='pickpack1291_office_font_v06';
  const FONT_KEY='pickpack1291_office_font_setting_v082';
 const THEME_KEY='pickpack1291_office_theme_v06';
 const VN_ZONE='Asia/Ho_Chi_Minh';
-const VN_TIME=new Intl.DateTimeFormat('vi-VN',{timeZone:VN_ZONE,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+const VN_TIME=new Intl.DateTimeFormat('en-US',{timeZone:VN_ZONE,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
 const VN_HOUR=new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,hour:'2-digit',hourCycle:'h23'});
 function resolveTheme(mode,now=new Date()){if(mode!=='auto')return mode;const hour=Number(VN_HOUR.format(now));return hour>=6&&hour<18?'light':'dark'}
 function clockNow(now=new Date()){return {time:VN_TIME.format(now),iso:now.toISOString()}}
 function clockMarkup(){
  const now=clockNow();
- return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Giờ Việt Nam"><time id="clock-time" class="office-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off"><span id="clock-hours" class="office-clock-main">${escape(now.time.slice(0,5))}</span><span id="clock-seconds" class="office-clock-seconds">${escape(now.time.slice(5))}</span></time></div>`;
+ return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Giờ Việt Nam"><time id="clock-time" class="office-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off"><span id="clock-hours" class="office-clock-main">${escape(now.time.slice(0,5))}</span><span id="clock-seconds" class="office-clock-seconds">${escape(now.time.slice(5,8))}</span><span id="clock-period" class="office-clock-period">${escape(now.time.slice(-2))}</span></time></div>`;
 }
 function tickClock(){
  const now=clockNow(),clock=document.getElementById('clock-time');
  if(clock&&clock.getAttribute('aria-label')!==now.time){
   const hours=document.getElementById('clock-hours'),seconds=document.getElementById('clock-seconds');
   if(hours&&hours.textContent!==now.time.slice(0,5))hours.textContent=now.time.slice(0,5);
-  if(seconds&&seconds.textContent!==now.time.slice(5))seconds.textContent=now.time.slice(5);
+  if(seconds&&seconds.textContent!==now.time.slice(5,8))seconds.textContent=now.time.slice(5,8);
+  const period=document.getElementById('clock-period');if(period&&period.textContent!==now.time.slice(-2))period.textContent=now.time.slice(-2);
   clock.setAttribute('aria-label',now.time);
   clock.dateTime=now.iso;
  }
@@ -192,8 +193,8 @@ function dashboard(){
 function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong>${view==='people'?`<small>${escape(row.user)}</small>`:''}</div></div>`;if(key==='state')return badge(row[key]);if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key])}
 function filtered(){const set=store[state.view]||[];let rows=set.filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);return rows}
 function controls(){
- const statuses=state.view==='people'?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
- return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${state.view==='shifts'?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}</div></div>`;
+ const statuses=['people','labor'].includes(state.view)?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
+ return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${['people','labor','minutes','assets'].includes(state.view)?`<a class="btn ghost tiny" data-nav="categories" data-catalog-scope="${state.view}" href="${href('categories')}&scope=${state.view}">${icon('list',15)} Quản lý danh mục</a>`:''}${['people','minutes','assets'].includes(state.view)?`<button class="btn primary tiny" data-action="add">${icon('plus',15)} ${state.view==='people'?'Thêm nhân sự':state.view==='minutes'?'Tạo biên bản':'Thêm CCDC'}</button>`:''}${state.view==='shifts'?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}</div></div>`;
 }
 function recordActions(r){
  if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button></span>`;
@@ -204,11 +205,8 @@ function table(){
  return `<section class="panel table-panel">${controls()}${rows.length?`<div class="table-scroll"><table class="${state.view==='people'?'people-table':'module-table'}"><thead><tr>${locked?'':'<th><input type="checkbox" id="select-all" aria-label="Chọn tất cả bản ghi đang hiển thị" '+(rows.every(x=>state.selected.has(x.id))?'checked':'')+'></th>'}${cols.map(([,lab])=>`<th>${lab}</th>`).join('')}<th>Thao tác</th></tr></thead><tbody>${rows.map(r=>`<tr>${locked?'':`<td><input type="checkbox" data-select="${escape(r.id)}" aria-label="Chọn ${escape(r.id)}" ${state.selected.has(r.id)?'checked':''}></td>`}${cols.map(([k])=>`<td>${k==='name'?`<a class="inline-link cell-record-link" href="${href(state.view,r.id)}">${tableCell(r,k,state.view)}</a>`:tableCell(r,k,state.view)}</td>`).join('')}<td>${recordActions(r)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty"><strong>Không tìm thấy bản ghi phù hợp</strong><span>Thử điều chỉnh bộ lọc hoặc từ khóa</span></div>`}<div class="table-footer"><span>Hiển thị ${rows.length} / ${store[state.view].length} bản ghi</span></div></section>`;
 }
 function modulePage(){
- const call={people:'Thêm nhân sự',minutes:'Tạo biên bản',assets:'Thêm CCDC'}[state.view];
- const head=call?`<button class="btn primary" data-action="add">${icon('plus',16)} ${call}</button>`:'';
- const other=state.view==='people'?`<a class="btn ghost" data-nav="categories" href="${href('categories')}">${icon('list',16)} Quản lý danh mục</a>`:'';
  const scanner=state.view==='shifts'?shiftScanPanel():state.view==='labor'?laborScanPanel():state.view==='pda'?pdaScanPanel():'';
- return `<div class="page-content">${pageHead(head,other)}${scanner}${state.view==='pda'?deviceRegistry():''}${table()}</div>`;
+ return `<div class="page-content">${scanner}${state.view==='pda'?deviceRegistry():''}${table()}</div>`;
 }
 function categoriesPage(){
  const field=state.categoryTab,label=CATEGORY_FIELDS.find(([k])=>k===field)?.[1]||'Danh mục',values=catalogs[field]||[];const rows=values.map((value,i)=>({value,i})).filter(({value})=>value.toLocaleLowerCase('vi').includes(state.search.trim().toLocaleLowerCase('vi')));
