@@ -35,7 +35,7 @@ with sync_playwright() as p:
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==1
  app.locator('button[data-action="settings"]').click()
- assert app.get_by_text('Cỡ chữ').count()==1
+ assert app.get_by_text('Cỡ chữ',exact=True).count()==1
  app.locator('button[data-font="5"]').click()
  assert app.locator('.font-steps output').inner_text()=='105%'
  app.locator('button[data-theme-choice="dark"]').click()
