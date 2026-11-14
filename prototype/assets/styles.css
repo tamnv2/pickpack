@@ -192,3 +192,69 @@ td,th{padding:9px 12px}
 .site-footer{position:fixed;bottom:7px;right:15px;left:auto;text-align:right;padding:3px 6px;margin:0;border-radius:4px;background:var(--bg);color:var(--muted);opacity:.64;font-size:calc(9.5px * var(--text-scale));font-weight:500;line-height:1.45;pointer-events:none;z-index:5;max-width:calc(100vw - 30px);white-space:normal}
 .login-links .web-version{margin-left:auto;align-self:center}
 @media(max-width:560px){.site-footer{right:8px;bottom:5px;font-size:calc(8.5px * var(--text-scale));max-width:calc(100vw - 16px)}}
+
+/* Office v0.8.2 — consistent dense layout, simplified headings and two-line name */
+.corporate-brand span,.login-corporate span{display:block}
+.side-top .corporate-brand{line-height:1.3;letter-spacing:0}
+.login-brand .login-corporate{font-size:calc(13px * var(--text-scale));line-height:1.35}
+.topbar{height:52px;min-height:52px;padding:0 15px}
+.top-left:empty{display:none}
+.page-content{padding:10px 12px 28px;max-width:none}
+.page-header{margin-bottom:9px;min-height:30px;align-items:center}
+.page-header h1{font-size:calc(21px * var(--text-scale));margin:0;line-height:1.3}
+.metrics{gap:8px;margin-bottom:9px}
+.metric-card{padding:9px 11px;border-radius:8px}
+.metric-number{font-size:calc(24px * var(--text-scale));margin:2px 0 4px}
+.metric-icon{width:27px;height:27px}
+.overview-metrics .metric-card{min-height:91px}
+.overview-metrics .metric-number{font-size:calc(23px * var(--text-scale))}
+.overview-sections,.two-col{gap:9px;margin-bottom:9px}
+.panel{border-radius:8px}
+.panel-title{padding:10px 12px 7px}
+.panel-title p{margin:2px 0 0}
+.coverage-list{padding:0 12px 8px}
+.coverage-row{padding:6px 0}
+.alert-list{padding:0 10px 10px}
+.alert-row{padding:8px 5px}
+.timeline{padding:0 12px 9px}
+.timeline-row{padding:9px 0}
+.chart-area{height:205px;padding:10px 15px 21px 10px}
+.chart-bars{height:164px}
+.bar-wrap{height:140px}
+.table-controls{min-height:45px;padding:6px 10px}
+.table-control-left,.table-control-right{gap:7px;flex-wrap:wrap}
+td,th{padding:7px 9px}
+th:first-child,td:first-child{padding-left:12px}
+.table-footer{padding:6px 10px}
+.scan-station{margin-bottom:9px;padding:11px 12px}
+.scan-station-head{margin-bottom:9px;gap:9px}
+.scan-station-head h2{font-size:calc(14px * var(--text-scale));margin:0 0 3px}
+.scan-station-head p{margin:0}
+.scan-mark{width:33px;height:33px}
+.scan-mode-wrapper{margin-bottom:9px}
+.scan-mode button{min-height:30px}
+.scan-code-label{margin-bottom:5px}
+.scan-form-row input{min-height:35px;padding:7px 10px}
+.scan-preview{margin-top:8px;padding:9px}
+.scan-fields{gap:6px 10px}
+.scan-fields div{padding-top:5px}
+.scan-identity{margin-bottom:8px}
+.compact-identity{margin:0}
+.compact-identity .person-avatar{width:35px;height:35px}
+.scan-code-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:10px}
+.scan-code-grid>label{min-width:0;display:grid;gap:5px;margin:0}
+.scan-code-grid input{width:100%;min-width:0;min-height:35px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--control);color:var(--text);font-size:calc(12px * var(--text-scale))}
+.scan-code-grid .btn{min-height:35px}
+.scan-pair-preview{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scan-pair-preview>div{min-width:0;padding:9px;border:1px solid var(--border);background:var(--chip);border-radius:7px}
+.scan-pair-preview .compact-identity{min-width:0}
+.scan-pair-preview .compact-identity small{line-height:1.4;overflow-wrap:anywhere}
+.scan-device{display:grid;gap:5px;font-size:calc(12px * var(--text-scale))}
+.scan-device strong{overflow-wrap:anywhere}
+.scan-device span{color:var(--muted)}
+.device-registry{margin-bottom:9px}
+.modal-head{padding:14px 18px 10px}
+#record-form .form-grid{gap:10px}
+@media(max-width:1150px){.scan-code-grid{grid-template-columns:1fr 1fr}.scan-code-grid .btn{grid-column:1/-1;justify-self:start}}
+@media(max-width:780px){.topbar{height:51px;min-height:51px}.page-content{padding:9px 10px 25px}.overview-metrics{gap:7px}.scan-pair-preview{grid-template-columns:1fr}}
+@media(max-width:560px){.scan-code-grid{grid-template-columns:1fr}.scan-code-grid .btn{grid-column:auto;width:100%}.scan-mode-wrapper{gap:6px}.table-controls{padding:7px 9px;gap:5px}.table-control-left,.table-control-right{flex-wrap:wrap;justify-content:flex-start}.page-header{min-height:29px;margin-bottom:8px}.page-header h1{font-size:calc(19px * var(--text-scale))}.metrics .metric-card{min-height:95px;padding:9px}.site-footer{font-size:calc(8px * var(--text-scale))}}
