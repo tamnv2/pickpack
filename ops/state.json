@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "OFFICE_UI_V082_TEST_PREVIEW_READY",
-  "application_code": "WEB_OFFICE_STATIC_V082_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43590709932_BUILD_CHROMIUM_HOSTED_CDN_BROWSER",
+  "phase": "OFFICE_UI_V083_VERIFICATION_PENDING",
+  "application_code": "WEB_OFFICE_STATIC_V083_DRAFT_PR_UNVERIFIED",
+  "technical_ci": "V083_PENDING_LIVE_CI_CHECK",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V082_TEST_PREVIEW_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V083_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner visual/business review of v0.8.2 compact table-only UI and employee/PDA QR keyboard scanner workflows",
-    "Real shift/user authority, hours/work attribution, Firebase Auth/role RBAC/OpsCore/realtime before live data",
-    "Physical QR/barcode reader or camera, APK, production RELEASE_PASS/FIELD_PASS/OWNER_PASS not tested or authorized"
+    "Verify v0.8.3 Chromium source/hosted tests and immutable test preview; Owner UI review",
+    "Authoritative identity/shift-user and backend RBAC before real operations",
+    "Production RELEASE_PASS/FIELD_PASS/OWNER_PASS, physical barcode and APK not approved/tested"
   ],
-  "latest_checkpoint": "PP-20261114-012",
+  "latest_checkpoint": "PP-20261114-013",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -44,10 +44,10 @@
     "modules": 7,
     "independent_tab_links": true,
     "demo_admin": "MOCK_ONLY",
-    "provider_usage": "ZERO_RUNTIME_API_CALLS",
+    "provider_usage": "ZERO_RUNTIME_BUSINESS_API_CALLS_STATIC_CDN_TRANSFER_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.8.2",
+    "version": "0.8.3",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -59,7 +59,7 @@
       "pda_device_ids": 3
     },
     "admin_actions": "BROWSER_LOCAL_SYNTHETIC_CRUD_BULK_XLSX_STATUS_PDA_LOAN_GUARD",
-    "navigation": "NATIVE_ANCHORS_NO_NEW_TAB_BUTTON",
+    "navigation": "SHORT_LABEL_FLAT_NAV_TOP_LEFT_PROFILE_SETTINGS_NO_REPEATED_PAGE_HEADING",
     "storage": "LOCALSTORAGE_FAKE_DATA_ONLY",
     "font_scale": "PREFERENCE_100_PERCENT_ACTUAL_BASE_110_PERCENT_OLD_SETTING_ONE_TIME_CONVERSION",
     "sidebar_theme": "LIGHT_IN_LIGHT_DARK_IN_DARK",
@@ -92,10 +92,12 @@
     "layout": "TABLE_ONLY_NO_CARD_TOGGLE",
     "labor_scan": "EMPLOYEE_CODE_QR_KEYBOARD_EXACT_PROFILE_SHIFT_USER_DATE_TIME_TEMP_NO_GUESSED_HOURS_WORK_ONE_PER_DAY",
     "pda_scan": "EMPLOYEE_AND_PDA_QR_KEYBOARD_MATCH_ID_SERIAL_LAST5_BORROW_RETURN_AUDIT_RETURNER_NO_DUPLICATE_OPEN_LOAN",
-    "verification_v082": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_99ed047b963dbaee81d54711acae3485d5313e98_RUN_43590709932_BUILD_7_FILES_171953_BYTES_CHROMIUM_HOSTED_REMOTE"
+    "verification_v082": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_99ed047b963dbaee81d54711acae3485d5313e98_RUN_43590709932_BUILD_7_FILES_171953_BYTES_CHROMIUM_HOSTED_REMOTE",
+    "personnel_catalogs": "FIVE_LOCALSTORAGE_LISTS_SELECT_CRUD_CASE_INSENSITIVE_DUPLICATE_GUARD_RENAME_REFERENCES_DELETE_IN_USE_BLOCK",
+    "interactions": "ANIMATED_MENU_TOAST_FORM_VALIDATION_SCANNER_LOGIN_LOGOUT_REDUCED_MOTION"
   },
   "test_preview": {
-    "status": "WEB_TEST_PREVIEW_PASS",
+    "status": "V083_PENDING_VERIFICATION_PREVIOUS_V082_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
     "url": "https://rawcdn.githack.com/tamnv2/pickpack/99ed047b963dbaee81d54711acae3485d5313e98/prototype/index.html",
     "verified_commit": "99ed047b963dbaee81d54711acae3485d5313e98",
