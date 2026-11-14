@@ -354,12 +354,12 @@ function modal(){
  const fields=key==='people'?PERSON_EDITOR:columns[key].filter(([k])=>k!=='id');
  return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>QUẢN LÝ DỮ LIỆU</span><h2 id="modal-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><form id="record-form">${key==='people'?photoEditor(existing):''}<div class="form-grid">${fields.map(([k,l])=>fieldInput(k,l,editing?existing[k]:k==='state'?INITIAL_STATE[key]:'',editing)).join('')}</div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu chỉnh sửa':'Tạo bản ghi'}</button></div></form></section></div>`;
 }
-function toast(){return state.notice?`<div class="toast" role="status">${escape(state.notice)}<button data-action="clear-notice" aria-label="Đóng thông báo">×</button></div>`:''}
+function toast(){if(!state.notice)return '';const fail=/không|trùng|lỗi|vượt|chưa hợp lệ|phải có/i.test(state.notice);return `<div class="toast ${fail?'toast-error':'toast-success'}" role="${fail?'alert':'status'}"><span class="toast-symbol">${fail?'!':'✓'}</span><span>${escape(state.notice)}</span><button data-action="clear-notice" aria-label="Đóng thông báo">×</button></div>`}
 function render(){document.documentElement.setAttribute('data-theme',state.theme);document.documentElement.setAttribute('data-accent',state.accent);document.documentElement.style.setProperty('--text-scale',String(state.fontPct/100*1.1));if(document.body.dataset.screen==='login'){renderLogin();return}if(!demoSession()){root.innerHTML=`<main class="auth-required"><img src="assets/supra-mark.png" alt="The Supra"><h2>Vui lòng đăng nhập</h2><p>Đăng nhập Quản trị viên trước khi sử dụng giao diện và các tab nghiệp vụ.</p><a class="btn primary" href="index.html">Đăng nhập</a></main>`;return}root.innerHTML=`${side()}<div class="screen-shade ${state.sidebar?'show':''}" data-action="close-nav"></div><div class="app-main">${top()}${state.view==='dashboard'?dashboard():state.view==='categories'?categoriesPage():modulePage()}<footer class="site-footer">Phát triển hệ thống - tamnv2 | Pick Pack 1291</footer></div>${drawer()}${modal()}${toast()}`}
 function renderLogin(){root.innerHTML=`<main class="login-screen"><div class="login-panel"><div class="login-left"><div class="login-brand"><img class="brand-logo" src="assets/supra-mark.png" alt="The Supra"><span class="login-corporate"><span>CÔNG TY CỔ PHẦN THE SUPRA</span><span>DC HƯNG YÊN</span></span></div><div class="login-art"><div class="art-greeting">QUẢN LÝ VẬN HÀNH</div><h1>Quản lý Pick & Pack tập trung.</h1><p>Nhân sự, công ca, hồ sơ và thiết bị trong cùng một hệ thống.</p><div class="art-metrics"><div><strong>07</strong><span>Phân hệ</span></div><div><strong>03</strong><span>Thiết bị PDA</span></div><div><strong>05</strong><span>Phiên Web</span></div></div></div></div><div class="login-right"><span class="login-kicker">PICKPACK OFFICE</span><h2>Đăng nhập hệ thống</h2><p>Nhập thông tin tài khoản để tiếp tục.</p><form id="login-form" autocomplete="off" class="login-form"><label>Tên đăng nhập<input id="demo-user" name="username" value="" placeholder="Nhập tên đăng nhập" autocomplete="off" required></label><label>Mật khẩu<div class="password-wrap"><input id="demo-password" name="password" type="${state.loginVisible?'text':'password'}" placeholder="Nhập mật khẩu" autocomplete="off" required><button type="button" class="password-toggle" data-action="show-password" aria-label="${state.loginVisible?'Ẩn':'Hiện'} mật khẩu">${state.loginVisible?'Ẩn':'Hiện'}</button></div></label>${state.loginError?`<div class="login-error" role="alert">${escape(state.loginError)}</div>`:''}<button class="btn primary login-submit" type="submit">Đăng nhập <span>→</span></button></form><div class="login-links"><button data-action="theme" class="text-button">${state.theme==='dark'?'☼ Sáng':'☾ Tối'}</button><span class="web-version">Web v${WEB_VERSION}</span></div></div></div></main>`}
 function safeHistory(method,url){try{history[method](null,'',url)}catch{ /* Browser file:// history restrictions do not block UI. */ }}
-function closeStuff(){state.sidebar=false;state.modal='';state.drawer='';state.editId=''}
-function setView(view){state.view=view;state.search='';state.filter='all';state.drawer='';state.sidebar=false;state.selected.clear();safeHistory('pushState',href(view));render();window.scrollTo(0,0)}
+function closeStuff(){state.sidebar=false;state.modal='';state.drawer='';state.editId='';state.profileMenu=false}
+function setView(view){state.view=view;state.search='';state.filter='all';state.drawer='';state.sidebar=false;state.profileMenu=false;state.selected.clear();safeHistory('pushState',href(view));render();window.scrollTo(0,0)}
 function saveForm(form){
  const key=state.view;
  if(['shifts','dashboard','labor','pda'].includes(key))return;
@@ -452,9 +452,14 @@ root.addEventListener('submit',function(e){
  if(e.target.id==='labor-scan-form'){e.preventDefault();scanLabor(new FormData(e.target).get('employeeCode'));return}
  if(e.target.id==='pda-scan-form'){e.preventDefault();const fd=new FormData(e.target);scanPda(fd.get('employeeCode'),fd.get('deviceCode'));return}
  if(e.target.id==='record-form'){e.preventDefault();saveForm(e.target)}
+ if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
 });
 root.addEventListener('click',e=>{
- const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())saveForm(form);return}
+ const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())saveForm(form);else form.querySelectorAll('input,select').forEach(el=>{el.dataset.touched='1';markField(el)});return}
+ const submitCategory=e.target.closest('#catalog-form button[type="submit"]');if(submitCategory){e.preventDefault();const form=submitCategory.form;if(form?.reportValidity())saveCatalog(form);else form.querySelectorAll('input').forEach(el=>{el.dataset.touched='1';markField(el)});return}
+ const categoryTab=e.target.closest('[data-category-tab]');if(categoryTab){state.categoryTab=categoryTab.dataset.categoryTab;state.notice='';render();return}
+ const categoryEdit=e.target.closest('[data-category-edit]');if(categoryEdit){state.categoryEdit=catalogs[state.categoryTab]?.[Number(categoryEdit.dataset.categoryEdit)]||'';state.modal='category-edit';render();return}
+ const categoryDelete=e.target.closest('[data-category-delete]');if(categoryDelete){deleteCatalog(Number(categoryDelete.dataset.categoryDelete));return}
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();setView(nav.dataset.nav)}return}
  const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
  const edit=e.target.closest('[data-edit]');if(edit){if(state.view==='shifts')return;state.editId=edit.dataset.edit;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===state.editId)?.photo||''):'';state.modal='edit';render();return}
@@ -464,13 +469,13 @@ root.addEventListener('click',e=>{
  const pdaMode=e.target.closest('[data-pda-mode]');if(pdaMode){state.pdaMode=pdaMode.dataset.pdaMode==='return'?'return':'borrow';state.pdaScan=null;render();root.querySelector('#pda-staff-code')?.focus();return}
  const accent=e.target.closest('[data-accent-choice]');if(accent){const chosen=accent.dataset.accentChoice;if(!ACCENTS.some(([key])=>key===chosen))return;state.accent=chosen;storageSet(ACCENT_KEY,chosen);render();return}
  const font=e.target.closest('[data-font]');if(font){state.fontPct=Math.max(90,Math.min(120,state.fontPct+Number(font.dataset.font)));storageSet(FONT_KEY,String(state.fontPct));render();return}const choice=e.target.closest('[data-theme-choice]');if(choice){state.theme=choice.dataset.themeChoice;storageSet(THEME_KEY,state.theme);safeHistory('replaceState',href(state.view,state.drawer));render();return}const btn=e.target.closest('[data-action]');if(!btn)return;const act=btn.dataset.action;if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
- switch(act){case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
+ switch(act){case'profile-menu':state.profileMenu=!state.profileMenu;break;case'category-add':state.categoryEdit='';state.modal='category-new';break;case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
  case'theme':state.theme=state.theme==='light'?'dark':'light';storageSet(THEME_KEY,state.theme);safeHistory('replaceState',document.body.dataset.screen==='app'?href(state.view,state.drawer):'index.html?theme='+state.theme);break;
  case'add':if(['shifts','dashboard','labor','pda'].includes(state.view))return;state.editId='';state.photoDraft='';state.modal='new';break;case'close-modal':state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
- case'notifications':state.modal='notifications';break;case'settings':state.modal='settings';break;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
+ case'notifications':state.profileMenu=false;state.modal='notifications';break;case'settings':state.profileMenu=false;state.modal='settings';break;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
  case'clear-notice':state.notice='';break;
  case'show-password':{const form=root.querySelector('#login-form');const username=form?.querySelector('#demo-user')?.value||'';const password=form?.querySelector('#demo-password')?.value||'';state.loginVisible=!state.loginVisible;render();root.querySelector('#demo-user').value=username;root.querySelector('#demo-password').value=password;return}
- case'logout':storageRemove(SESSION_KEY);location.href='index.html';return;
+ case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
  case'bulk-delete':deleteIds([...state.selected]);return;
  
  case'export':exportExcel();return;
@@ -478,6 +483,7 @@ root.addEventListener('click',e=>{
  render();
 });
 root.addEventListener('input',function(e){
+ markField(e.target);
  if(e.target.id==='shift-code'){
   const code=e.target.value.trim(),person=store.people.find(p=>p.id===code),preview=root.querySelector('#scan-preview');
   if(preview)preview.innerHTML=code&&!person?'<div class="scan-empty">Chưa tìm thấy mã nhân viên phù hợp.</div>':scanPreview(person);
@@ -511,12 +517,15 @@ root.addEventListener('change',async function(e){
   }catch(err){state.notice=err?.message||'Không đọc được ảnh';const box=root.querySelector('.photo-editor-info small');if(box)box.textContent=state.notice}
   return;
  }
+ markField(e.target);
  if(e.target.id==='status-filter'){state.filter=e.target.value;state.selected.clear();render();return}
  if(e.target.id==='select-all'){const ids=filtered().map(x=>x.id);if(e.target.checked)ids.forEach(id=>state.selected.add(id));else ids.forEach(id=>state.selected.delete(id));render();return}
  if(e.target.matches('[data-select]')){if(e.target.checked)state.selected.add(e.target.dataset.select);else state.selected.delete(e.target.dataset.select);render()}
 });
-window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY){const fresh=readRecords();for(const key of Object.keys(store))store[key]=fresh[key];state.notice='Dữ liệu đã được đồng bộ từ tab khác';render()}if(e.key===SESSION_KEY)render()});
+window.addEventListener('storage',e=>{if(e.key===CATALOG_KEY){Object.assign(catalogs,readCatalogs());render()}if(e.key===STORAGE_KEY){const fresh=readRecords();for(const key of Object.keys(store))store[key]=fresh[key];state.notice='Dữ liệu đã được đồng bộ từ tab khác';render()}if(e.key===SESSION_KEY)render()});
 window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);state.view=PAGES[p.get('view')]?p.get('view'):'dashboard';state.theme=p.get('theme')==='dark'?'dark':'light';storageSet(THEME_KEY,state.theme);state.drawer=p.get('record')||'';state.search='';state.filter='all';state.selected.clear();render()});
+function markField(el){if(!el?.matches('#record-form input:not([type=file]),#record-form select,#catalog-form input'))return;const touched=el.dataset.touched==='1'||String(el.value||'').trim().length>0;const valid=el.checkValidity();el.classList.toggle('is-valid',touched&&valid);el.classList.toggle('is-invalid',touched&&!valid)}
+root.addEventListener('focusout',e=>{if(e.target.matches('#record-form input,#record-form select,#catalog-form input')){e.target.dataset.touched='1';markField(e.target)}});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeStuff();render()}});
 render();
 })();
