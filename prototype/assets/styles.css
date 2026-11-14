@@ -386,3 +386,45 @@ html{scrollbar-gutter:stable}
  .dashboard-search-panel{margin-bottom:8px}
 }
 @media(prefers-reduced-motion:reduce){.dashboard-search-panel{animation:none}.dashboard-search-hit{transition:none}}
+
+/* v0.9.0 — 10 Owner-approved synthetic business workflows, no hosted backend. */
+.office-clock-period{font-size:calc(10px * var(--text-scale));font-weight:750;color:var(--primary);letter-spacing:.03em;padding-left:5px}
+.topbar .header-clock{width:170px;min-width:170px;max-width:170px}
+.table-controls{padding-block:9px;min-height:51px}
+.table-control-right{flex-wrap:wrap;gap:7px}
+.table-control-right .btn{min-height:32px}
+.page-content:has(.table-panel)>.page-header:empty{display:none}
+.scan-mode-wrapper.shift-choice-row{align-items:end;gap:18px;flex-wrap:wrap}
+.shift-choice{display:grid;gap:6px;font-size:calc(11px * var(--text-scale))}
+.shift-choice select,.labor-scan-fields select{border:1px solid var(--border);background:var(--control);color:var(--text);height:43px;border-radius:8px;padding:0 10px;min-width:155px}
+.labor-scan-fields{display:grid;grid-template-columns:minmax(175px,240px) minmax(200px,1fr) auto;align-items:end;gap:12px}
+.labor-scan-fields>label{display:grid;gap:7px}
+.labor-scan-fields input{width:100%;min-height:43px;box-sizing:border-box;border:1px solid var(--border);background:var(--control);color:var(--text);border-radius:8px;padding:0 12px}
+.labor-scan-fields button{min-height:43px}
+.toast-stack{position:fixed;top:68px;right:18px;z-index:400;display:flex;flex-direction:column;gap:9px;max-height:calc(100dvh - 78px);width:min(390px,calc(100vw - 32px));pointer-events:none}
+.toast-stack .toast{position:relative;bottom:auto;right:auto;top:auto;width:100%;max-width:100%;box-sizing:border-box;display:flex;align-items:center;gap:9px;pointer-events:auto;box-shadow:0 8px 22px #0b17202a;background:var(--card);color:var(--text);border:1px solid var(--border);border-left:3px solid var(--green);padding:12px 13px;animation:pp-toast .18s ease-out}
+.toast-stack .toast-error{border-left-color:#d75353}
+.toast-stack .toast button{color:var(--muted);margin-left:auto}
+.toast-stack .toast::after{animation:pp-progress 5s linear forwards}
+.modal-overlay:has(.confirmation-dialog),.modal-overlay:has(.portrait-lightbox){display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;z-index:170}
+.confirmation-dialog{max-width:450px;width:min(94vw,450px);padding-bottom:0}
+.confirmation-dialog #confirm-form{padding:21px 24px 15px}
+.confirmation-dialog #confirm-message{font-size:calc(13px * var(--text-scale));line-height:1.55;color:var(--text);margin:0 0 17px}
+.confirm-password{display:grid;gap:7px;font-size:calc(11px * var(--text-scale));font-weight:700;color:var(--text)}
+.confirm-password input{height:42px;border:1px solid var(--border);border-radius:7px;padding:0 12px;background:var(--control);color:var(--text)}
+.demo-security-note{display:block;font-size:calc(10px * var(--text-scale));line-height:1.45;margin:9px 0;color:var(--muted)}
+.confirm-error{font-size:calc(11px * var(--text-scale));color:#d75353;min-height:17px}
+.confirmation-dialog .modal-actions{padding:16px 0 2px;display:flex;justify-content:flex-end;gap:9px}
+.confirmation-dialog .btn.danger{background:#b94040;color:white;border:1px solid #b94040}
+.portrait-original{margin:15px 0 18px;background:var(--chip);border:1px solid var(--border);border-radius:10px;padding:12px;display:grid;gap:8px;justify-items:center}
+.portrait-open{border:0;background:transparent;cursor:zoom-in;display:block;width:100%;padding:0}
+.portrait-open img{display:block;margin:auto;width:auto;height:auto;max-width:100%;max-height:430px;object-fit:contain;border-radius:7px;box-shadow:0 2px 10px #0b172022}
+.portrait-original>small{font-size:calc(10px * var(--text-scale));text-align:center;color:var(--muted)}
+.portrait-placeholder{min-height:130px;display:grid;align-content:center;justify-items:center;gap:9px}
+.portrait-placeholder p{color:var(--muted);font-size:calc(11px * var(--text-scale));text-align:center}
+.portrait-lightbox{max-width:min(900px,96vw);max-height:94vh;display:flex;justify-content:center;align-items:center;position:relative;background:var(--card);padding:14px;border-radius:10px}
+.portrait-lightbox>img{display:block;max-width:min(870px,90vw);max-height:88vh;width:auto;height:auto;object-fit:contain}
+.portrait-close{position:absolute;right:15px;top:15px;background:var(--card);z-index:2;box-shadow:0 2px 7px #0004}
+@media(max-width:900px){.labor-scan-fields{grid-template-columns:minmax(170px,1fr) minmax(190px,2fr)}.labor-scan-fields button{grid-column:1/-1}}
+@media(max-width:600px){.topbar .top-right{grid-template-columns:0px 25px 113px}.topbar .header-clock{width:113px;min-width:113px;max-width:113px}.office-clock-main{font-size:calc(15px * var(--text-scale))}.office-clock-seconds{font-size:calc(11px * var(--text-scale))}.office-clock-period{font-size:calc(9px * var(--text-scale));padding-left:3px}.labor-scan-fields{grid-template-columns:minmax(0,1fr)}.labor-scan-fields button{grid-column:auto}.shift-choice-row{align-items:start}.toast-stack{right:10px;top:58px;width:min(390px,calc(100vw - 20px))}.table-control-right{justify-content:flex-end}}
+@media(prefers-reduced-motion:reduce){.toast-stack .toast,.toast-stack .toast::after{animation:none}}
