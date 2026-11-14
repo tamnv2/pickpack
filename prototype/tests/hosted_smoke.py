@@ -56,7 +56,7 @@ try:
         second.locator('#record-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text() == '37'
         # The other open tab receives a native storage event and updates the dashboard.
-        page.locator('.metrics .metric-number').first.get_by_text('37').wait_for(timeout=5000)
+        page.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim() === '37'", timeout=5000)
 
         with second.expect_download() as finished:
             second.locator('button[data-action="export"]').click()
