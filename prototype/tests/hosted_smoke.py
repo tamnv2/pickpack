@@ -104,10 +104,10 @@ try:
         time_probe=context.new_page()
         time_probe.clock.install(time=datetime(2026,11,14,10,32,58,tzinfo=timezone.utc))
         assert time_probe.goto(base + '/app.html?view=dashboard').ok
-        assert time_probe.locator('#clock-time').inner_text()=='17:32:58'
+        assert time_probe.locator('#clock-time').text_content()=='17:32:58'
         time_probe.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
         time_probe.clock.fast_forward(3000)
-        assert time_probe.locator('#clock-time').inner_text()=='17:33:01'
+        assert time_probe.locator('#clock-time').text_content()=='17:33:01'
         assert time_probe.locator('#clock-hours').inner_text()=='17:33'
         assert time_probe.locator('#clock-seconds').inner_text()==':01'
         assert time_probe.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
