@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.5'
+assert version=='0.8.6'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -52,9 +52,21 @@ try:
         assert page.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
         assert page.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
         assert page.locator('#clock-time').is_visible()
+        assert page.locator('#clock-time .flip-digit').count() == 6
+        assert page.locator('#clock-time .flip-separator').count() == 2
         assert page.locator('#clock-date').is_visible()
         assert '/' in page.locator('#clock-date').inner_text()
         assert page.locator('.metrics .metric-card').count() == 8
+        assert page.locator('#global-search').is_visible()
+        page.evaluate("() => window.__searchClock=document.querySelector('#clock-time')")
+        page.locator('#global-search').fill('90000001')
+        assert page.locator('.dashboard-search-hit[href*="view=people"][href*="record=90000001"]').count()==1
+        assert page.evaluate("() => window.__searchClock===document.querySelector('#clock-time')")
+        assert page.locator('.metrics .metric-card').count() == 8
+        page.locator('#global-search').fill('KHONG_CO_BAN_GHI_1291')
+        assert page.locator('.dashboard-no-results').count()==1
+        page.locator('#global-search').fill('')
+        assert page.locator('.dashboard-search-panel').count()==0
         assert page.locator('.coverage-row').count() == 6
         assert page.locator('.breadcrumb').count() == 0
         assert page.locator('.page-header .eyebrow').count() == 0
@@ -77,6 +89,18 @@ try:
         assert page.evaluate("document.documentElement.dataset.accent") == 'violet'
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()") == '#823eab'
         page.locator('[data-action="close-modal"]').last.click()
+        # Verify a true seconds rollover and flip without re-rendering the page.
+        flip_probe=context.new_page()
+        flip_probe.clock.install(time=datetime(2026,11,14,10,32,58,tzinfo=timezone.utc))
+        assert flip_probe.goto(base + '/app.html?view=dashboard').ok
+        assert flip_probe.locator('#clock-time').text_content()=='17:32:58'
+        flip_probe.evaluate("() => window.__flipClock=document.querySelector('#clock-time')")
+        flip_probe.clock.fast_forward(3000)
+        assert flip_probe.locator('#clock-time').text_content()=='17:33:01'
+        assert flip_probe.locator('.flip-digit[data-old]').count()>=1
+        assert flip_probe.locator('.flip-digit.is-flipping').count()>=1
+        assert flip_probe.evaluate("() => window.__flipClock===document.querySelector('#clock-time')")
+        flip_probe.close()
         # Check the exact 18:00 Vietnam transition with Playwright's deterministic browser clock.
         page.locator('.top-profile').click()
         page.locator('button[data-action="settings"]').click()
@@ -217,7 +241,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.5 personnel metadata/XLSX, 18h auto theme transition, pinned clock, exact nav, QR, mobile, no external calls')
+        print('HOSTED_SMOKE_PASS: v0.8.6 flipping digits, dashboard cross-module search, 18h theme, personnel/QR/XLSX/mobile, zero external requests')
         browser.close()
 finally:
     server.shutdown()
