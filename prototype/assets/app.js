@@ -280,6 +280,7 @@ root.addEventListener('submit',function(e){
  if(e.target.id==='record-form'){e.preventDefault();saveForm(e.target)}
 });
 root.addEventListener('click',e=>{
+ const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())saveForm(form);return}
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();setView(nav.dataset.nav)}return}
  const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
  const edit=e.target.closest('[data-edit]');if(edit){if(state.view==='shifts')return;state.editId=edit.dataset.edit;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===state.editId)?.photo||''):'';state.modal='edit';render();return}
