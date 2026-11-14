@@ -10,3 +10,9 @@ Use one compact semantic checkpoint per meaningful change; preserve **fact, Owne
 - **Release gate:** CODE ONLY by default → build/test/report CODE_READY; Owner separate explicit authorization required before merge/production deployment, shared provider writes or costs.
 - **FACT:** read-only Inventory source `service/src/auth.ts` defines `PICKER/REPORTER/ADMIN/PICKPACK_ADMIN/OBPP_COORDINATOR/ROOT`; authentication design is Worker-driven. Existing secure cross-app role-read contract **not yet verified**. `pickpack` was empty pre-bootstrap.
 - **NEXT:** verify role-consumption path without touching Inventory; design/approve exact PickPack business permission matrix and provider resource scope before app code. No Production release authorized.
+
+## PP-20261114-002 — OWNER APPROVED UI-FIRST / 14-11-2026
+- **APPROVED:** Web UI prototype before business logic/data/API/APK; Admin Demo is mock, not shared Firebase identity/role; Owner reviews UI before next phase. Public/Production deployment not authorized.
+- **DONE (working PR only):** self-contained `prototype/index.html`, 7 UI sections with fictional records, local search/filter/add, desktop/mobile responsive, no remote assets or network calls. No backend/Auth/DB/Worker/APK.
+- **VERIFY:** local Chromium smoke at 1366×900 and 390×844: demo entry, navigation, search, filter, temporary add, reload reset, XSS-text escaping, no external requests or console page errors. No CI configured; UI not yet Owner accepted.
+- **NEXT:** Owner reviews UI and requests corrections. Identity-authority verification, business RBAC, database and APK remain deferred. No merge or provider deployment.
