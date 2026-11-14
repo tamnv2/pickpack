@@ -127,3 +127,9 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 - **APPROVED UI-only:** fix the user-observed toolbar positional variance across Overview and other modules using invariant search / notification / time slots at the same viewport, including Categories search; retain responsive behavior.
 - **APPROVED UI-only:** replace static digits with genuinely hinged split-flap animation: old top half rotates out, next bottom half rotates in; only changed digits animate; fixed display, accessibility label and reduced-motion fallback. No external widget/network or provider changes.
 - Same static synthetic demo boundary; no Production/merge authorization.
+
+## Web Office preview v0.8.8 — Owner-approved Visual Timer motion (14/11/2026)
+- **APPROVED:** replace v0.8.7 compact flap styling with original code recreating the mechanical retro split-flap look/movement referenced at https://visualtimer.com/timers/flip-clock/ (no imported code, media or hotlinks): higher-contrast dark tiles, visible hinge/pins, top flap folding out then bottom flap folding in, eased depth/shading, increased legibility within the already consistent toolbar.
+- Keep HH:mm:ss, Vietnam date, animate only changed digits, avoid UI re-render/network calls. Recover frozen flaps when reduced-motion/hidden-tab settings change; honor accessibility and responsive layouts. Timer/stopwatch/audio not in scope.
+- This is static synthetic Web UI only, subject to Owner visual acceptance; no production, backend, shared provider, or Inventory changes.
+
