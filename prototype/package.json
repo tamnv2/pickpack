@@ -1,9 +1,9 @@
 {
   "name": "pickpack-horilla-inspired-ui-review",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
-  "description": "Static PickPack 1291 office UI with source-aligned employee registry, avatar and browser-local scan demo",
+  "description": "Static PickPack 1291 Office UI with seven palettes, system dashboard, offline XLSX exports and barcode attendance",
   "scripts": {
     "check": "node scripts/build.mjs --check",
     "build": "node scripts/build.mjs"
