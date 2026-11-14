@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.6'
+assert version=='0.8.7'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -54,10 +54,22 @@ try:
         assert page.locator('#clock-time').is_visible()
         assert page.locator('#clock-time .flip-digit').count() == 6
         assert page.locator('#clock-time .flip-separator').count() == 2
+        assert page.locator('.flip-upper').count()==6
+        assert page.locator('.flip-lower').count()==6
+        assert page.locator('.flip-out').count()==6
+        assert page.locator('.flip-in').count()==6
         assert page.locator('#clock-date').is_visible()
         assert '/' in page.locator('#clock-date').inner_text()
         assert page.locator('.metrics .metric-card').count() == 8
         assert page.locator('#global-search').is_visible()
+        slots=lambda: page.evaluate("""() => ['.top-search','.topbar .notif','.header-clock'].map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return [r.x,r.y,r.width]})""")
+        overview_slots=slots()
+        for module in ['people','shifts','pda','labor','minutes','assets','categories']:
+            page.locator(f'a.nav-main[href*="view={module}"]').click() if module!='categories' else page.goto(base + '/app.html?view=categories')
+            assert all(abs(a-b)<1 for u,v in zip(overview_slots,slots()) for a,b in zip(u,v)),module
+            assert page.locator('#global-search').is_visible()
+        page.locator('a.nav-main[href*="view=dashboard"]').click()
+        assert all(abs(a-b)<1 for u,v in zip(overview_slots,slots()) for a,b in zip(u,v))
         page.evaluate("() => window.__searchClock=document.querySelector('#clock-time')")
         page.locator('#global-search').fill('90000001')
         assert page.locator('.dashboard-search-hit[href*="view=people"][href*="record=90000001"]').count()==1
@@ -93,12 +105,14 @@ try:
         flip_probe=context.new_page()
         flip_probe.clock.install(time=datetime(2026,11,14,10,32,58,tzinfo=timezone.utc))
         assert flip_probe.goto(base + '/app.html?view=dashboard').ok
-        assert flip_probe.locator('#clock-time').text_content()=='17:32:58'
+        assert flip_probe.locator('#clock-time').get_attribute('aria-label')=='17:32:58'
         flip_probe.evaluate("() => window.__flipClock=document.querySelector('#clock-time')")
         flip_probe.clock.fast_forward(3000)
-        assert flip_probe.locator('#clock-time').text_content()=='17:33:01'
-        assert flip_probe.locator('.flip-digit[data-old]').count()>=1
+        assert flip_probe.locator('#clock-time').get_attribute('aria-label')=='17:33:01'
         assert flip_probe.locator('.flip-digit.is-flipping').count()>=1
+        assert flip_probe.locator('.flip-digit.is-flipping .flip-out').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-flap-out'
+        assert flip_probe.locator('.flip-digit.is-flipping .flip-in').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-flap-in'
+        assert flip_probe.locator('.flip-digit.is-flipping .flip-upper').first.get_attribute('data-digit') is not None
         assert flip_probe.evaluate("() => window.__flipClock===document.querySelector('#clock-time')")
         flip_probe.close()
         # Check the exact 18:00 Vietnam transition with Playwright's deterministic browser clock.
@@ -241,7 +255,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.6 flipping digits, dashboard cross-module search, 18h theme, personnel/QR/XLSX/mobile, zero external requests')
+        print('HOSTED_SMOKE_PASS: v0.8.7 physical flip panels (upper/lower rotating), fixed toolbar positions across tabs, 18h theme, QR/XLSX/mobile, zero external requests')
         browser.close()
 finally:
     server.shutdown()
