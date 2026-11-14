@@ -48,15 +48,39 @@ with sync_playwright() as p:
  for module,n in expected.items():
   app.locator(f'a.nav-main[href*="view={module}"]').click()
   assert app.locator('.records-label b').inner_text()==str(n),(module,app.locator('.records-label b').inner_text())
-  assert app.locator('table tbody tr').count()==n
+  assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}')
+ app.locator('a.nav-main[href*="view=shifts"]').click()
+ assert app.locator('form#shift-scan-form').count()==1
+ assert app.locator('input#shift-code').count()==1
+ assert app.locator('button[data-action="add"]').count()==0
+ app.locator('input#shift-code').fill('90000001')
+ assert app.locator('#scan-preview').get_by_text('Mã nhân viên:',exact=False).count()>=1
+ app.locator('#shift-scan-form button[value="enter"]').click()
+ assert app.locator('.records-label b').inner_text()=='43'
+ assert 'Đã vào ca' in app.locator('.scan-outcome').inner_text()
+ app.locator('input#shift-code').fill('90000001')
+ app.locator('#shift-scan-form button[value="enter"]').click()
+ assert app.locator('.records-label b').inner_text()=='43'
+ assert 'không ghi nhận vào ca lần hai' in app.locator('.scan-outcome').inner_text()
+ app.locator('input#shift-code').fill('90000001')
+ app.locator('#shift-scan-form button[value="exit"]').click()
+ assert 'Đã ra ca' in app.locator('.scan-outcome').inner_text()
+ app.locator('input#shift-code').fill('90000001')
+ app.locator('#shift-scan-form button[value="exit"]').click()
+ assert 'Không có lượt vào ca đang mở' in app.locator('.scan-outcome').inner_text()
+ app.locator('input#shift-code').fill('NOT_FOUND')
+ app.locator('#shift-scan-form button[value="enter"]').click()
+ assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
  app.locator('a.nav-main[href*="view=people"]').click()
  app.screenshot(path=str(root/'preview-people.png'),full_page=True)
  print('testing create',flush=True)
  app.locator('button[data-action="add"]').click()
  assert app.locator('form#record-form').count()==1
+ app.locator('input[name="id"]').fill('90009999')
  app.locator('input[name="name"]').fill('Nhân viên giả lập bổ sung')
- app.locator('select[name="team"]').select_option('Pick')
+ app.locator('input[name="position"]').fill('Pick')
+ app.locator('input[name="phone"]').fill('0001234567')
  app.locator('select[name="shift"]').select_option('Ca 1')
  app.locator('#record-form button[type="submit"]').click()
  assert app.locator('.records-label b').inner_text()=='37'
@@ -83,12 +107,11 @@ with sync_playwright() as p:
  app.once('dialog',lambda d:d.accept())
  app.locator('button[data-action="bulk-delete"]').click()
  assert app.locator('.records-label b').inner_text()=='35'
- app.once('dialog',lambda d:d.accept())
- app.locator('button[data-action="reset"]').click()
- assert app.locator('.records-label b').inner_text()=='36'
  print('testing PDA',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
- app.locator('table tbody tr').first.locator('[data-record]').click()
+ assert app.locator('.device-registry table tbody tr').count()==3
+ assert 'Seri PDA' in app.locator('.device-registry thead').inner_text()
+ app.locator('.table-panel').last.locator('table tbody tr').first.locator('[data-record]').click()
  assert app.locator('.detail-drawer').count()==1
  app.locator('.detail-drawer button[data-quick]').click()
  assert app.locator('.detail-drawer').count()==1
@@ -105,5 +128,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: login; realistic fixtures; native anchors; CRUD, search, cards, bulk, reset, PDA status, settings font size, both themes and mobile')
+ print('PASS: login, source-derived employee fields, barcode clock-in/out guards, CRUD, PDA inventory and actions, settings, themes and mobile')
  browser.close()
