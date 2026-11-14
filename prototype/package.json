@@ -1,12 +1,14 @@
 {
   "name": "pickpack-horilla-inspired-ui-review",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
-  "description": "Independent offline UI review for PickPack 1291, inspired by Horilla patterns",
+  "description": "Standalone Office UI prototype for PickPack 1291 with synthetic local CRUD, preferences and native links",
   "scripts": {
     "check": "node scripts/build.mjs --check",
     "build": "node scripts/build.mjs"
   },
-  "engines": {"node": ">=18"}
+  "engines": {
+    "node": ">=18"
+  }
 }
