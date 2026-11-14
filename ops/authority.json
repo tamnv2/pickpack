@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "project_key": "pickpack-1291",
+  "repository": "tamnv2/pickpack",
+  "visibility": "public",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "mutation_scope": {
+    "repositories": [
+      "tamnv2/pickpack"
+    ],
+    "other_repositories": "DENY_ALL_WRITES",
+    "external_provider_resources": "OWNER_APPROVAL_REQUIRED",
+    "unknown_resources": "FAIL_CLOSED"
+  },
+  "reference_scope": {
+    "owner_owned_repositories": "READ_ONLY_ONLY_WHEN_OWNER_REQUESTS",
+    "supra_inventory": "READ_ONLY_NO_MUTATION"
+  },
+  "bootstrap_order": [
+    "AGENTS.md",
+    "ops/authority.json",
+    "ops/state.json",
+    "docs/SPEC.md",
+    "docs/JOURNAL.md",
+    "README.md",
+    "live_main_and_open_pr_ci",
+    "relevant_live_source"
+  ],
+  "continuity": {
+    "strategy": "MINIMUM_WORDS_MAXIMUM_MEANING",
+    "journal": "docs/JOURNAL.md",
+    "state": "ops/state.json",
+    "spec": "docs/SPEC.md",
+    "verify_commits_and_readback": true
+  },
+  "default_execution_gate": "CODE_ONLY_OWNER_GATED_PRODUCTION"
+}

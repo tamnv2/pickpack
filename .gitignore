@@ -1,0 +1,44 @@
+# Private credentials and local environment
+.env
+.env.*
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+google-services.json
+service-account*.json
+*credentials*.json
+*.sqlite
+*.db
+
+# Personal records, raw diagnostics and exported data
+*.log
+logs/
+private/
+secrets/
+exports/
+*.xlsx
+*.xlsm
+*.csv
+
+# Build/dependency outputs
+node_modules/
+dist/
+build/
+coverage/
+.gradle/
+**/build/
+*.apk
+*.aab
+*.exe
+*.zip
+
+# Local IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+__pycache__/

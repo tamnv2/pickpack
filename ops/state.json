@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "project_key": "pickpack-1291",
+  "as_of_vn": "2026-11-14",
+  "phase": "GOVERNANCE_BOOTSTRAP",
+  "application_code": "NOT_STARTED",
+  "technical_ci": "NOT_RUN",
+  "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
+  "field_acceptance": "NOT_TESTED",
+  "owner_business_acceptance": "SPEC_IN_PROGRESS",
+  "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
+  "identity_contract": {
+    "firebase_auth": "SHARED_WITH_INVENTORY",
+    "user_roles": "SINGLE_CANONICAL_ROLE_PER_USER",
+    "identity_sync_interface": "UNVERIFIED_READ_ONLY_SOURCE",
+    "role_mapping": "PRESERVE_EXACT_VERIFIED_ROLE",
+    "cross_project_mutations": "FORBIDDEN"
+  },
+  "runtime_boundaries": {
+    "cloudflare_account": "SHARED",
+    "worker": "PICKPACK_SEPARATE_PLANNED",
+    "ops_core": "SEPARATE_PLANNED",
+    "provider_setup": "NOT_AUTHORIZED"
+  },
+  "design_target": {
+    "pda_concurrent": 3,
+    "web_concurrent": 5,
+    "realtime": true
+  },
+  "pending": [
+    "Verify current read-only role validation contract without Inventory mutation",
+    "Approve detailed business permission matrix and data model before implementation"
+  ],
+  "latest_checkpoint": "PP-20261114-001"
+}
