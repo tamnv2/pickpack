@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.3'
+assert version=='0.8.4'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -42,7 +42,13 @@ try:
         assert page.locator('a.nav-main').count() == 7
         assert page.locator('.side-bottom .web-version').inner_text()==f'Web v{version}'
         assert page.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
-        assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='fixed'
+        assert page.locator('.side-bottom .site-footer').count()==1
+        assert page.locator('.app-main .site-footer').count()==0
+        assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='static'
+        assert not page.locator('button.menu-button').is_visible()
+        labels=page.locator('.nav-flat .nav-label').all_inner_texts()
+        assert len(labels)==7 and all(5 <= len(text.split()) <= 6 for text in labels),labels
+        assert page.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
         assert page.locator('.metrics .metric-card').count() == 8
         assert page.locator('.coverage-row').count() == 6
         assert page.locator('.breadcrumb').count() == 0
@@ -161,10 +167,13 @@ try:
         mobile.locator('#login-form button[type="submit"]').click()
         mobile.wait_for_url('**/app.html?view=dashboard*')
         assert mobile.locator('button.menu-button').is_visible()
+        assert mobile.locator('button.menu-button').inner_text()=='Mục'
         assert mobile.locator('.top-profile').is_visible()
         assert mobile.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
         mobile.locator('button.menu-button').click()
+        assert mobile.locator('.sidebar').evaluate("el=>el.classList.contains('is-open')")
+        assert mobile.locator('.nav-flat .nav-label').evaluate_all('(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)')
         mobile.locator('a.nav-main[href*="view=shifts"]').click()
         assert mobile.locator('#shift-scan-form').is_visible()
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
@@ -176,7 +185,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: compact nav and profile, local catalog CRUD/select, QR labor/PDA, Ctrl-tab storage, XLSX, mobile, no external requests')
+        print('HOSTED_SMOKE_PASS: v0.8.4 5-6 word sidebar labels and credit, mobile-only menu, CRUD/catalogs/QR/XLSX no external calls')
         browser.close()
 finally:
     server.shutdown()
