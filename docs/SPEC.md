@@ -136,3 +136,7 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 ## Web Office preview v0.8.9 — Owner clock-only display
 - **APPROVED (14/11/2026):** remove the weekday/day/month/year line entirely from the sticky toolbar (both visual DOM and unused date formatting), leaving Vietnam HH:mm:ss only. Enlarge the six split-flap digits to occupy freed clock space (28×44px on desktop, responsive reductions at 1200/1020/600px) without changing search/bell/clock slots.
 - Preserve physical 3D flipping, reduced-motion fallback, date-free header semantics and local-only demo contract. No backend/Auth/Inventory/provider/Production change.
+
+## Web Office preview v0.8.10 — Clean clock
+- **APPROVED (15/11/2026):** remove the rejected split-flap clock and all dedicated 3D animation logic/styles. Display unboxed 24-hour Vietnam `HH:mm:ss` in the same sticky toolbar, with prominent hour/minute and smaller muted seconds, adapting to light/dark theme. No calendar date.
+- Update clock text in place every second without whole-page rerender or provider calls; keep identical search/bell/clock positions across modules, responsive/mobile support, and existing automatic theme switching. No backend, inventory or production changes.
