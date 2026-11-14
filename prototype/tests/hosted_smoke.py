@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.7'
+assert version=='0.8.8'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -110,10 +110,27 @@ try:
         flip_probe.clock.fast_forward(3000)
         assert flip_probe.locator('#clock-time').get_attribute('aria-label')=='17:33:01'
         assert flip_probe.locator('.flip-digit.is-flipping').count()>=1
-        assert flip_probe.locator('.flip-digit.is-flipping .flip-out').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-flap-out'
-        assert flip_probe.locator('.flip-digit.is-flipping .flip-in').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-flap-in'
+        assert flip_probe.locator('.flip-digit.is-flipping .flip-out').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-retro-flap-out'
+        assert flip_probe.locator('.flip-digit.is-flipping .flip-in').first.evaluate("el=>getComputedStyle(el).animationName")=='pp-retro-flap-in'
         assert flip_probe.locator('.flip-digit.is-flipping .flip-upper').first.get_attribute('data-digit') is not None
+        # Assert both rotating halves actually reach a 3D mid-angle, not a framed number swap.
+        out_transform=flip_probe.locator('.flip-digit.is-flipping .flip-out').first.evaluate("""el => {
+          const a=el.getAnimations()[0]; if(!a)return '';
+          a.pause(); a.currentTime=150; return getComputedStyle(el).transform
+        }""")
+        in_transform=flip_probe.locator('.flip-digit.is-flipping .flip-in').first.evaluate("""el => {
+          const a=el.getAnimations()[0]; if(!a)return '';
+          a.pause(); a.currentTime=430; return getComputedStyle(el).transform
+        }""")
+        assert out_transform.startswith('matrix3d('),out_transform
+        assert in_transform.startswith('matrix3d('),in_transform
+        assert flip_probe.locator('.flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")>=35
         assert flip_probe.evaluate("() => window.__flipClock===document.querySelector('#clock-time')")
+        # Motion accessibility: instant stable face when animations are disabled.
+        flip_probe.emulate_media(reduced_motion='reduce')
+        flip_probe.clock.fast_forward(1000)
+        assert flip_probe.locator('.flip-digit.is-flipping').count()==0
+        assert flip_probe.locator('.flip-digit').evaluate_all("els=>els.every(el=>el.querySelector('.flip-lower').dataset.digit===el.dataset.value)")
         flip_probe.close()
         # Check the exact 18:00 Vietnam transition with Playwright's deterministic browser clock.
         page.locator('.top-profile').click()
@@ -255,7 +272,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.7 physical flip panels (upper/lower rotating), fixed toolbar positions across tabs, 18h theme, QR/XLSX/mobile, zero external requests')
+        print('HOSTED_SMOKE_PASS: v0.8.8 retro top/bottom 3D mid-rotations and reduced-motion settling, toolbar geometry, QR/XLSX/mobile, zero API')
         browser.close()
 finally:
     server.shutdown()
