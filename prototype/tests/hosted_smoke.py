@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.4'
+assert version=='0.8.5'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -47,8 +47,12 @@ try:
         assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='static'
         assert not page.locator('button.menu-button').is_visible()
         labels=page.locator('.nav-flat .nav-label').all_inner_texts()
-        assert len(labels)==7 and all(5 <= len(text.split()) <= 6 for text in labels),labels
+        assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC'],labels
         assert page.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
+        assert page.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
+        assert page.locator('#clock-time').is_visible()
+        assert page.locator('#clock-date').is_visible()
+        assert '/' in page.locator('#clock-date').inner_text()
         assert page.locator('.metrics .metric-card').count() == 8
         assert page.locator('.coverage-row').count() == 6
         assert page.locator('.breadcrumb').count() == 0
@@ -64,6 +68,8 @@ try:
         page.locator('button[data-action="settings"]').click()
         assert page.locator('.font-steps output').inner_text() == '100%'
         assert page.locator('[data-accent-choice]').count() == 7
+        page.locator('[data-theme-choice="auto"]').click()
+        assert page.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')") == 'auto'
         page.locator('[data-accent-choice="violet"]').click()
         assert page.evaluate("document.documentElement.dataset.accent") == 'violet'
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()") == '#823eab'
@@ -77,6 +83,10 @@ try:
         second.wait_for_url('**/app.html?view=people*', timeout=5000)
         second.wait_for_load_state()
         assert second.locator('.records-label b').inner_text() == '36'
+        assert second.locator('.people-table thead th').all_inner_texts()[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác']
+        assert second.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
+        second.evaluate('window.scrollTo(0, 600)')
+        assert abs(second.locator('.topbar').bounding_box()['y'])<2
         assert 'view=dashboard' in page.url
 
         # Categories are browser-local, persist across tabs and feed the employee form.
@@ -97,9 +107,12 @@ try:
         second.locator('#record-form select[name="site"]').select_option('1291')
         second.locator('#record-form select[name="warehouse"]').select_option('1291')
         second.locator('#record-form select[name="shift"]').select_option('Ca 1')
+        second.locator('#record-form input[name="startDate"]').fill('2026-12-01')
         second.locator('#record-form input[name="user"]').fill('pp1291.pk99')
         second.locator('#record-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text() == '37'
+        assert '01/12/2026' in second.locator('.people-table tbody tr').first.inner_text()
+        assert 'Quản trị viên' in second.locator('.people-table tbody tr').first.inner_text()
         assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').position")=='Điều phối thử'
         # The other open tab receives a native storage event and updates the dashboard.
         page.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim() === '37'", timeout=5000)
@@ -118,6 +131,10 @@ try:
         assert sheet['B1'].value == 'Mã nhân viên'
         assert sheet['A2'].value == 'Nhân viên kiểm thử liên tab'
         assert sheet['B2'].value == '90009999'
+        assert sheet['I1'].value == 'Ngày nhận việc'
+        assert sheet['J1'].value == 'Cập nhật bởi'
+        assert sheet['I2'].value == '01/12/2026'
+        assert sheet['J2'].value == 'Quản trị viên'
         assert sheet.max_row == 38
         workbook.close()
 
@@ -185,7 +202,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.4 5-6 word sidebar labels and credit, mobile-only menu, CRUD/catalogs/QR/XLSX no external calls')
+        print('HOSTED_SMOKE_PASS: v0.8.5 5-6 word sidebar labels and credit, mobile-only menu, CRUD/catalogs/QR/XLSX no external calls')
         browser.close()
 finally:
     server.shutdown()
