@@ -82,6 +82,8 @@ with sync_playwright() as p:
  assert app.locator('.font-steps output').inner_text()=='100%'
  app.locator('button[data-font="5"]').click()
  assert app.locator('.font-steps output').inner_text()=='105%'
+ app.locator('button[data-theme-choice="light"]').click()
+ assert app.evaluate("document.documentElement.dataset.theme")=='light'
  assert app.locator('button[data-accent-choice]').count()==7
  app.locator('button[data-accent-choice="green"]').click()
  assert app.evaluate("document.documentElement.dataset.accent")=='green'
