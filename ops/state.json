@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "OFFICE_UI_V085_PUBLIC_TEST_PREVIEW_VERIFIED",
-  "application_code": "WEB_OFFICE_STATIC_V085_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43604203541_SOURCE_0cdc1a07372015ead7f62f43c014891765760c13",
+  "phase": "OFFICE_UI_V086_PUBLIC_TEST_PREVIEW_VERIFIED",
+  "application_code": "WEB_OFFICE_STATIC_V086_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43606010315_SOURCE_09f92c6b65ba80563ddbf0dbf61adf4ecac93453",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V085_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V086_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner UI visual/business review of v0.8.5 public test-only static Web",
+    "Owner UI visual/business review of v0.8.6 public test-only static Web",
     "Authoritative identity/role/shift-user backend and security before live operations",
     "Physical hardware/field tests, APK, Production RELEASE_PASS/FIELD_PASS/OWNER_PASS not approved"
   ],
-  "latest_checkpoint": "PP-20261114-016",
+  "latest_checkpoint": "PP-20261114-017",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -48,7 +48,7 @@
     "provider_usage": "ZERO_RUNTIME_BUSINESS_API_CALLS_STATIC_CDN_TRANSFER_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.8.5",
+    "version": "0.8.6",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -88,7 +88,7 @@
     "verification_v08": "CODE_READY_CI_PASS_SOURCE_741503bd12a7528f68546880ffd8ee97204bd8a8_RUN_43586461064_NODE_BUILD_7_FILES_160367_BYTES_CHROMIUM_DOM_HOSTED_XLSX_OPENPYXL_PASS",
     "footer": "Phát triển hệ thống - tamnv2 | Pick Pack 1291",
     "footer_placement": "SIDEBAR_UNDER_WEB_VERSION_NOT_FIXED_VIEWPORT",
-    "version_label": "WEB_V0_8_5_SIDEBAR_BOTTOM_AND_LOGIN",
+    "version_label": "WEB_V0_8_6_SIDEBAR_BOTTOM_AND_LOGIN",
     "verification_v081": "CODE_READY_CI_PASS_PREVIEW_PASS_ACTIONS_43587655812_BUILD_7_FILES_161451_BYTES_LOCAL_CHROMIUM_HTTP_HOSTED_AND_REMOTE_CDN_BROWSER_PASS",
     "layout": "TABLE_ONLY_NO_CARD_TOGGLE",
     "labor_scan": "EMPLOYEE_CODE_QR_KEYBOARD_EXACT_PROFILE_SHIFT_USER_DATE_TIME_TEMP_NO_GUESSED_HOURS_WORK_ONE_PER_DAY",
@@ -100,15 +100,17 @@
     "verification_v084": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_7f379b28c16b8fa273ff6634478550eb5695e61d_RUN_43599665168_BUILD_7_FILES_187603_BYTES_CHROMIUM_1440_1024_390_HOSTED_REMOTE",
     "theme_schedule": "AUTO_HO_CHI_MINH_06_TO_17_59_LIGHT_18_TO_05_59_DARK_MANUAL_OVERRIDE_PERSISTENT",
     "personnel_table": "EXISTING_STARTDATE_UPDATEDBY_COLUMNS_AUTO_WIDTH_HORIZONTAL_SCROLL_NATIVE_DATE_INPUT_DMY",
-    "topbar": "STICKY_VI_DATE_TIME_SECONDS_LIVE_DOM_ONLY_TICK_REDUCED_MOTION",
-    "verification_v085": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_0cdc1a07372015ead7f62f43c014891765760c13_RUN_43604203541_7_FILES_192767_BYTES_CHROMIUM_HOSTED_TIMEBOUNDARY_18H_XLSX_MOBILE_NO_EXTERNAL_CALLS"
+    "topbar": "STICKY_VI_WEEKDAY_DATE_TIME_SPLIT_FLAP_SIX_DIGITS_CHANGED_ONLY_REDUCED_MOTION",
+    "verification_v085": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_0cdc1a07372015ead7f62f43c014891765760c13_RUN_43604203541_7_FILES_192767_BYTES_CHROMIUM_HOSTED_TIMEBOUNDARY_18H_XLSX_MOBILE_NO_EXTERNAL_CALLS",
+    "dashboard_search": "VISIBLE_CROSS_SIX_SYNTHETIC_MODULES_TOTAL_COUNT_UP_TO_12_LINKS_LIVE_RESULTS_NO_KPI_FILTER_NO_FULL_RENDER",
+    "verification_v086": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_09f92c6b65ba80563ddbf0dbf61adf4ecac93453_RUN_43606010315_BUILD_7_FILES_199141_BYTES_CHROMIUM_HOSTED_CDN_BROWSER"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/0cdc1a07372015ead7f62f43c014891765760c13/prototype/index.html",
-    "verified_commit": "0cdc1a07372015ead7f62f43c014891765760c13",
-    "verified_run": "43604203541",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/09f92c6b65ba80563ddbf0dbf61adf4ecac93453/prototype/index.html",
+    "verified_commit": "09f92c6b65ba80563ddbf0dbf61adf4ecac93453",
+    "verified_run": "43606010315",
     "public_access": true,
     "credentials": "admin/admin_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
