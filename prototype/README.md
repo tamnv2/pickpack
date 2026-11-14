@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.8.9
+# PickPack 1291 — Web Office v0.8.10
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -72,3 +72,8 @@ python tests/hosted_smoke.py
 - Bỏ hoàn toàn dòng thứ/ngày/tháng/năm và bộ định dạng ngày dư thừa khỏi topbar. Chỉ còn đồng hồ lật HH:mm:ss theo giờ Việt Nam.
 - Tăng thẻ lên 28 × 44 px (desktop), thu nhỏ theo breakpoint để giữ nguyên vị trí tìm kiếm/thông báo và không tràn trên tablet/mobile; animation 3D không đổi.
 - Kiểm thử Chromium nguồn và hosted: không còn phần tử ngày, thẻ lật được phóng lớn và nằm trọn trong khu vực đồng hồ ở màn hình desktop/tablet/mobile; không gọi API nghiệp vụ.
+
+## Web Office v0.8.10 — đồng hồ đồng bộ giao diện
+- Theo yêu cầu Owner: **loại bỏ hoàn toàn flip clock** (mặt số, CSS 3D và JavaScript animation). Thay bằng đồng hồ chữ `HH:mm:ss` không khung nền; giờ/phút nổi bật, giây nhỏ/màu phụ theo theme sáng/tối, vẫn dùng giờ Việt Nam và không hiển thị ngày.
+- Cập nhật chỉ 2 phần DOM giờ/phút và giây mỗi giây, không dựng lại trang; thanh trên giữ đúng vị trí tìm kiếm/thông báo ở các mục. Giữ tương thích mobile và không gọi API nghiệp vụ.
+- Kiểm thử nguồn, Chromium, hosted và CDN: xem checkpoint `PP-20261115-022` trong `docs/JOURNAL.md`. Web demo `admin/admin`, dữ liệu giả lập trong trình duyệt; không Production.
