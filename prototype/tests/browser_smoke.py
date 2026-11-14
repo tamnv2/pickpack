@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.6'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.7'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.6'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.7'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -49,13 +49,18 @@ with sync_playwright() as p:
  assert app.locator('#clock-time').count()==1 and app.locator('#clock-date').count()==1
  assert app.locator('#clock-time .flip-digit').count()==6
  assert app.locator('#clock-time .flip-separator').count()==2
+ assert app.locator('#clock-time .flip-upper').count()==6
+ assert app.locator('#clock-time .flip-lower').count()==6
+ assert app.locator('#clock-time .flip-out').count()==6
+ assert app.locator('#clock-time .flip-in').count()==6
  assert app.locator('#clock-time').get_attribute('aria-live')=='off'
- assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.textContent)")
+ assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.getAttribute('aria-label'))")
+ assert app.locator('#clock-time .flip-digit').first.evaluate("el=>getComputedStyle(el).perspective")!='none'
  assert '/' in app.locator('#clock-date').inner_text()
- old_clock=app.locator('#clock-time').inner_text()
+ old_clock=app.locator('#clock-time').get_attribute('aria-label')
  app.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
  app.wait_for_timeout(1250)
- assert app.locator('#clock-time').inner_text()!=old_clock
+ assert app.locator('#clock-time').get_attribute('aria-label')!=old_clock
  assert app.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
  app.set_viewport_size({'width':1024,'height':768})
  assert not app.locator('button.menu-button').is_visible()
@@ -69,6 +74,8 @@ with sync_playwright() as p:
  assert app.locator('.page-header h1').count()==0
  assert app.locator('.metrics.overview-metrics .metric-card').count()==8
  assert app.locator('#global-search').is_visible()
+ header_slots=lambda: app.evaluate("""() => ['.top-search','.topbar .notif','.header-clock'].map(s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.x,r.y,r.width]})""")
+ overview_slots=header_slots()
  assert app.locator('#dashboard-search-results .dashboard-search-panel').count()==0
  app.evaluate("() => window.__overviewClock=document.querySelector('#clock-time')")
  app.locator('#global-search').fill('90000001')
@@ -123,6 +130,7 @@ with sync_playwright() as p:
  print('testing modules',flush=True)
  for module,n in expected.items():
   app.locator(f'a.nav-main[href*="view={module}"]').click()
+  assert all(abs(a-b)<1 for x,y in zip(overview_slots,header_slots()) for a,b in zip(x,y)),module
   assert app.locator('.table-panel').last.locator('.records-label b').inner_text()==str(n),(module,app.locator('.table-panel').last.locator('.records-label b').inner_text())
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}')
@@ -236,6 +244,14 @@ with sync_playwright() as p:
  app.locator('button[data-category-tab="supplier"]').click()
  assert app.locator('.catalog-panel tbody tr').count()==3
  app.locator('.catalog-heading a[data-nav="people"]').click()
+ app.locator('a[data-nav="categories"]').click()
+ assert app.locator('#global-search').is_visible()
+ assert all(abs(a-b)<1 for x,y in zip(overview_slots,header_slots()) for a,b in zip(x,y))
+ app.locator('#global-search').fill('NoMatchingCategory_1291')
+ assert app.locator('.catalog-panel tbody tr').count()==0
+ app.locator('#global-search').fill('')
+ assert app.locator('.catalog-panel tbody tr').count()>=1
+ app.locator('.catalog-heading a[data-nav="people"]').click()
  print('testing staff columns',flush=True)
  head=app.locator('.people-table thead th').all_inner_texts()
  assert head[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác'],head
@@ -313,5 +329,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.8.6 flip clock six digits, overview cross-module search, unchanged KPIs, personnel/QR/CRUD/XLSX/mobile')
+ print('PASS: v0.8.7 hinged 3D clock faces and fixed search/bell/clock slots across all modules, CRUD/QR/XLSX')
  browser.close()
