@@ -425,3 +425,92 @@ html{scrollbar-gutter:stable}
 @media(prefers-reduced-motion:reduce){
  .flip-digit.is-flipping .flip-out,.flip-digit.is-flipping .flip-in{animation:none;visibility:hidden}
 }
+
+
+/* v0.8.8 — visualtimer-style retro mechanical flip, authored locally without external assets. */
+.topbar .header-clock .clock-pulse{display:none}
+.flip-clock{gap:2px}
+.flip-digit{
+ --tile-w:26px;--tile-h:38px;
+ width:var(--tile-w);height:var(--tile-h);flex:0 0 var(--tile-w);
+ border:1px solid #1b1d23;border-radius:5px;background:#22252c;
+ box-shadow:0 2px 0 #191b20,inset 0 1px 0 #ffffff1b,0 4px 7px #10151f30;
+ perspective:350px;perspective-origin:50% 50%;
+ font-variant-numeric:tabular-nums;
+}
+.flip-pane,.flip-flap{box-sizing:border-box;border:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip-upper,.flip-out{
+ top:0;
+ background:linear-gradient(180deg,#393c45 0%,#292c34 100%);
+ border:0;border-radius:4px 4px 0 0;
+ box-shadow:inset 0 1px 0 #ffffff18;
+}
+.flip-lower,.flip-in{
+ bottom:0;
+ background:linear-gradient(180deg,#1e2128 0%,#30343c 100%);
+ border:0;border-radius:0 0 4px 4px;
+ box-shadow:inset 0 -1px 0 #ffffff0b;
+}
+.flip-pane::before,.flip-flap::before{
+ height:var(--tile-h);line-height:var(--tile-h);
+ font-family:Arial,Helvetica,sans-serif;
+ font-size:25px;font-weight:800;
+ letter-spacing:-.02em;color:#f6f7f8;
+ text-shadow:0 1px 1px #0008;
+}
+.flip-lower::before,.flip-in::before{top:calc(var(--tile-h) * -.5)}
+.flip-upper{z-index:1}.flip-lower{z-index:1}
+.flip-out{z-index:4;visibility:hidden;transform-origin:center bottom}
+.flip-in{z-index:3;visibility:hidden;transform-origin:center top}
+.flip-digit.is-flipping .flip-out{
+ visibility:visible;will-change:transform;
+ animation:pp-retro-flap-out .27s cubic-bezier(.48,.04,.80,.39) both;
+}
+.flip-digit.is-flipping .flip-in{
+ visibility:visible;will-change:transform;
+ animation:pp-retro-flap-in .32s .27s cubic-bezier(.12,.54,.28,1) both;
+}
+@keyframes pp-retro-flap-out{
+ 0%{transform:rotateX(0);filter:brightness(1)}
+ 65%{filter:brightness(.76)}
+ 100%{transform:rotateX(-90deg);filter:brightness(.4)}
+}
+@keyframes pp-retro-flap-in{
+ 0%{transform:rotateX(90deg);filter:brightness(.5)}
+ 72%{transform:rotateX(-12deg);filter:brightness(.88)}
+ 100%{transform:rotateX(0);filter:brightness(1)}
+}
+/* Mechanical hinge: consistent narrow seam and dark end pins, without obscuring numerals. */
+.flip-digit::after,.flip-digit.is-flipping::after{
+ content:"";display:block;position:absolute;top:calc(50% - 1px);left:0;right:0;
+ width:100%;height:2px;z-index:6;border:0;border-radius:0;
+ background:linear-gradient(180deg,#0d1015b8,#5a5d6359);
+ box-shadow:0 1px 0 #ffffff14;transform:none;animation:none;filter:none;pointer-events:none;
+}
+.flip-digit::before,.flip-digit.is-flipping::before{
+ content:"";display:block;position:absolute;left:0;right:0;top:calc(50% - 2px);
+ width:100%;height:4px;z-index:7;background:linear-gradient(90deg,#11151c 0 7%,transparent 7% 93%,#11151c 93% 100%);
+ border:0;animation:none;pointer-events:none;
+}
+.flip-separator{font-size:18px;color:var(--muted);padding-bottom:0}
+.header-clock .clock-values{gap:3px}
+@media(max-width:1200px){
+ .flip-digit{--tile-w:24px;--tile-h:35px}
+ .flip-pane::before,.flip-flap::before{font-size:23px}
+}
+@media(max-width:1020px){
+ .flip-digit{--tile-w:21px;--tile-h:30px}
+ .flip-pane::before,.flip-flap::before{font-size:20px}
+ .flip-separator{font-size:15px}
+}
+@media(max-width:600px){
+ .flip-clock{gap:1px}
+ .flip-digit{--tile-w:13px;--tile-h:22px;border-radius:2px}
+ .flip-upper,.flip-out{border-radius:2px 2px 0 0}
+ .flip-lower,.flip-in{border-radius:0 0 2px 2px}
+ .flip-pane::before,.flip-flap::before{font-size:11px;letter-spacing:0}
+ .flip-separator{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .flip-digit.is-flipping .flip-out,.flip-digit.is-flipping .flip-in{animation:none;visibility:hidden;will-change:auto}
+}
