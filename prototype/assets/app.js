@@ -198,9 +198,13 @@ function scanShift(code,operation){
  }
  return outcome(false,'Thao tác không hợp lệ.');
 }
+function compactPersonPreview(person){
+ if(!person)return '<div class="scan-empty">Chưa xác định nhân viên.</div>';
+ return `<div class="scan-identity compact-identity">${avatar(person)}<div><strong>${escape(person.name)} · ${escape(person.id)}</strong><small>${escape(person.position||'Chưa cập nhật')} · ${escape(person.shift||'Chưa phân ca')} · User: ${escape(person.user||'—')}</small></div></div>`;
+}
 function laborScanPanel(){
  const result=state.laborScan,person=result?.code?store.people.find(p=>p.id===result.code):null;
- return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('calendar',20)}</span><div><h2>Quét mã công nhật</h2><p>Quét mã nhân viên để xác định hồ sơ, ca và user. Giờ công được chấm sau khi có căn cứ.</p></div></div><form id="labor-scan-form" autocomplete="off"><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên</label><div class="scan-form-row"><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${scanPreview(person)}</div></section>`;
+ return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('calendar',20)}</span><div><h2>Quét mã công nhật</h2><p>Quét mã nhân viên để xác định hồ sơ, ca và user. Giờ công được chấm sau khi có căn cứ.</p></div></div><form id="labor-scan-form" autocomplete="off"><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên</label><div class="scan-form-row"><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div></section>`;
 }
 function scanLabor(code){
  const staff=String(code||'').trim(),p=store.people.find(row=>row.id===staff),now=new Date();
@@ -226,7 +230,7 @@ function pdaDevicePreview(device){
 }
 function pdaScanPanel(){
  const result=state.pdaScan,person=result?.staff?store.people.find(p=>p.id===result.staff):null,device=result?.device?resolvePda(result.device):null,mode=state.pdaMode;
- return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('device',20)}</span><div><h2>Quét mã mượn / trả PDA</h2><p>Quét mã nhân viên, sau đó QR/seri PDA. Mỗi thiết bị chỉ có một lượt mượn đang mở.</p></div></div><div class="scan-mode-wrapper"><span class="scan-code-label">Thao tác</span><div class="scan-mode" role="group" aria-label="Chế độ mượn trả PDA"><button type="button" class="${mode==='borrow'?'active':''}" data-pda-mode="borrow" aria-pressed="${mode==='borrow'}">Mượn PDA</button><button type="button" class="${mode==='return'?'active':''}" data-pda-mode="return" aria-pressed="${mode==='return'}">Trả PDA</button></div></div><form id="pda-scan-form" autocomplete="off"><div class="scan-code-grid"><label class="scan-code-label" for="pda-staff-code">Mã nhân viên / QR nhân viên<input id="pda-staff-code" name="employeeCode" maxlength="30" placeholder="Quét mã nhân viên" required autocomplete="off"></label><label class="scan-code-label" for="pda-device-code">Mã PDA / QR / seri / 5 số cuối<input id="pda-device-code" name="deviceCode" maxlength="120" placeholder="Quét mã PDA" required autocomplete="off"></label><button class="btn primary" type="submit">Ghi nhận ${mode==='borrow'?'mượn':'trả'} PDA</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-pair-preview"><div id="pda-person-preview">${person?scanPreview(person):'<div class="scan-empty">Nhân sự chưa được xác định.</div>'}</div><div id="pda-device-preview">${pdaDevicePreview(device)}</div></div></section>`;
+ return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('device',20)}</span><div><h2>Quét mã mượn / trả PDA</h2><p>Quét mã nhân viên, sau đó QR/seri PDA. Mỗi thiết bị chỉ có một lượt mượn đang mở.</p></div></div><div class="scan-mode-wrapper"><span class="scan-code-label">Thao tác</span><div class="scan-mode" role="group" aria-label="Chế độ mượn trả PDA"><button type="button" class="${mode==='borrow'?'active':''}" data-pda-mode="borrow" aria-pressed="${mode==='borrow'}">Mượn PDA</button><button type="button" class="${mode==='return'?'active':''}" data-pda-mode="return" aria-pressed="${mode==='return'}">Trả PDA</button></div></div><form id="pda-scan-form" autocomplete="off"><div class="scan-code-grid"><label class="scan-code-label" for="pda-staff-code">Mã nhân viên / QR nhân viên<input id="pda-staff-code" name="employeeCode" maxlength="30" placeholder="Quét mã nhân viên" required autocomplete="off"></label><label class="scan-code-label" for="pda-device-code">Mã PDA / QR / seri / 5 số cuối<input id="pda-device-code" name="deviceCode" maxlength="120" placeholder="Quét mã PDA" required autocomplete="off"></label><button class="btn primary" type="submit">Ghi nhận ${mode==='borrow'?'mượn':'trả'} PDA</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-pair-preview"><div id="pda-person-preview">${compactPersonPreview(person)}</div><div id="pda-device-preview">${pdaDevicePreview(device)}</div></div></section>`;
 }
 function scanPda(employeeCode,deviceCode){
  const staff=String(employeeCode||'').trim(),deviceInput=String(deviceCode||'').trim();
@@ -444,11 +448,11 @@ root.addEventListener('input',function(e){
  }
  if(e.target.id==='labor-staff-code'){
   const code=e.target.value.trim(),preview=root.querySelector('#labor-scan-preview'),person=store.people.find(p=>p.id===code);
-  if(preview)preview.innerHTML=scanPreview(person);return;
+  if(preview)preview.innerHTML=compactPersonPreview(person);return;
  }
  if(e.target.id==='pda-staff-code'){
   const code=e.target.value.trim(),preview=root.querySelector('#pda-person-preview'),person=store.people.find(p=>p.id===code);
-  if(preview)preview.innerHTML=scanPreview(person);return;
+  if(preview)preview.innerHTML=compactPersonPreview(person);return;
  }
  if(e.target.id==='pda-device-code'){
   const preview=root.querySelector('#pda-device-preview');if(preview)preview.innerHTML=pdaDevicePreview(resolvePda(e.target.value));return;
