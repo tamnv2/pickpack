@@ -111,3 +111,9 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 - Seven menu names now **five or six Vietnamese words each**, with automatic wrapping: Tổng quan hoạt động vận hành; Quản lý hồ sơ nhân sự; Ghi nhận ra vào ca; Quản lý công nhật nhân sự; Quản lý biên bản sự việc; Quản lý công cụ dụng cụ; Ghi nhận mượn trả PDA.
 - Desktop nonfunctional three-line toggle removed; mobile-only functional `Mục` button preserves narrow-screen navigation. Same mock-only auth/data/provider and CODE ONLY boundaries.
 
+
+## Web Office preview v0.8.5 — Owner 14/11/2026
+- **APPROVED UI only:** list employee existing `startDate` as **Ngày nhận việc** and existing auto-populated `updatedBy` as **Cập nhật bởi**, reorder personnel columns and use content-sized table widths with horizontal overflow as needed. Date editor uses browser-local date picker, persisted in dd/mm/yyyy in the mock.
+- Sidebar ordered as Owner specified: Tổng quan vận hành, Quản lý nhân sự, Quét vào/ra ca, Mượn / trả PDA, Quản lý công nhật, Quản lý biên bản, Quản lý CCDC. Keep right-click/new-tab native links.
+- Personal display adds **Tự động/Sáng/Tối**; auto follows Vietnam time: 06:00–17:59 light and 18:00–05:59 dark; manual choice persists locally and across same-origin tabs. Header sticky with live Vietnamese weekday/date, HH:mm:ss; update only clock DOM each second, not full app; respect reduced motion and responsive constraints.
+- Design conventions referenced read-only from VoltAgent DESIGN.md (IBM/SAP/Airtable/Linear), without copying source/assets or changing backend, Auth, providers or Production.
