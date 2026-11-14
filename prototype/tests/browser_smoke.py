@@ -130,6 +130,7 @@ with sync_playwright() as p:
  print('testing modules',flush=True)
  for module,n in expected.items():
   app.locator(f'a.nav-main[href*="view={module}"]').click()
+  assert not errs,(module,errs)
   assert all(abs(a-b)<1 for x,y in zip(overview_slots,header_slots()) for a,b in zip(x,y)),module
   assert app.locator('.table-panel').last.locator('.records-label b').inner_text()==str(n),(module,app.locator('.table-panel').last.locator('.records-label b').inner_text())
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
