@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "UI_5_VARIANTS_OWNER_REVIEW",
-  "application_code": "OFFLINE_UI_5_THEMES_BUILD_PASS",
-  "technical_ci": "LOCAL_BUILD_AND_BROWSER_SMOKE_PASS_CI_NOT_RUN",
+  "phase": "UI_FIVE_ARCHITECTURES_OWNER_REVIEW",
+  "application_code": "UI_5_ARCHITECTURES_BUILD_PASS_CODE_READY",
+  "technical_ci": "LOCAL_BUILD_BROWSER_SMOKE_PASS_CI_NOT_RUN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "FIVE_UI_VARIANTS_PENDING_REVIEW",
+  "owner_business_acceptance": "UI_SELECTION_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -31,5 +31,15 @@
     "Owner compare five responsive UI designs in light and dark and select/revise a preferred variant",
     "Real shared login/roles, cross-tab data sync, workflows, database, API, realtime and APK deferred until UI approval"
   ],
-  "latest_checkpoint": "PP-20261114-003"
+  "latest_checkpoint": "PP-20261114-004",
+  "ui_prototype": {
+    "variants": 5,
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "independent_tab_links": true,
+    "real_popup_navigation": "NOT_VERIFIED_SANDBOX_BLOCK",
+    "provider_usage": "NO_RUNTIME_PROVIDER_CALLS"
+  }
 }
