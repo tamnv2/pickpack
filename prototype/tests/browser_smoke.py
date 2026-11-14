@@ -11,7 +11,7 @@ with sync_playwright() as p:
   pg=(browser.new_context(viewport={'width':390,'height':844},is_mobile=True) if mobile else ctx).new_page()
   pg.set_default_timeout(2000)
   pg.set_content(f'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body data-screen="{screen}"><div id="root"></div></body></html>')
-  pg.evaluate("""() => {let m = new Map([['pickpack1291_demo_session_v05','demo-admin-only']]);Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}})}""")
+  pg.evaluate("""() => {let m = new Map([['pickpack1291_office_session_v06','demo-admin-only']]);Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}})}""")
   pg.add_style_tag(content=css)
   pg.add_script_tag(content=js)
   return pg
@@ -20,7 +20,7 @@ with sync_playwright() as p:
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
- assert login.get_by_text('Sai tên đăng nhập hoặc mật khẩu mẫu').count()==1
+ assert login.get_by_text('Tên đăng nhập hoặc mật khẩu không đúng').count()==1
  login.locator('input[name="username"]').fill('admin')
  login.locator('input[name="password"]').fill('admin')
  login.locator('button[data-action="show-password"]').click()
@@ -30,6 +30,16 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
+ assert app.locator('.demo-note').count()==0
+ assert app.locator('button[data-action="settings"]').count()==1
+ app.locator('button[data-action="settings"]').click()
+ assert app.get_by_text('Cỡ chữ').count()==1
+ app.locator('button[data-font="5"]').click()
+ assert app.locator('.font-steps output').inner_text()=='105%'
+ app.locator('button[data-theme-choice="dark"]').click()
+ assert app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
+ app.locator('button[data-theme-choice="light"]').click()
+ app.locator('button[data-action="close-modal"]').last.click()
  assert app.locator('.nav-external').count()==0
  assert app.locator('a.nav-main').first.get_attribute('href').startswith('app.html?')
  app.screenshot(path=str(root/'preview-dashboard.png'),full_page=True)
@@ -95,5 +105,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: login form validation/password visibility; 6 datasets 30-42 rows; native anchors; CRUD, search, card/table, bulk, reset, PDA status, theme; mobile')
+ print('PASS: login; realistic fixtures; native anchors; CRUD, search, cards, bulk, reset, PDA status, settings font size, both themes and mobile')
  browser.close()
