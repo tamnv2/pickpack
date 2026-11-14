@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "OFFICE_UI_V083_PUBLIC_TEST_PREVIEW_VERIFIED",
-  "application_code": "WEB_OFFICE_STATIC_V083_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43595501602_SOURCE_97f05c01625a787659bb6e6fbc292b20d97ad47d",
+  "phase": "OFFICE_UI_V084_PUBLIC_TEST_PREVIEW_VERIFIED",
+  "application_code": "WEB_OFFICE_STATIC_V084_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43599665168_SOURCE_7f379b28c16b8fa273ff6634478550eb5695e61d",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V083_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V084_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner visual/business review of v0.8.3 public test-only Web",
-    "Real authoritative identity/role/shift/user backend and security approval before live operations",
-    "Physical barcode field tests, APK, production RELEASE_PASS/FIELD_PASS/OWNER_PASS not authorized"
+    "Owner UI visual/business review of v0.8.4 public test-only static Web",
+    "Authoritative identity/role/shift-user backend and security before real operations",
+    "Physical hardware/field tests, APK, Production RELEASE_PASS/FIELD_PASS/OWNER_PASS not approved"
   ],
-  "latest_checkpoint": "PP-20261114-013",
+  "latest_checkpoint": "PP-20261114-014",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -47,7 +47,7 @@
     "provider_usage": "ZERO_RUNTIME_BUSINESS_API_CALLS_STATIC_CDN_TRANSFER_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.8.3",
+    "version": "0.8.4",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -59,7 +59,7 @@
       "pda_device_ids": 3
     },
     "admin_actions": "BROWSER_LOCAL_SYNTHETIC_CRUD_BULK_XLSX_STATUS_PDA_LOAN_GUARD",
-    "navigation": "SHORT_LABEL_FLAT_NAV_TOP_LEFT_PROFILE_SETTINGS_NO_REPEATED_PAGE_HEADING",
+    "navigation": "SEVEN_FIVE_TO_SIX_WORD_LABELS_WRAPPING_NO_CLIP_DESKTOP_HAMBURGER_REMOVED_MOBILE_MUC_OPENER",
     "storage": "LOCALSTORAGE_FAKE_DATA_ONLY",
     "font_scale": "PREFERENCE_100_PERCENT_ACTUAL_BASE_110_PERCENT_OLD_SETTING_ONE_TIME_CONVERSION",
     "sidebar_theme": "LIGHT_IN_LIGHT_DARK_IN_DARK",
@@ -86,8 +86,8 @@
     "export": "NATIVE_EXCEL_XLSX_STORED_ZIP_OOXML_STYLE_FILTER_FROZEN_HEADER_NO_EXTERNAL_REQUESTS",
     "verification_v08": "CODE_READY_CI_PASS_SOURCE_741503bd12a7528f68546880ffd8ee97204bd8a8_RUN_43586461064_NODE_BUILD_7_FILES_160367_BYTES_CHROMIUM_DOM_HOSTED_XLSX_OPENPYXL_PASS",
     "footer": "Phát triển hệ thống - tamnv2 | Pick Pack 1291",
-    "footer_placement": "FIXED_VIEWPORT_BOTTOM_RIGHT_OPACITY_0_64",
-    "version_label": "WEB_V0_8_2_SIDEBAR_BOTTOM_AND_LOGIN",
+    "footer_placement": "SIDEBAR_UNDER_WEB_VERSION_NOT_FIXED_VIEWPORT",
+    "version_label": "WEB_V0_8_4_SIDEBAR_BOTTOM_AND_LOGIN",
     "verification_v081": "CODE_READY_CI_PASS_PREVIEW_PASS_ACTIONS_43587655812_BUILD_7_FILES_161451_BYTES_LOCAL_CHROMIUM_HTTP_HOSTED_AND_REMOTE_CDN_BROWSER_PASS",
     "layout": "TABLE_ONLY_NO_CARD_TOGGLE",
     "labor_scan": "EMPLOYEE_CODE_QR_KEYBOARD_EXACT_PROFILE_SHIFT_USER_DATE_TIME_TEMP_NO_GUESSED_HOURS_WORK_ONE_PER_DAY",
@@ -95,14 +95,15 @@
     "verification_v082": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_99ed047b963dbaee81d54711acae3485d5313e98_RUN_43590709932_BUILD_7_FILES_171953_BYTES_CHROMIUM_HOSTED_REMOTE",
     "personnel_catalogs": "FIVE_LOCALSTORAGE_LISTS_SELECT_CRUD_CASE_INSENSITIVE_DUPLICATE_GUARD_RENAME_REFERENCES_DELETE_IN_USE_BLOCK",
     "interactions": "ANIMATED_MENU_TOAST_FORM_VALIDATION_SCANNER_LOGIN_LOGOUT_REDUCED_MOTION",
-    "verification_v083": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_97f05c01625a787659bb6e6fbc292b20d97ad47d_RUN_43595501602_BUILD_7_FILES_186106_BYTES_CHROMIUM_HOSTED_REMOTE"
+    "verification_v083": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_97f05c01625a787659bb6e6fbc292b20d97ad47d_RUN_43595501602_BUILD_7_FILES_186106_BYTES_CHROMIUM_HOSTED_REMOTE",
+    "verification_v084": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_7f379b28c16b8fa273ff6634478550eb5695e61d_RUN_43599665168_BUILD_7_FILES_187603_BYTES_CHROMIUM_1440_1024_390_HOSTED_REMOTE"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/97f05c01625a787659bb6e6fbc292b20d97ad47d/prototype/index.html",
-    "verified_commit": "97f05c01625a787659bb6e6fbc292b20d97ad47d",
-    "verified_run": "43595501602",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/7f379b28c16b8fa273ff6634478550eb5695e61d/prototype/index.html",
+    "verified_commit": "7f379b28c16b8fa273ff6634478550eb5695e61d",
+    "verified_run": "43599665168",
     "public_access": true,
     "credentials": "admin/admin_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
