@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.8.8
+# PickPack 1291 — Web Office v0.8.9
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -67,3 +67,8 @@ python tests/hosted_smoke.py
 - Dark charcoal split-flap cards with larger white numerals, center hinge/end pins, contrast/shadows and top-out (270 ms) then bottom-in (320 ms) 3D easing. Only changed digits animate; HH:mm:ss and Vietnamese calendar date remain.
 - Active flaps settle safely when hidden or reduced-motion is enabled; static face updates without page rerender or business API usage. Search/notification/clock toolbar slots stay unchanged.
 - Chromium/HTTP-hosted E2E verifies mid-rotation transforms, reduced-motion settling, mobile and actual public CDN preview: GitHub Actions #43614819960 (tested source e5de98df9d5c3db9122641d75df2d3c59144686e). UI visual similarity still requires Owner review.
+
+## Web Office v0.8.9 — Đồng hồ chỉ hiển thị giờ
+- Bỏ hoàn toàn dòng thứ/ngày/tháng/năm và bộ định dạng ngày dư thừa khỏi topbar. Chỉ còn đồng hồ lật HH:mm:ss theo giờ Việt Nam.
+- Tăng thẻ lên 28 × 44 px (desktop), thu nhỏ theo breakpoint để giữ nguyên vị trí tìm kiếm/thông báo và không tràn trên tablet/mobile; animation 3D không đổi.
+- Kiểm thử Chromium nguồn và hosted: không còn phần tử ngày, thẻ lật được phóng lớn và nằm trọn trong khu vực đồng hồ ở màn hình desktop/tablet/mobile; không gọi API nghiệp vụ.
