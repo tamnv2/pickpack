@@ -103,3 +103,11 @@
 @media(max-width:1080px){.scan-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.scan-station{padding:16px}.scan-form-row{flex-wrap:wrap}.scan-form-row input{flex:1 0 100%}.scan-form-row .btn{flex:1;min-width:0}.scan-fields{grid-template-columns:1fr 1fr;gap:10px}.photo-editor{align-items:flex-start}}
 @media(max-width:420px){.scan-fields{grid-template-columns:1fr}.scan-station-head{align-items:flex-start}.scan-identity{align-items:flex-start}.photo-editor{flex-direction:column;align-items:center;text-align:center}.photo-editor-actions{justify-content:center}}
+
+.scan-mode-wrapper{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+.scan-mode-wrapper .scan-code-label{margin:0}
+.scan-mode{display:inline-flex;gap:5px;padding:4px;border-radius:9px;background:var(--chip);border:1px solid var(--border)}
+.scan-mode button{min-height:36px;min-width:110px;padding:7px 15px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:calc(12px * var(--text-scale));font-weight:700}
+.scan-mode button.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+.scan-mode button:not(.active):hover{background:var(--card);color:var(--text)}
+@media(max-width:530px){.scan-mode-wrapper{align-items:flex-start;flex-direction:column;gap:8px}.scan-mode{width:100%}.scan-mode button{flex:1}}
