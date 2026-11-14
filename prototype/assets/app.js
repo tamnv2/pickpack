@@ -170,7 +170,7 @@ function controls(){
 }
 function recordActions(r){
  if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button></span>`;
- return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem chi tiết">${icon('eye',16)}</button><button class="row-open" data-edit="${escape(r.id)}" title="Sửa bản ghi">${icon('edit',16)}</button><button class="row-open danger-text" data-delete="${escape(r.id)}" title="Xóa bản ghi">${icon('trash',16)}</button></span>`;
+ return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem chi tiết">${icon('eye',16)}</button>${state.view==='pda'?'':`<button class="row-open" data-edit="${escape(r.id)}" title="Sửa bản ghi">${icon('edit',16)}</button>`}<button class="row-open danger-text" data-delete="${escape(r.id)}" title="Xóa bản ghi">${icon('trash',16)}</button></span>`;
 }
 function table(){
  const cols=columns[state.view],rows=filtered(),locked=state.view==='shifts';
@@ -297,7 +297,7 @@ function drawer(){
  if(!state.drawer)return '';
  const row=store[state.view]?.find(x=>x.id===state.drawer);if(!row)return '';
  const fields=state.view==='people'?PERSON_DETAILS:columns[state.view].slice(1);
- return `<div class="drawer-shade" data-action="close-drawer"></div><aside class="detail-drawer" role="dialog" aria-modal="true" aria-label="Chi tiết ${escape(row.id)}"><div class="detail-head"><div><small>CHI TIẾT HỒ SƠ</small><h2>${escape(row.name)}</h2></div><button class="icon-button" data-action="close-drawer" aria-label="Đóng chi tiết">×</button></div><div class="detail-content"><div class="detail-hero">${state.view==='people'?avatar(row,true):`<span class="detail-icon">${icon(state.view==='pda'?'device':'file',23)}</span>`}<div><strong>${escape(row.name)}</strong><small>${escape(row.id)}</small></div></div>${row.state?badge(row.state):''}<div class="detail-fields">${fields.filter(([k])=>k!=='name').map(([k,label])=>`<div><span>${escape(label)}</span><b>${escape(row[k]||'—')}</b></div>`).join('')}</div><div class="drawer-actions">${state.view==='shifts'?'':`<button class="btn primary" data-edit="${escape(row.id)}">${icon('edit',16)} Chỉnh sửa</button>${['people','labor','pda'].includes(state.view)?'':`<button class="btn ghost" data-quick="${escape(row.id)}">${quickLabel()}</button>`}<button class="btn danger" data-delete="${escape(row.id)}">Xóa</button>`}</div></div></aside>`;
+ return `<div class="drawer-shade" data-action="close-drawer"></div><aside class="detail-drawer" role="dialog" aria-modal="true" aria-label="Chi tiết ${escape(row.id)}"><div class="detail-head"><div><small>CHI TIẾT HỒ SƠ</small><h2>${escape(row.name)}</h2></div><button class="icon-button" data-action="close-drawer" aria-label="Đóng chi tiết">×</button></div><div class="detail-content"><div class="detail-hero">${state.view==='people'?avatar(row,true):`<span class="detail-icon">${icon(state.view==='pda'?'device':'file',23)}</span>`}<div><strong>${escape(row.name)}</strong><small>${escape(row.id)}</small></div></div>${row.state?badge(row.state):''}<div class="detail-fields">${fields.filter(([k])=>k!=='name').map(([k,label])=>`<div><span>${escape(label)}</span><b>${escape(row[k]||'—')}</b></div>`).join('')}</div><div class="drawer-actions">${state.view==='shifts'?'':`${state.view==='pda'?'':`<button class="btn primary" data-edit="${escape(row.id)}">${icon('edit',16)} Chỉnh sửa</button>`}${['people','labor','pda'].includes(state.view)?'':`<button class="btn ghost" data-quick="${escape(row.id)}">${quickLabel()}</button>`}<button class="btn danger" data-delete="${escape(row.id)}">Xóa</button>`}</div></div></aside>`;
 }
 const FIELD_OPTIONS={team:['Pick','Pack thường','Pack Auto','Điều phối'],shift:['Ca 1','Ca 2'],state:['Đang làm việc','Chờ vào ca','Nghỉ ca','Trong ca','Đã ra ca','Tạm tính','Đã xác nhận','Chưa chấm','Chờ xác nhận','Đã lưu','Sẵn sàng','Đang sử dụng','Cần kiểm tra','Đang mượn','Đã trả'],type:['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'],work:['Pick','Pack thường','Pack Auto','Điều phối']};
 const STATES_BY_MODULE={people:['Đang làm việc','Chờ vào ca','Nghỉ ca'],shifts:['Chờ vào ca','Trong ca','Đã ra ca'],labor:['Chưa chấm','Tạm tính','Đã xác nhận'],minutes:['Chờ xác nhận','Đã lưu','Đã xác nhận'],assets:['Sẵn sàng','Đang sử dụng','Cần kiểm tra'],pda:['Đang mượn','Đã trả']};
@@ -347,11 +347,11 @@ function modal(){
  if(state.modal==='notifications')return noticesModal();
  if(state.modal==='category-new'||state.modal==='category-edit')return catalogModal();
  const key=state.view;
- if(['shifts','dashboard','labor','pda'].includes(key))return '';
+ if(['shifts','dashboard','pda'].includes(key)||(key==='labor'&&state.modal!=='edit'))return '';
  const existing=store[key]?.find(r=>r.id===state.editId);
  const editing=state.modal==='edit'&&!!existing;
  const title=editing?`Sửa ${PAGES[key].title.toLowerCase()}`:`Thêm ${PAGES[key].title.toLowerCase()}`;
- const fields=key==='people'?PERSON_EDITOR:columns[key].filter(([k])=>k!=='id');
+ const fields=key==='people'?PERSON_EDITOR:key==='labor'?[['work','Công việc'],['hours','Giờ công'],['state','Trạng thái']]:columns[key].filter(([k])=>k!=='id');
  return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>QUẢN LÝ DỮ LIỆU</span><h2 id="modal-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><form id="record-form">${key==='people'?photoEditor(existing):''}<div class="form-grid">${fields.map(([k,l])=>fieldInput(k,l,editing?existing[k]:k==='state'?INITIAL_STATE[key]:'',editing)).join('')}</div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu chỉnh sửa':'Tạo bản ghi'}</button></div></form></section></div>`;
 }
 function toast(){if(!state.notice)return '';const fail=/không|trùng|lỗi|vượt|chưa hợp lệ|phải có/i.test(state.notice);return `<div class="toast ${fail?'toast-error':'toast-success'}" role="${fail?'alert':'status'}"><span class="toast-symbol">${fail?'!':'✓'}</span><span>${escape(state.notice)}</span><button data-action="clear-notice" aria-label="Đóng thông báo">×</button></div>`}
@@ -362,8 +362,18 @@ function closeStuff(){state.sidebar=false;state.modal='';state.drawer='';state.e
 function setView(view){state.view=view;state.search='';state.filter='all';state.drawer='';state.sidebar=false;state.profileMenu=false;state.selected.clear();safeHistory('pushState',href(view));render();window.scrollTo(0,0)}
 function saveForm(form){
  const key=state.view;
- if(['shifts','dashboard','labor','pda'].includes(key))return;
+ if(['shifts','dashboard','pda'].includes(key))return;
  const fd=new FormData(form),editing=state.modal==='edit'&&!!state.editId;
+ if(key==='labor'){
+  if(!editing)return;
+  const work=String(fd.get('work')||'').trim(),hours=String(fd.get('hours')||'').trim(),newState=String(fd.get('state')||'').trim();
+  const hoursNum=Number(hours.replace(',','.'));
+  if(!STATES_BY_MODULE.labor.includes(newState)||(newState==='Đã xác nhận'&&(!FIELD_OPTIONS.work.includes(work)||!/^[0-9]{1,2}([,.][0-9]{1,2})?$/.test(hours)||!Number.isFinite(hoursNum)||hoursNum>24))){
+   state.notice='Cần chọn công việc và giờ công hợp lệ trước khi xác nhận';render();return;
+  }
+  updateRecord('labor',state.editId,{work,hours,state:newState});
+  state.notice='Đã cập nhật công nhật';state.modal='';state.editId='';render();return;
+ }
  if(key==='people'){
   const id=String(fd.get('id')||'').trim(),name=String(fd.get('name')||'').trim();
   if(!/^[A-Za-z0-9-]{2,30}$/.test(id)||name.length<2){state.notice='Mã nhân viên hoặc họ tên không hợp lệ';render();return}
