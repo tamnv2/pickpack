@@ -56,21 +56,24 @@ with sync_playwright() as p:
  assert app.locator('button[data-action="add"]').count()==0
  app.locator('input#shift-code').fill('90000001')
  assert app.locator('#scan-preview').get_by_text('Mã nhân viên:',exact=False).count()>=1
- app.locator('#shift-scan-form button[value="enter"]').click()
+ app.locator('input#shift-code').press('Enter')
  assert app.locator('.records-label b').inner_text()=='43'
  assert 'Đã vào ca' in app.locator('.scan-outcome').inner_text()
  app.locator('input#shift-code').fill('90000001')
- app.locator('#shift-scan-form button[value="enter"]').click()
+ app.locator('input#shift-code').press('Enter')
  assert app.locator('.records-label b').inner_text()=='43'
  assert 'không ghi nhận vào ca lần hai' in app.locator('.scan-outcome').inner_text()
  app.locator('input#shift-code').fill('90000001')
- app.locator('#shift-scan-form button[value="exit"]').click()
+ app.locator('button[data-scan-mode="exit"]').click()
+ assert app.locator('button[data-scan-mode="exit"]').get_attribute('aria-pressed')=='true'
+ app.locator('input#shift-code').fill('90000001')
+ app.locator('input#shift-code').press('Enter')
  assert 'Đã ra ca' in app.locator('.scan-outcome').inner_text()
  app.locator('input#shift-code').fill('90000001')
- app.locator('#shift-scan-form button[value="exit"]').click()
+ app.locator('input#shift-code').press('Enter')
  assert 'Không có lượt vào ca đang mở' in app.locator('.scan-outcome').inner_text()
  app.locator('input#shift-code').fill('NOT_FOUND')
- app.locator('#shift-scan-form button[value="enter"]').click()
+ app.locator('input#shift-code').press('Enter')
  assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
  app.locator('a.nav-main[href*="view=people"]').click()
  app.screenshot(path=str(root/'preview-people.png'),full_page=True)
