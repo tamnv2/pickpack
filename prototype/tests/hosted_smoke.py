@@ -81,7 +81,7 @@ try:
         second.locator('#catalog-form button[type="submit"]').click()
         assert 'Điều phối thử' in second.locator('.catalog-panel').inner_text()
         assert 'Điều phối thử' in second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v083')).position")
-        second.locator('a[data-nav="people"]').click()
+        second.locator('.catalog-heading a[data-nav="people"]').click()
         second.locator('button[data-action="add"]').click()
         second.locator('#record-form input[name="id"]').fill('90009999')
         second.locator('#record-form input[name="name"]').fill('Nhân viên kiểm thử liên tab')
