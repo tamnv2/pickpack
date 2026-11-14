@@ -1,0 +1,12 @@
+{
+  "name": "pickpack-ui-five-concepts",
+  "version": "0.2.0",
+  "private": true,
+  "description": "PickPack 1291 buildable static UI review (no backend)",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs --check"
+  },
+  "engines": {"node": ">=18"}
+}
