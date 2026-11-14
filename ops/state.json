@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-14",
-  "phase": "HORILLA_UI_STYLE_APPROVED_V05_FUNCTION_REVIEW",
-  "application_code": "HORILLA_ADMIN_DEMO_V05_CODE_READY",
-  "technical_ci": "LOCAL_BUILD_INLINE_CHROMIUM_PASS_CI_NOT_RUN",
+  "phase": "OFFICE_UI_V06_OWNER_REVIEW_PENDING",
+  "application_code": "OFFICE_UI_V06_DRAFT_PR_TESTED_NOT_BUILD_VERIFIED",
+  "technical_ci": "V06_V8_SYNTAX_16_RENDER_6_BEHAVIOR_PASS_CHROMIUM_BUILD_CI_NOT_RUN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "HORILLA_STYLE_APPROVED_V04_V05_REVIEW_PENDING",
+  "owner_business_acceptance": "V06_WEB_OFFICE_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,14 +28,15 @@
     "realtime": true
   },
   "pending": [
-    "Owner review/test v0.5 login, CRUD and native browser right-click new-tab on Chrome/Edge",
-    "Actual Firebase Auth/Inventory roles, server RBAC, OpsCore, API, realtime, PDA app remain deferred until separately approved"
+    "Owner browser review/test v0.6, including navigation/right-click new-tab, forms, responsive, CSV and multi-tab storage",
+    "V0.6 build/real Chromium/CI not verified this session",
+    "Production-grade Firebase Auth/shared roles, server-side RBAC, OpsCore, API, realtime and APK remain separate deferred gates"
   ],
-  "latest_checkpoint": "PP-20261114-006",
+  "latest_checkpoint": "PP-20261114-007",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
-    "release": "DRAFT_PR_ONLY",
+    "release": "UNMERGED_DRAFT_PR_ONLY",
     "themes": [
       "light",
       "dark"
@@ -46,7 +47,7 @@
     "provider_usage": "ZERO_RUNTIME_API_CALLS",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -57,8 +58,13 @@
       "pda_history": 30,
       "pda_device_ids": 3
     },
-    "admin_actions": "LOCAL_FAKE_CRUD_BULK_CSV_RESET_STATUS",
+    "admin_actions": "BROWSER_LOCAL_SYNTHETIC_CRUD_BULK_CSV_STATUS_PDA_LOAN_GUARD",
     "navigation": "NATIVE_ANCHORS_NO_NEW_TAB_BUTTON",
-    "storage": "LOCALSTORAGE_FAKE_DATA_ONLY"
+    "storage": "LOCALSTORAGE_FAKE_DATA_ONLY",
+    "font_scale": "90-120% STEP_5 PERSISTED",
+    "sidebar_theme": "LIGHT_IN_LIGHT_DARK_IN_DARK",
+    "notifications": "DERIVED_FROM_SYNTHETIC_DATA",
+    "chart": "DERIVED_FROM_SYNTHETIC_SHIFTS",
+    "verification_v06": "V8_JS_SYNTAX_16_STRUCTURE_6_SIMULATED_BEHAVIOR_PASS_NO_REAL_BROWSER_OR_BUILD"
   }
 }
