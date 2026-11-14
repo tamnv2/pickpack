@@ -121,12 +121,13 @@ with sync_playwright() as p:
  app.locator('#pda-staff-code').fill('90000035')
  app.locator('#pda-device-code').fill('PDA-03')
  app.locator('#pda-device-code').press('Enter')
- assert 'Người trả không khớp' in app.locator('.scan-outcome').inner_text()
+ assert 'Đã trả PDA-03' in app.locator('.scan-outcome').inner_text()
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).pda.find(x=>x.name==='PDA-03'&&x.state==='Đã trả').returnStaff")=='90000035'
+ assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='31'
  app.locator('#pda-staff-code').fill('90000034')
  app.locator('#pda-device-code').fill('PDA-03')
  app.locator('#pda-device-code').press('Enter')
- assert 'Đã trả PDA-03' in app.locator('.scan-outcome').inner_text()
- assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='31'
+ assert 'chưa có lượt mượn đang mở' in app.locator('.scan-outcome').inner_text()
  app.locator('a.nav-main[href*="view=shifts"]').click()
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
