@@ -3,6 +3,7 @@
 No real data and no external host. This validates navigation that inline-DOM smoke cannot.
 """
 from contextlib import closing
+import base64
 from datetime import datetime, timezone
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -161,11 +162,28 @@ try:
         second.locator('#record-form select[name="shift"]').select_option('Ca 1')
         second.locator('#record-form input[name="startDate"]').fill('2026-12-01')
         second.locator('#record-form input[name="user"]').fill('pp1291.pk99')
+        # Entirely synthetic high-resolution portrait: 480x640, never contacts a remote service.
+        photo_b64=second.evaluate("""() => {
+          const c=document.createElement('canvas');c.width=480;c.height=640;const g=c.getContext('2d');
+          g.fillStyle='#e0e7ed';g.fillRect(0,0,480,640);
+          g.fillStyle='#5c7892';g.beginPath();g.arc(240,235,82,0,Math.PI*2);g.fill();
+          g.fillStyle='#668da5';g.fillRect(105,340,270,230);
+          return c.toDataURL('image/png').split(',')[1]
+        }""")
+        second.locator('#staff-photo').set_input_files({'name':'synthetic-portrait.png','mimeType':'image/png','buffer':base64.b64decode(photo_b64)})
+        second.locator('#photo-preview img').wait_for()
         second.locator('#record-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text() == '37'
         assert '01/12/2026' in second.locator('.people-table tbody tr').first.inner_text()
         assert 'Quản trị viên' in second.locator('.people-table tbody tr').first.inner_text()
         assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').position")=='Điều phối thử'
+        second.locator('.people-table tbody tr').first.locator('[data-record]').click()
+        second.locator('#portrait-original img').wait_for(timeout=5000)
+        assert second.locator('#portrait-original img').evaluate("el=>el.naturalWidth===480 && el.naturalHeight===640")
+        second.locator('[data-action="zoom-portrait"]').click()
+        assert second.locator('.portrait-lightbox img').evaluate("el=>el.naturalWidth===480")
+        second.locator('.portrait-lightbox [data-action="close-modal"]').click()
+        second.locator('.detail-head [data-action="close-drawer"]').click()
         # The other open tab receives a native storage event and updates the dashboard.
         page.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim() === '37'", timeout=5000)
 
@@ -190,6 +208,12 @@ try:
         assert sheet.max_row == 38
         workbook.close()
 
+        for module,scope in [('labor','laborWork'),('minutes','minutesType'),('assets','assetsType')]:
+            second.locator(f'a.nav-main[href*="view={module}"]').click()
+            second.locator(f'a[data-catalog-scope="{module}"]').click()
+            assert second.locator(f'[data-category-tab="{scope}"]').count()==1
+            assert second.locator('.catalog-panel tbody tr').count()>0
+            second.locator(f'.catalog-heading a[data-nav="{module}"]').click()
         second.locator('a.nav-main[href*="view=shifts"]').click()
         second.locator('#scan-shift-choice').select_option('Ca HC')
         second.locator('#shift-code').fill('90009999')
@@ -267,7 +291,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.0 AM/PM, native confirm password, catalog labor paired scans, shift choices, QR/XLSX, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.0 AM/PM, catalog CRUD, high-res IndexedDB portrait, password, labor/shift scans, XLSX, zero external API')
         browser.close()
 finally:
     server.shutdown()
