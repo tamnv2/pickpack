@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.8.9';
+ const WEB_VERSION='0.8.10';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes']];
@@ -41,34 +41,19 @@ const VN_TIME=new Intl.DateTimeFormat('vi-VN',{timeZone:VN_ZONE,hour:'2-digit',m
 const VN_HOUR=new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,hour:'2-digit',hourCycle:'h23'});
 function resolveTheme(mode,now=new Date()){if(mode!=='auto')return mode;const hour=Number(VN_HOUR.format(now));return hour>=6&&hour<18?'light':'dark'}
 function clockNow(now=new Date()){return {time:VN_TIME.format(now),iso:now.toISOString()}}
-function clockDigits(time){return [...time].map((char,i)=>char===':'?'<span class="flip-separator" aria-hidden="true">:</span>':`<span class="flip-digit" data-value="${char}" data-index="${i}" aria-hidden="true"><span class="flip-pane flip-upper" data-digit="${char}"></span><span class="flip-pane flip-lower" data-digit="${char}"></span><span class="flip-flap flip-out" data-digit="${char}"></span><span class="flip-flap flip-in" data-digit="${char}"></span></span>`).join('')}
-function clockMarkup(){const now=clockNow();return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Giờ Việt Nam"><div class="clock-values"><time id="clock-time" class="flip-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off">${clockDigits(now.time)}</time></div></div>`}
+function clockMarkup(){
+ const now=clockNow();
+ return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Giờ Việt Nam"><time id="clock-time" class="office-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off"><span id="clock-hours" class="office-clock-main">${escape(now.time.slice(0,5))}</span><span id="clock-seconds" class="office-clock-seconds">${escape(now.time.slice(5))}</span></time></div>`;
+}
 function tickClock(){
  const now=clockNow(),clock=document.getElementById('clock-time');
- const animate=!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- if(clock&&!animate)for(const el of clock.querySelectorAll('.flip-digit.is-flipping')){
-  el.classList.remove('is-flipping');
-  el.querySelector('.flip-upper').dataset.digit=el.dataset.value;
-  el.querySelector('.flip-lower').dataset.digit=el.dataset.value;
- }
  if(clock&&clock.getAttribute('aria-label')!==now.time){
-  const digits=clock.querySelectorAll('.flip-digit');
-  let digit=0;
-  for(const char of now.time){if(char===':')continue;
-   const el=digits[digit++];if(!el||el.dataset.value===char)continue;
-   const old=el.dataset.value;
-   // A backgrounded tab or skipped frame must never leave the old flap stuck.
-   el.classList.remove('is-flipping');
-   el.querySelector('.flip-lower').dataset.digit=old;
-   el.querySelector('.flip-upper').dataset.digit=char;
-   el.querySelector('.flip-lower').dataset.digit=animate?old:char;
-   el.querySelector('.flip-out').dataset.digit=old;
-   el.querySelector('.flip-in').dataset.digit=char;
-   el.dataset.value=char;
-   if(animate){void el.offsetWidth;el.classList.add('is-flipping')}
-  }
+  const hours=document.getElementById('clock-hours'),seconds=document.getElementById('clock-seconds');
+  if(hours&&hours.textContent!==now.time.slice(0,5))hours.textContent=now.time.slice(0,5);
+  if(seconds&&seconds.textContent!==now.time.slice(5))seconds.textContent=now.time.slice(5);
+  clock.setAttribute('aria-label',now.time);
+  clock.dateTime=now.iso;
  }
- if(clock){clock.dateTime=now.iso;clock.setAttribute('aria-label',now.time)}
  const next=resolveTheme(state.themeMode);if(next!==state.theme){state.theme=next;render()}
 }
 
@@ -581,7 +566,6 @@ window.addEventListener('storage',e=>{if(e.key===CATALOG_KEY){Object.assign(cata
 window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);state.view=PAGES[p.get('view')]?p.get('view'):'dashboard';state.theme=resolveTheme(state.themeMode);state.drawer=p.get('record')||'';state.search='';state.filter='all';state.selected.clear();render()});
 function markField(el){if(!el?.matches('#record-form input:not([type=file]),#record-form select,#catalog-form input'))return;const touched=el.dataset.touched==='1'||String(el.value||'').trim().length>0;const valid=el.checkValidity();el.classList.toggle('is-valid',touched&&valid);el.classList.toggle('is-invalid',touched&&!valid)}
 root.addEventListener('focusout',e=>{if(e.target.matches('#record-form input,#record-form select,#catalog-form input')){e.target.dataset.touched='1';markField(e.target)}});
-root.addEventListener('animationend',e=>{if(e.animationName!=='pp-retro-flap-in')return;const el=e.target.closest('.flip-digit');if(!el||!el.classList.contains('is-flipping'))return;el.querySelector('.flip-lower').dataset.digit=el.dataset.value;el.classList.remove('is-flipping')});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeStuff();render()}});
 window.addEventListener('focus',tickClock);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tickClock()});
