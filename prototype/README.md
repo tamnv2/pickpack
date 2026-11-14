@@ -1,12 +1,18 @@
-# PickPack 1291 — Web Office v0.8
+# PickPack 1291 — Web Office v0.8.1
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
+## Bản Web kiểm thử công khai
+- **Preview v0.8.1:** https://rawcdn.githack.com/tamnv2/pickpack/ddc12d9b66461f842f65c6f8ffa323f3d992a41d/prototype/index.html
+- Đăng nhập kiểm thử `admin/admin`; **không phải xác thực thật**. Bản preview là tệp tĩnh từ commit riêng bất biến, công khai qua CDN bên thứ ba. CDN có thể hiển thị trang xác nhận trước khi mở HTML lần đầu. Không nhập dữ liệu nhân sự/ảnh thật.
+- **Bằng chứng:** GitHub Actions [#43587655812](https://github.com/tamnv2/pickpack/actions/runs/43587655812): `SOURCE_CHECK_PASS`, `BUILD_PASS` 7 tệp/161451 bytes, Chromium nội bộ và HTTP hosted PASS; **`PUBLIC_PREVIEW_HTTP_PASS`** (HTML/JS/CSS) và **`PUBLIC_PREVIEW_BROWSER_PASS`** (đăng nhập và footer từ CDN thực). Không thêm Worker/Firebase/Netlify/GitHub Pages, không merge hay deploy Production.
+
 ## Giao diện
-- Nhận diện: `CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN` tại tiêu đề trái; thông tin **Quản trị viên** duy nhất trong thanh trên; cạnh dưới sidebar chỉ có nút Đăng xuất.
+- Nhận diện: `CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN` tại tiêu đề trái; thông tin **Quản trị viên** duy nhất trong thanh trên; cạnh dưới sidebar có phiên bản Web và nút Đăng xuất.
 - Cỡ chữ mặc định tăng **10 điểm phần trăm** so với v0.7: từ 100% thành 110%. Cài đặt 100–130% theo bước 5%; người có mức chữ cũ được nâng +10 điểm **một lần**.
 - Giao diện sáng chọn **7 màu**: đỏ, cam, vàng, lục, lam, chàm, tím. Mặc định lam; lưu lựa chọn theo trình duyệt. Giao diện tối giữ màu riêng, không bị thay đổi bởi palette sáng.
 - Giảm padding/margin ở đầu trang, menu, KPI, bảng, quét ca; vẫn tăng cỡ chữ và bảo đảm xem trên desktop/mobile.
+- Dòng ghi công **“Phát triển hệ thống - tamnv2 | Pick Pack 1291”** được cố định góc dưới phải, mờ nhẹ; nhãn **Web v0.8.1** hiển thị ở đáy sidebar và trên màn hình đăng nhập.
 - **Tổng quan** chỉ đọc, dữ liệu tính từ 6 phân hệ: 8 KPI nhân sự/ca/công nhật/biên bản/CCDC/PDA, trạng thái tất cả phân hệ, việc cần xử lý, biểu đồ quét theo giờ và lượt ca gần đây. **Không có tạo/sửa/xóa, tạo biên bản hay lối tắt điều hướng**.
 - Có 7 phân hệ: Tổng quan, Nhân sự, Ra/vào ca, Công nhật, Biên bản, Công cụ dụng cụ, Mượn/trả PDA. Menu HTML anchor thật cho chuột phải mở tab mới.
 
