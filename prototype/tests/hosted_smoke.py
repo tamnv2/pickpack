@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.8.8'
+assert version=='0.8.9'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -58,8 +58,10 @@ try:
         assert page.locator('.flip-lower').count()==6
         assert page.locator('.flip-out').count()==6
         assert page.locator('.flip-in').count()==6
-        assert page.locator('#clock-date').is_visible()
-        assert '/' in page.locator('#clock-date').inner_text()
+        assert page.locator('#clock-date').count()==0
+        assert page.locator('.header-clock').get_attribute('aria-label')=='Giờ Việt Nam'
+        assert page.locator('#clock-time .flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")==44
+        assert page.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1&&c.top>=h.top-1&&c.bottom<=h.bottom+1}")
         assert page.locator('.metrics .metric-card').count() == 8
         assert page.locator('#global-search').is_visible()
         slots=lambda: page.evaluate("""() => ['.top-search','.topbar .notif','.header-clock'].map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return [r.x,r.y,r.width]})""")
@@ -253,6 +255,9 @@ try:
         mobile.locator('#demo-password').fill('admin')
         mobile.locator('#login-form button[type="submit"]').click()
         mobile.wait_for_url('**/app.html?view=dashboard*')
+        assert mobile.locator('#clock-date').count()==0
+        assert mobile.locator('#clock-time .flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")==26
+        assert mobile.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1}")
         assert mobile.locator('button.menu-button').is_visible()
         assert mobile.locator('button.menu-button').inner_text()=='Mục'
         assert mobile.locator('.top-profile').is_visible()
@@ -272,7 +277,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.8.8 retro top/bottom 3D mid-rotations and reduced-motion settling, toolbar geometry, QR/XLSX/mobile, zero API')
+        print('HOSTED_SMOKE_PASS: v0.8.9 time-only enlarged retro flip fits desktop/mobile, 3D rotation, reduced-motion, toolbar geometry, QR/XLSX, zero API')
         browser.close()
 finally:
     server.shutdown()
