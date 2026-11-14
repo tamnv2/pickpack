@@ -6,6 +6,7 @@ from contextlib import closing
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import json
 from threading import Thread
 from zipfile import ZipFile
 from openpyxl import load_workbook
@@ -13,6 +14,8 @@ from playwright.sync_api import sync_playwright
 
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
+version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
+assert version=='0.8.1'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -37,6 +40,9 @@ try:
         page.locator('#login-form button[type="submit"]').click()
         page.wait_for_url('**/app.html?view=dashboard*')
         assert page.locator('a.nav-main').count() == 7
+        assert page.locator('.side-bottom .web-version').inner_text()==f'Web v{version}'
+        assert page.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
+        assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='fixed'
         assert page.locator('.metrics .metric-card').count() == 8
         assert page.locator('.coverage-row').count() == 6
         assert page.locator('.corporate-brand').inner_text() == 'CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN'
@@ -107,6 +113,7 @@ try:
         mobile.locator('#login-form button[type="submit"]').click()
         mobile.wait_for_url('**/app.html?view=dashboard*')
         assert mobile.locator('button.menu-button').is_visible()
+        assert mobile.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
         mobile.locator('button.menu-button').click()
         mobile.locator('a.nav-main[href*="view=shifts"]').click()
