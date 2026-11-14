@@ -45,6 +45,10 @@ with sync_playwright() as p:
  assert len(labels)==7 and all(5<=len(label.split())<=6 for label in labels),labels
  assert labels==['Tổng quan hoạt động vận hành','Quản lý hồ sơ nhân sự','Ghi nhận ra vào ca','Quản lý công nhật nhân sự','Quản lý biên bản sự việc','Quản lý công cụ dụng cụ','Ghi nhận mượn trả PDA']
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
+ app.set_viewport_size({'width':1024,'height':768})
+ assert not app.locator('button.menu-button').is_visible()
+ assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
+ app.set_viewport_size({'width':1440,'height':900})
  assert app.locator('.corporate-brand span').all_inner_texts()==['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
  assert app.locator('.top-profile').get_by_text('Quản trị viên').count()==1
  assert app.locator('.side-bottom').get_by_text('Quản trị viên').count()==0
