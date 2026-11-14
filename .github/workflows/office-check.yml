@@ -49,6 +49,28 @@ jobs:
                   print('PREVIEW_FILE_OK',path,'bytes',len(body),'mime',mime)
           print('PUBLIC_PREVIEW_HTTP_PASS',base+'index.html')
           PY
+          python - <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+          base='https://rawcdn.githack.com/tamnv2/pickpack/'+os.environ['PREVIEW_SHA']+'/prototype/'
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
+              context=browser.new_context()
+              # GitHack may show a one-time safety confirmation before serving arbitrary HTML.
+              context.add_cookies([{'name':'__Http-phish','value':'1','domain':'rawcdn.githack.com','path':'/','secure':True,'httpOnly':True}])
+              page=context.new_page()
+              response=page.goto(base+'index.html',wait_until='domcontentloaded',timeout=30000)
+              assert response and response.ok, ('HTTP',response.status if response else None)
+              page.locator('form#login-form').wait_for(timeout=10000)
+              assert page.locator('.login-links .web-version').inner_text()=='Web v0.8.1'
+              page.locator('#demo-user').fill('admin')
+              page.locator('#demo-password').fill('admin')
+              page.locator('#login-form button[type="submit"]').click()
+              page.wait_for_url('**/app.html?view=dashboard*',timeout=10000)
+              assert page.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
+              print('PUBLIC_PREVIEW_BROWSER_PASS',base+'index.html')
+              browser.close()
+          PY
       - name: Preserve browser evidence on failure
         if: failure()
         uses: actions/upload-artifact@v4
