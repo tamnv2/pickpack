@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.8.10
+# PickPack 1291 — Web Office v0.9.0
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -77,3 +77,13 @@ python tests/hosted_smoke.py
 - Theo yêu cầu Owner: **loại bỏ hoàn toàn flip clock** (mặt số, CSS 3D và JavaScript animation). Thay bằng đồng hồ chữ `HH:mm:ss` không khung nền; giờ/phút nổi bật, giây nhỏ/màu phụ theo theme sáng/tối, vẫn dùng giờ Việt Nam và không hiển thị ngày.
 - Cập nhật chỉ 2 phần DOM giờ/phút và giây mỗi giây, không dựng lại trang; thanh trên giữ đúng vị trí tìm kiếm/thông báo ở các mục. Giữ tương thích mobile và không gọi API nghiệp vụ.
 - Kiểm thử nguồn, Chromium, hosted và CDN: xem checkpoint `PP-20261115-022` trong `docs/JOURNAL.md`. Web demo `admin/admin`, dữ liệu giả lập trong trình duyệt; không Production.
+
+## Web Office v0.9.0 — nghiệm thu UI/UX 10 hạng mục (dữ liệu giả)
+- Đồng hồ `hh:mm:ss AM/PM` theo giờ Việt Nam. Toast tồn tại tối đa 5 giây, hiển thị nhiều nhất 5 thông báo, mới thay cũ, không chắn thao tác.
+- Modal xác nhận đồng nhất, đặt giữa màn hình; khi sửa/xóa bản ghi và danh mục phải nhập mật khẩu kiểm thử `admin`. Đây là **mô phỏng, không phải re-auth bảo mật**; Product thật cần xác thực và phân quyền phía server.
+- Ảnh JPEG/PNG/WebP tối đa 5 MB: ảnh vuông 192px dùng làm avatar, blob nguyên bản lưu **IndexedDB của trình duyệt**, hiển thị lớn trong hồ sơ và phóng to. Không truyền ảnh lên GitHub/provider. Tuyệt đối chỉ dùng **ảnh giả lập**, không nhập ảnh chân dung/thông tin nhân sự thật trên rawcdn.githack.com (public/shared-origin). Dung lượng ảnh phụ thuộc quota trình duyệt, không đồng bộ giữa các máy.
+- Công nhật: chọn Công việc công nhật (danh mục CRUD riêng), quét lần đầu tạo bản ghi bắt đầu, quét lần thứ hai cùng nhân viên/ngày kết thúc đúng bản ghi; hiển thị một dòng với giờ BĐ + KT, không hiển thị Giờ công/Trạng thái/User làm việc. Dữ liệu công nhật cũ không có mốc thời gian không được tự suy diễn.
+- Ra/vào ca: Vào ca chọn Ca 1/Ca 2/Ca HC bên cạnh loại thao tác, không lấy ca mặc định từ hồ sơ; Ra ca ẩn lựa chọn.
+- Thêm nhân sự / Quản lý danh mục, Tạo biên bản / Quản lý danh mục, Thêm CCDC / Quản lý danh mục chuyển cạnh Xuất Excel. Danh mục Loại biên bản và Loại CCDC dùng làm nguồn select, chống xóa giá trị đang được tham chiếu.
+- Web tĩnh 100% dữ liệu giả lập trong localStorage/IndexedDB, không gọi Firebase/Cloudflare/OpsCore; URL CDN miễn phí phục vụ file tĩnh nhưng **không có SLA**. Mỗi thiết bị/trình duyệt giữ dữ liệu riêng. GitHub Actions standard public runner miễn phí, không phát sinh provider usage; không tự động thay thế Production.
+- Test source commit `07220190e06049a7fe168e8d19308ea34395a240`, [Actions #43626063941](https://github.com/tamnv2/pickpack/actions/runs/43626063941), 7 tệp 213255 byte, Chromium + hosted browser + public CDN PASS.
