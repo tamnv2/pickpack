@@ -46,10 +46,15 @@ function clockDigits(time){return [...time].map((char,i)=>char===':'?'<span clas
 function clockMarkup(){const now=clockNow();return `<div class="header-clock" title="Giờ Việt Nam (UTC+7)" aria-label="Ngày và giờ Việt Nam"><span class="clock-pulse" aria-hidden="true"></span><div class="clock-values"><time id="clock-time" class="flip-clock" datetime="${now.iso}" aria-label="${escape(now.time)}" aria-live="off">${clockDigits(now.time)}</time><span id="clock-date">${escape(now.date)}</span></div></div>`}
 function tickClock(){
  const now=clockNow(),clock=document.getElementById('clock-time'),date=document.getElementById('clock-date');
+ const animate=!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(clock&&!animate)for(const el of clock.querySelectorAll('.flip-digit.is-flipping')){
+  el.classList.remove('is-flipping');
+  el.querySelector('.flip-upper').dataset.digit=el.dataset.value;
+  el.querySelector('.flip-lower').dataset.digit=el.dataset.value;
+ }
  if(clock&&clock.getAttribute('aria-label')!==now.time){
   const digits=clock.querySelectorAll('.flip-digit');
   let digit=0;
-  const animate=!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   for(const char of now.time){if(char===':')continue;
    const el=digits[digit++];if(!el||el.dataset.value===char)continue;
    const old=el.dataset.value;
