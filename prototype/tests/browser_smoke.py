@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.1'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.2'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,14 +33,17 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.1'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.2'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).position")=='fixed'
  assert app.locator('.site-footer').evaluate("el => getComputedStyle(el).textAlign")=='right'
  assert float(app.locator('.site-footer').evaluate("el => getComputedStyle(el).opacity"))<=0.70
- assert app.locator('.corporate-brand').inner_text()=='CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN'
+ assert app.locator('.corporate-brand span').all_inner_texts()==['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
  assert app.locator('.top-profile').get_by_text('Quản trị viên').count()==1
  assert app.locator('.side-bottom').get_by_text('Quản trị viên').count()==0
+ assert app.locator('.breadcrumb').count()==0
+ assert app.locator('.page-header .eyebrow').count()==0
+ assert app.locator('.page-header h1').count()==1
  assert app.locator('.metrics.overview-metrics .metric-card').count()==8
  assert app.locator('.coverage-row').count()==6
  assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
@@ -49,10 +52,12 @@ with sync_playwright() as p:
  assert app.locator('.overview-page button[data-action="export"]').count()==0
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==1
+ assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--text-scale').trim()")=='1.1'
  app.locator('button[data-action="settings"]').click()
  assert app.get_by_text('Cỡ chữ',exact=True).count()==1
+ assert app.locator('.font-steps output').inner_text()=='100%'
  app.locator('button[data-font="5"]').click()
- assert app.locator('.font-steps output').inner_text()=='115%'
+ assert app.locator('.font-steps output').inner_text()=='105%'
  assert app.locator('button[data-accent-choice]').count()==7
  app.locator('button[data-accent-choice="green"]').click()
  assert app.evaluate("document.documentElement.dataset.accent")=='green'
@@ -76,6 +81,52 @@ with sync_playwright() as p:
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}')
   assert app.locator('.table-panel').last.locator('button[data-action="export"]').inner_text().strip().endswith('Xuất Excel')
+  assert app.locator('.record-card').count()==0
+  assert app.locator('[data-action="layout-cards"],[data-action="layout-table"]').count()==0
+  assert app.locator('.page-header h1').count()==1
+  assert app.locator('.module-summary').count()==0
+ print('testing labor QR scan',flush=True)
+ app.locator('a.nav-main[href*="view=labor"]').click()
+ assert app.locator('#labor-scan-form').count()==1
+ assert app.locator('button[data-action="add"]').count()==0
+ app.locator('#labor-staff-code').fill('90000034')
+ assert '90000034' in app.locator('#labor-scan-preview').inner_text()
+ app.locator('#labor-staff-code').press('Enter')
+ assert 'Đã ghi nhận công nhật' in app.locator('.scan-outcome').inner_text()
+ assert app.locator('.records-label b').inner_text()=='43'
+ app.locator('#labor-staff-code').fill('90000034')
+ app.locator('#labor-staff-code').press('Enter')
+ assert 'Không tạo trùng' in app.locator('.scan-outcome').inner_text()
+ assert app.locator('.records-label b').inner_text()=='43'
+ app.locator('#labor-staff-code').fill('NOT_FOUND')
+ app.locator('#labor-staff-code').press('Enter')
+ assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
+ print('testing PDA QR borrow-return',flush=True)
+ app.locator('a.nav-main[href*="view=pda"]').click()
+ assert app.locator('#pda-scan-form').count()==1
+ assert app.locator('button[data-action="add"]').count()==0
+ app.locator('#pda-staff-code').fill('90000034')
+ app.locator('#pda-staff-code').press('Enter')
+ assert app.locator('#pda-device-code').evaluate('(el)=>document.activeElement===el')
+ app.locator('#pda-device-code').fill('00003')
+ assert 'PDA-03' in app.locator('#pda-device-preview').inner_text()
+ app.locator('#pda-device-code').press('Enter')
+ assert 'Đã mượn PDA-03' in app.locator('.scan-outcome').inner_text()
+ assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='31'
+ app.locator('#pda-staff-code').fill('90000034')
+ app.locator('#pda-device-code').fill('PDA-03')
+ app.locator('#pda-device-code').press('Enter')
+ assert 'Không được mượn trùng' in app.locator('.scan-outcome').inner_text()
+ app.locator('[data-pda-mode="return"]').click()
+ app.locator('#pda-staff-code').fill('90000035')
+ app.locator('#pda-device-code').fill('PDA-03')
+ app.locator('#pda-device-code').press('Enter')
+ assert 'Người trả không khớp' in app.locator('.scan-outcome').inner_text()
+ app.locator('#pda-staff-code').fill('90000034')
+ app.locator('#pda-device-code').fill('PDA-03')
+ app.locator('#pda-device-code').press('Enter')
+ assert 'Đã trả PDA-03' in app.locator('.scan-outcome').inner_text()
+ assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='31'
  app.locator('a.nav-main[href*="view=shifts"]').click()
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
@@ -132,10 +183,7 @@ with sync_playwright() as p:
  app.locator('input#global-search').fill('KhôngCóTrongDanhSách_TEST')
  assert app.get_by_text('Không tìm thấy bản ghi phù hợp').count()==1
  app.locator('input#global-search').fill('')
- print('testing cards',flush=True)
- app.locator('button[data-action="layout-cards"]').click()
- assert app.locator('.record-card').count()==36
- app.locator('button[data-action="layout-table"]').click()
+ assert app.locator('.record-card').count()==0
  print('testing bulk',flush=True)
  app.locator('table tbody tr').first.locator('[data-select]').check()
  assert 'Xóa đã chọn (1)' in app.locator('button[data-action="bulk-delete"]').inner_text()
@@ -148,8 +196,7 @@ with sync_playwright() as p:
  assert 'Seri PDA' in app.locator('.device-registry thead').inner_text()
  app.locator('.table-panel').last.locator('table tbody tr').first.locator('[data-record]').click()
  assert app.locator('.detail-drawer').count()==1
- app.locator('.detail-drawer button[data-quick]').click()
- assert app.locator('.detail-drawer').count()==1
+ assert app.locator('.detail-drawer button[data-quick]').count()==0
  app.locator('button[data-action="close-drawer"]').click()
  app.locator('button[data-action="theme"]').click()
  assert app.locator('html').count()==0 or app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
@@ -163,5 +210,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: corporate brand, default font +10%, 7 light palettes, full read-only dashboard, login, CRUD/avatar, barcode, PDA, Excel action, themes and mobile')
+ print('PASS: base 110% at setting 100%, two-line brand, dense single-header table UI, labor QR and PDA scan validation, login/CRUD/Excel, mobile')
  browser.close()
