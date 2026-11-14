@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.5'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.6'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.5'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.6'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -47,6 +47,9 @@ with sync_playwright() as p:
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  assert app.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
  assert app.locator('#clock-time').count()==1 and app.locator('#clock-date').count()==1
+ assert app.locator('#clock-time .flip-digit').count()==6
+ assert app.locator('#clock-time .flip-separator').count()==2
+ assert app.locator('#clock-time').get_attribute('aria-live')=='off'
  assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.textContent)")
  assert '/' in app.locator('#clock-date').inner_text()
  old_clock=app.locator('#clock-time').inner_text()
@@ -65,6 +68,18 @@ with sync_playwright() as p:
  assert app.locator('.page-header .eyebrow').count()==0
  assert app.locator('.page-header h1').count()==0
  assert app.locator('.metrics.overview-metrics .metric-card').count()==8
+ assert app.locator('#global-search').is_visible()
+ assert app.locator('#dashboard-search-results .dashboard-search-panel').count()==0
+ app.evaluate("() => window.__overviewClock=document.querySelector('#clock-time')")
+ app.locator('#global-search').fill('90000001')
+ assert app.locator('#dashboard-search-results .dashboard-search-panel').count()==1
+ assert app.locator('#dashboard-search-results .dashboard-search-hit[href*="view=people"][href*="record=90000001"]').count()==1
+ assert app.evaluate("() => window.__overviewClock===document.querySelector('#clock-time')")
+ assert app.locator('.metrics.overview-metrics .metric-card').count()==8
+ app.locator('#global-search').fill('KHONG_CO_BAN_GHI_1291')
+ assert app.locator('#dashboard-search-results .dashboard-no-results').count()==1
+ app.locator('#global-search').fill('')
+ assert app.locator('#dashboard-search-results .dashboard-search-panel').count()==0
  assert app.locator('.coverage-row').count()==6
  assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
  assert app.locator('.shortcut-panel').count()==0
@@ -298,5 +313,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.8.5 exact seven module labels, personnel columns/auto sizing, sticky live clock, theme modes, QR, CRUD, XLSX, mobile')
+ print('PASS: v0.8.6 flip clock six digits, overview cross-module search, unchanged KPIs, personnel/QR/CRUD/XLSX/mobile')
  browser.close()
