@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.7'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.8.8'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.7'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.8.8'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -56,6 +56,9 @@ with sync_playwright() as p:
  assert app.locator('#clock-time').get_attribute('aria-live')=='off'
  assert app.locator('#clock-time').evaluate("el => /^\\d{2}:\\d{2}:\\d{2}$/.test(el.getAttribute('aria-label'))")
  assert app.locator('#clock-time .flip-digit').first.evaluate("el=>getComputedStyle(el).perspective")!='none'
+ assert app.locator('#clock-time .flip-digit').first.evaluate("el=>parseFloat(getComputedStyle(el).getPropertyValue('--tile-h'))")>=35
+ assert app.locator('#clock-time .flip-digit').first.evaluate("el=>getComputedStyle(el).backgroundColor")=='rgb(34, 37, 44)'
+ assert app.locator('#clock-time .flip-digit').first.evaluate("el=>getComputedStyle(el,'::after').height")=='2px'
  assert '/' in app.locator('#clock-date').inner_text()
  old_clock=app.locator('#clock-time').get_attribute('aria-label')
  app.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
@@ -329,5 +332,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.8.7 hinged 3D clock faces and fixed search/bell/clock slots across all modules, CRUD/QR/XLSX')
+ print('PASS: v0.8.8 retro split flap height, hinge, uniform header, CRUD/QR/XLSX/mobile')
  browser.close()
