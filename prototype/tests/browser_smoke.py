@@ -32,15 +32,32 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==7
+ assert app.locator('.corporate-brand').inner_text()=='CÔNG TY CỔ PHẦN THE SUPRA - DC HƯNG YÊN'
+ assert app.locator('.top-profile').get_by_text('Quản trị viên').count()==1
+ assert app.locator('.side-bottom').get_by_text('Quản trị viên').count()==0
+ assert app.locator('.metrics.overview-metrics .metric-card').count()==8
+ assert app.locator('.coverage-row').count()==6
+ assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
+ assert app.locator('.shortcut-panel').count()==0
+ assert app.locator('.overview-page button[data-action="add"]').count()==0
+ assert app.locator('.overview-page button[data-action="export"]').count()==0
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==1
  app.locator('button[data-action="settings"]').click()
  assert app.get_by_text('Cỡ chữ',exact=True).count()==1
  app.locator('button[data-font="5"]').click()
- assert app.locator('.font-steps output').inner_text()=='105%'
+ assert app.locator('.font-steps output').inner_text()=='115%'
+ assert app.locator('button[data-accent-choice]').count()==7
+ app.locator('button[data-accent-choice="green"]').click()
+ assert app.evaluate("document.documentElement.dataset.accent")=='green'
+ assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()")=='#198056'
+ assert app.evaluate("localStorage.getItem('pickpack1291_office_light_accent_v08')")=='green'
  app.locator('button[data-theme-choice="dark"]').click()
  assert app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
+ assert app.locator('button[data-accent-choice]').count()==0
  app.locator('button[data-theme-choice="light"]').click()
+ assert app.locator('button[data-accent-choice]').count()==7
+ assert app.locator('button[data-accent-choice="green"]').get_attribute('aria-pressed')=='true'
  app.locator('button[data-action="close-modal"]').last.click()
  assert app.locator('.nav-external').count()==0
  assert app.locator('a.nav-main').first.get_attribute('href').startswith('app.html?')
@@ -52,6 +69,7 @@ with sync_playwright() as p:
   assert app.locator('.table-panel').last.locator('.records-label b').inner_text()==str(n),(module,app.locator('.table-panel').last.locator('.records-label b').inner_text())
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}')
+  assert app.locator('.table-panel').last.locator('button[data-action="export"]').inner_text().strip().endswith('Xuất Excel')
  app.locator('a.nav-main[href*="view=shifts"]').click()
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
@@ -139,5 +157,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: login, source-derived employee fields, barcode clock-in/out guards, CRUD, PDA inventory and actions, settings, themes and mobile')
+ print('PASS: corporate brand, default font +10%, 7 light palettes, full read-only dashboard, login, CRUD/avatar, barcode, PDA, Excel action, themes and mobile')
  browser.close()
