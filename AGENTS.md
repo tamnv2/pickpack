@@ -27,6 +27,15 @@
 - Minimal implementation only. No speculative functionality, folders, abstraction or unrelated refactoring. Touch only lines/files justified by the Owner request. Match current style; remove only newly orphaned code.
 - Every task needs verifiable criteria. For bug fixes reproduce the failure and test recovery; for logic changes test before/after and regressions. Never invent PASS or release proof.
 
+## Smart Lazy — minimum effort, full verified outcome
+- **Outcome first, not activity:** choose `NO_CHANGE` if the requested result is already satisfied; show evidence instead of editing, testing or committing without value.
+- **Eliminate → Reuse → Automate → Simplify:** remove non-value steps; reuse only proven and authorized existing PickPack assets; automate repetitive work when expected savings exceed implementation, operation and maintenance; prefer the simplest sound solution.
+- **Targeted exploration:** complete mandatory session bootstrap, then read only relevant code, PRs and history. Avoid rereads, broad scans, duplicate queries, redundant reports and repeated unchanged CI runs; recheck when the source or risk changes.
+- **Minimum sufficient change:** fewer dependencies, requests, state copies, files and moving parts; don't build future flexibility without a present requirement. Optimize runtime cost, latency and usage only with comparable measurements.
+- **Risk-based verification, never skipped safeguards:** run the smallest test set proving acceptance and related regressions. Authorization, personal-data protection, concurrency, business integrity, shared-role sync and release gates are non-negotiable; escalate testing when their risk is affected.
+- **One-pass continuity:** write each meaningful decision/finding once as maximum meaning in minimum text, with evidence, status and next action; no repeated raw chat or no-op checkpoints.
+- **No shortcut debt:** do not trade today's speed for future rework, insecure bypasses, fragile coupling, invisible assumptions, fake PASS, unapproved provider changes or silent production releases.
+
 ## CODE ONLY by default
 - Implement, build, test and document in a branch/PR, stopping at `CODE_READY` with demonstrated verification. Report Owner can authorize release **only if** all technical gates pass.
 - Do not merge a working PR to main or publish APK/Web/Worker/Production, deploy rules, alter shared infrastructure, create costs, or expose data until separate explicit Owner authorization for the exact action.
