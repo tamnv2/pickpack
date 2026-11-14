@@ -133,7 +133,14 @@ try:
         second.locator('#labor-staff-code').press('Enter')
         assert 'Đã ghi nhận công nhật' in second.locator('.scan-outcome').inner_text()
         assert second.locator('.records-label b').inner_text() == '43'
+        second.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
+        second.locator('#record-form select[name="work"]').select_option('Pick')
+        second.locator('#record-form input[name="hours"]').fill('8,5')
+        second.locator('#record-form select[name="state"]').select_option('Đã xác nhận')
+        second.locator('#record-form button[type="submit"]').click()
+        assert 'Đã xác nhận' in second.locator('.table-panel').last.locator('tbody tr').first.inner_text()
         second.locator('a.nav-main[href*="view=pda"]').click()
+        assert second.locator('.table-panel').last.locator('[data-edit]').count()==0
         second.locator('#pda-staff-code').fill('90000034')
         second.locator('#pda-staff-code').press('Enter')
         assert second.locator('#pda-device-code').evaluate("(el)=>document.activeElement===el")
