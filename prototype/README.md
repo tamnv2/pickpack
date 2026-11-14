@@ -24,9 +24,10 @@ cd prototype
 npm run check
 npm run build
 python tests/browser_smoke.py
+python tests/hosted_smoke.py
 ```
 Node >= 18, Playwright/Chromium cho smoke trình duyệt; không có JavaScript dependency tại runtime. `dist/` là thư mục build (untracked).
 
-- **Đã xác nhận trên v0.7:** phân tích cú pháp JS V8, 17 phép kiểm cấu trúc + hành vi quét và 11 phép kiểm hồ sơ/ca bằng DOM giả lập đều PASS.
-- **Chưa chạy v0.7:** npm check/build, Chromium end-to-end, ảnh upload qua Chromium, kiểm thử phần cứng máy quét, CSV, đa tab và CI/Field. Không được gọi `CODE_READY`, `CI_PASS`, `FIELD_PASS` hay `RELEASE_PASS` khi chưa có bằng chứng.
+- **CODE_READY — Web Office v0.7 prototype / CI_PASS:** GitHub Actions [#43584401138](https://github.com/tamnv2/pickpack/actions/runs/43584401138) trên commit `e85b1579fd0ed1e47fc004923abf110849a391a4` PASS: `npm run check`, `npm run build` (7 tệp, 145383 bytes), Chromium smoke (đăng nhập, CRUD, ảnh avatar, quét ca, PDA, theme/font, mobile), và HTTP hosted smoke (đăng nhập chuyển URL, Ctrl+click mở tab, đồng bộ localStorage giữa tab, CSV, quét ca, mobile, không gọi host ngoài).
+- **Chưa xác nhận:** máy quét vật lý, hệ thống auth/roles/backend, dữ liệu thật, môi trường field; các cổng `RELEASE_PASS`, `FIELD_PASS`, `OWNER_PASS` không được suy ra từ `CI_PASS`.
 - Không merge PR / deploy Web/APK/Worker/Production theo mặc định; chờ lệnh riêng của Owner.
