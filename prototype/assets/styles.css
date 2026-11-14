@@ -111,3 +111,75 @@
 .scan-mode button.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
 .scan-mode button:not(.active):hover{background:var(--card);color:var(--text)}
 @media(max-width:530px){.scan-mode-wrapper{align-items:flex-start;flex-direction:column;gap:8px}.scan-mode{width:100%}.scan-mode button{flex:1}}
+
+/* Web Office v0.8: readable compact layout, seven light palettes, read-only system overview */
+:root[data-theme=light][data-accent=red]{--primary:#c43d46;--primary-hover:#ac303a;--primary-soft:#fcecee;--focus:#eaa5ad;--sidebar-active:#fcecee}
+:root[data-theme=light][data-accent=orange]{--primary:#c45a19;--primary-hover:#a94c11;--primary-soft:#fff0e6;--focus:#ffc19a;--sidebar-active:#fff0e6}
+:root[data-theme=light][data-accent=yellow]{--primary:#946200;--primary-hover:#805500;--primary-soft:#fff7d6;--focus:#f3c953;--sidebar-active:#fff7d6}
+:root[data-theme=light][data-accent=green]{--primary:#198056;--primary-hover:#116a47;--primary-soft:#e5f7ed;--focus:#8dccad;--sidebar-active:#e5f7ed}
+:root[data-theme=light][data-accent=blue]{--primary:#2565bf;--primary-hover:#18539f;--primary-soft:#e9f1ff;--focus:#8eb6f2;--sidebar-active:#e9f1ff}
+:root[data-theme=light][data-accent=indigo]{--primary:#5057aa;--primary-hover:#3f4795;--primary-soft:#eeefff;--focus:#a9adeb;--sidebar-active:#eeefff}
+:root[data-theme=light][data-accent=violet]{--primary:#823eab;--primary-hover:#6f3195;--primary-soft:#f5eaff;--focus:#c9a1de;--sidebar-active:#f5eaff}
+.accent-swatches{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.accent-swatch{width:29px;height:29px;min-width:29px;border-radius:50%;border:2px solid transparent;display:grid;place-items:center;color:#fff;font-size:calc(13px * var(--text-scale));font-weight:850;transition:transform .12s}
+.accent-swatch:hover{transform:scale(1.1)}
+.accent-swatch.active{outline:2px solid var(--text);outline-offset:2px}
+.accent-red{background:#c43d46}.accent-orange{background:#c45a19}.accent-yellow{background:#946200}.accent-green{background:#198056}.accent-blue{background:#2565bf}.accent-indigo{background:#5057aa}.accent-violet{background:#823eab}
+.side-top{height:auto;min-height:77px;padding:10px 12px;gap:9px}
+.side-top .brand-logo{width:36px;height:38px;object-fit:contain;flex:none}
+.side-top .corporate-brand{display:block;line-height:1.34;font-size:calc(11px * var(--text-scale));letter-spacing:-.15px;overflow-wrap:anywhere}
+.location-chip{margin:11px 10px 15px;padding:9px 10px}
+.side-group{margin-bottom:13px}.group-title{margin-bottom:5px;padding:0 17px}
+.side-link{height:39px;margin:2px 8px}.nav-main{padding-left:12px}
+.side-bottom{padding:8px 11px;min-height:45px}
+.logout-wide{margin:0;width:100%;height:32px;display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:0 11px;font-size:calc(12px * var(--text-scale));font-weight:650;color:var(--sidebar-text)}
+.logout-wide:hover{background:var(--sidebar-hover)}
+.topbar{height:63px;min-height:63px;padding:0 20px}.top-left,.top-right{gap:12px}
+.page-content{padding:17px 20px 27px}
+.page-header{margin-bottom:14px;gap:12px}
+.page-header h1{font-size:calc(24px * var(--text-scale));margin-bottom:4px}
+.page-header .eyebrow{margin-bottom:5px}
+.metrics{gap:11px;margin-bottom:12px}
+.metric-card{padding:12px 14px 11px}
+.metric-number{font-size:calc(27px * var(--text-scale));margin:4px 0 6px}
+.metric-foot{font-size:calc(10.5px * var(--text-scale))}
+.metric-icon{width:29px;height:29px}
+.module-summary{gap:10px;margin-bottom:12px}
+.module-summary .metric-card{padding:9px 13px}
+.module-summary .metric-number{font-size:calc(22px * var(--text-scale));margin:0 0 3px}
+.panel-title{padding:13px 17px 9px}
+.table-controls{min-height:53px;padding:9px 13px;gap:9px}
+td,th{padding:9px 12px}
+.table-footer{padding:8px 13px}
+.btn{min-height:33px;padding:7px 12px}
+.two-col{gap:12px;margin-bottom:12px}
+.scan-station{padding:14px 17px;margin-bottom:12px}
+.scan-station-head{margin-bottom:12px}
+.scan-mode-wrapper{margin-bottom:12px}
+.scan-form-row input{min-height:40px}
+.scan-preview{margin-top:11px;padding:12px}
+.scan-outcome{margin-top:10px}
+.scan-fields{gap:8px 13px}
+.scan-fields div{padding-top:7px}
+.setting-row{padding:13px 0}
+.login-brand{font-size:calc(13px * var(--text-scale));line-height:1.36;max-width:460px}
+.login-brand span{overflow-wrap:anywhere}
+.overview-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+.overview-metrics .metric-card{min-height:104px}
+.overview-metrics .metric-number{font-size:calc(25px * var(--text-scale))}
+.overview-sections{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(285px,1fr);gap:12px;margin-bottom:12px}
+.coverage-list{padding:0 17px 12px}
+.coverage-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(105px,.85fr) minmax(64px,auto);column-gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:calc(11px * var(--text-scale))}
+.coverage-row:last-child{border-bottom:0}
+.coverage-row>strong{font-weight:650;min-width:0}
+.coverage-row>span{color:var(--muted)}
+.coverage-row>b{text-align:right;font-variant-numeric:tabular-nums}
+.coverage-track{grid-column:1/-1;height:3px;border-radius:5px;background:var(--chip);overflow:hidden;margin-top:6px}
+.coverage-track span{display:block;height:100%;border-radius:5px;background:var(--primary);transition:width .2s}
+.alert-row{padding:10px 6px}
+.overview-count{margin-left:auto;font-size:calc(13px * var(--text-scale));font-variant-numeric:tabular-nums}
+.overview-page .page-header .header-actions:empty{display:none}
+@media(max-width:1180px){.overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-sections{grid-template-columns:1fr}.coverage-row{grid-template-columns:minmax(0,1.2fr) minmax(100px,1fr) 65px}}
+@media(max-width:780px){.page-content{padding:13px 13px 22px}.topbar{padding-inline:13px}.overview-metrics{gap:8px}.overview-metrics .metric-card{min-height:95px}}
+@media(max-width:520px){.overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-metrics .metric-card{padding:11px}.overview-metrics .metric-number{font-size:calc(22px * var(--text-scale))}.coverage-row{gap:6px;grid-template-columns:minmax(0,1fr) 83px 52px;font-size:calc(10px * var(--text-scale))}.coverage-list{padding:0 11px 9px}.topbar{height:59px;min-height:59px}.accent-setting{align-items:flex-start}.accent-swatches{justify-content:flex-start}}
+@media(prefers-reduced-motion:reduce){.accent-swatch,.coverage-track span{transition:none}.accent-swatch:hover{transform:none}}
