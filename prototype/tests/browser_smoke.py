@@ -98,6 +98,13 @@ with sync_playwright() as p:
  app.locator('#labor-staff-code').press('Enter')
  assert 'Đã ghi nhận công nhật' in app.locator('.scan-outcome').inner_text()
  assert app.locator('.records-label b').inner_text()=='43'
+ app.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
+ assert app.locator('#record-form').count()==1
+ app.locator('#record-form select[name="work"]').select_option('Pick')
+ app.locator('#record-form input[name="hours"]').fill('8,0')
+ app.locator('#record-form select[name="state"]').select_option('Đã xác nhận')
+ app.locator('#record-form button[type="submit"]').click()
+ assert 'Đã xác nhận' in app.locator('.table-panel').last.locator('tbody tr').first.inner_text()
  app.locator('#labor-staff-code').fill('90000034')
  app.locator('#labor-staff-code').press('Enter')
  assert 'Không tạo trùng' in app.locator('.scan-outcome').inner_text()
@@ -108,6 +115,7 @@ with sync_playwright() as p:
  print('testing PDA QR borrow-return',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
  assert app.locator('#pda-scan-form').count()==1
+ assert app.locator('.table-panel').last.locator('[data-edit]').count()==0
  assert app.locator('button[data-action="add"]').count()==0
  app.locator('#pda-staff-code').fill('90000034')
  app.locator('#pda-staff-code').press('Enter')
