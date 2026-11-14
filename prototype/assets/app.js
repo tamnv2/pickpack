@@ -33,6 +33,13 @@ const ICONS=Object.fromEntries(['grid','users','clock','calendar','file','boxes'
 const STORAGE_KEY='pickpack1291_office_records_v07';
 const CATALOG_KEY='pickpack1291_office_catalogs_v083';
 const CATEGORY_FIELDS=[['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho']];
+const EXTRA_CATALOGS={
+ labor:{key:'laborWork',label:'Công việc công nhật',records:'labor',property:'work',title:'Danh mục công nhật'},
+ minutes:{key:'minutesType',label:'Loại biên bản',records:'minutes',property:'type',title:'Danh mục biên bản'},
+ assets:{key:'assetsType',label:'Loại CCDC',records:'assets',property:'type',title:'Danh mục CCDC'}
+};
+function catalogFields(scope){return scope==='people'?CATEGORY_FIELDS:EXTRA_CATALOGS[scope]?[[EXTRA_CATALOGS[scope].key,EXTRA_CATALOGS[scope].label]]:CATEGORY_FIELDS}
+function catalogOwner(field){const extra=Object.values(EXTRA_CATALOGS).find(x=>x.key===field);return extra?{records:extra.records,property:extra.property}:{records:'people',property:field}}
 const LEGACY_FONT_KEY='pickpack1291_office_font_v06';
  const FONT_KEY='pickpack1291_office_font_setting_v082';
 const THEME_KEY='pickpack1291_office_theme_v06';
@@ -117,12 +124,19 @@ function seedRecords(){
 function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(seedRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500))return data}catch{}return seedRecords()}
 const store=readRecords();
 function readCatalogs(){
- const defaults=Object.fromEntries(CATEGORY_FIELDS.map(([key])=>[key,[...new Set(store.people.map(p=>String(p[key]||'').trim()).filter(Boolean))]]));
- try{const raw=JSON.parse(storageGet(CATALOG_KEY)||'null');
-  if(raw&&CATEGORY_FIELDS.every(([key])=>Array.isArray(raw[key])&&raw[key].length<200&&raw[key].every(v=>typeof v==='string'&&v.length<=80)))return Object.fromEntries(CATEGORY_FIELDS.map(([key])=>[key,[...new Set(raw[key])]]));
+ const fields=[...CATEGORY_FIELDS,...Object.values(EXTRA_CATALOGS).map(x=>[x.key,x.label])];
+ const defaults=Object.fromEntries(fields.map(([key])=>{
+  const owner=catalogOwner(key);
+  return [key,[...new Set((store[owner.records]||[]).map(r=>String(r[owner.property]||'').trim()).filter(v=>v&&v!=='—'))]];
+ }));
+ try{
+  const raw=JSON.parse(storageGet(CATALOG_KEY)||'null');
+  if(raw&&typeof raw==='object')for(const [key] of fields)
+   if(Array.isArray(raw[key])&&raw[key].length<200&&raw[key].every(v=>typeof v==='string'&&v.length<=80))defaults[key]=[...new Set(raw[key])];
  }catch{}
  return defaults;
 }
+
 const catalogs=readCatalogs();
 function persistCatalogs(){storageSet(CATALOG_KEY,JSON.stringify(catalogs))}
 
@@ -139,10 +153,10 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['shift','Ca được phân'],['user','User làm việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',scanOutcome:null,scanMode:'enter',laborScan:null,pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:''};
+const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',scanOutcome:null,scanMode:'enter',laborScan:null,pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people'};
 const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const qs=new URLSearchParams(location.search);state.view=PAGES[qs.get('view')]?qs.get('view'):'dashboard';const savedTheme=storageGet(THEME_KEY);state.themeMode=['auto','light','dark'].includes(savedTheme)?savedTheme:'auto';if(!savedTheme)storageSet(THEME_KEY,'auto');state.theme=resolveTheme(state.themeMode);const storedFont=Number(storageGet(FONT_KEY));const oldFont=Number(storageGet(LEGACY_FONT_KEY));state.fontPct=Math.max(90,Math.min(120,Math.round((storedFont||(oldFont?oldFont/1.1:100))/5)*5));if(!storedFont)storageSet(FONT_KEY,String(state.fontPct));state.accent=ACCENTS.some(([key])=>key===storageGet(ACCENT_KEY))?storageGet(ACCENT_KEY):'blue';state.drawer=qs.get('record')||'';
-const href=(view=state.view,record='',theme=state.theme)=>`app.html?view=${encodeURIComponent(view)}&theme=${theme}`+(record?`&record=${encodeURIComponent(record)}`:'')+(location.protocol==='file:'?'&demo=1':'');
+const qs=new URLSearchParams(location.search);state.view=PAGES[qs.get('view')]?qs.get('view'):'dashboard';const savedTheme=storageGet(THEME_KEY);state.themeMode=['auto','light','dark'].includes(savedTheme)?savedTheme:'auto';if(!savedTheme)storageSet(THEME_KEY,'auto');state.theme=resolveTheme(state.themeMode);const storedFont=Number(storageGet(FONT_KEY));const oldFont=Number(storageGet(LEGACY_FONT_KEY));state.fontPct=Math.max(90,Math.min(120,Math.round((storedFont||(oldFont?oldFont/1.1:100))/5)*5));if(!storedFont)storageSet(FONT_KEY,String(state.fontPct));state.accent=ACCENTS.some(([key])=>key===storageGet(ACCENT_KEY))?storageGet(ACCENT_KEY):'blue';state.drawer=qs.get('record')||'';state.catalogScope=['people','labor','minutes','assets'].includes(qs.get('scope'))?qs.get('scope'):'people';state.categoryTab=catalogFields(state.catalogScope)[0][0];
+const href=(view=state.view,record='',theme=state.theme)=>`app.html?view=${encodeURIComponent(view)}&theme=${theme}`+(record?`&record=${encodeURIComponent(record)}`:'')+(view==='categories'?'&scope='+encodeURIComponent(state.catalogScope):'')+(location.protocol==='file:'?'&demo=1':'');
 const badge=(v)=>{const s=String(v);const type=/Chờ|Cần kiểm tra|Chưa/.test(s)?'warn':/Đã lưu|Đã xác nhận|Sẵn sàng|Đã ra/.test(s)?'neutral':/Trong ca|Đang|Tạm tính/.test(s)?'good':'neutral';return `<span class="status ${type}"><span class="status-dot"></span>${escape(s)}</span>`};
 const avatar=(x,big=false)=>/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(x.photo||'')?`<img class="person-avatar ${big?'big':''}" src="${x.photo}" alt="">`:`<span class="person-avatar ${big?'big':''}" aria-hidden="true">${escape(x.initial || String(x.name||'A').slice(-2).toUpperCase())}</span>`;
 function side(){return `<aside class="sidebar ${state.sidebar?'is-open':''}" aria-label="Điều hướng PickPack"><div class="side-top"><img class="brand-logo" src="assets/supra-mark.png" alt="The Supra"><div><strong class="corporate-brand"><span>CÔNG TY CỔ PHẦN THE SUPRA</span><span>DC HƯNG YÊN</span></strong></div><button class="mobile-hide" data-action="close-nav" aria-label="Đóng menu">×</button></div><div class="sidebar-scroll"><nav class="side-group nav-flat" aria-label="Nghiệp vụ">${SIDEBAR.map(([view,ic])=>`<div class="side-link ${state.view===view||(state.view==='categories'&&view==='people')?'selected':''}"><a class="nav-main" href="${href(view)}" data-nav="${view}" title="${PAGES[view].title}" aria-current="${state.view===view?'page':'false'}"><span class="nav-icon">${ICONS[ic]}</span><span class="nav-label">${NAV_LABELS[view]}</span></a></div>`).join('')}</nav></div><div class="side-bottom"><span class="web-version" title="Phiên bản Web Office">Web v${WEB_VERSION}</span><footer class="site-footer">Phát triển hệ thống - tamnv2 | Pick Pack 1291</footer></div></aside>`}
@@ -209,11 +223,11 @@ function modulePage(){
  return `<div class="page-content">${scanner}${state.view==='pda'?deviceRegistry():''}${table()}</div>`;
 }
 function categoriesPage(){
- const field=state.categoryTab,label=CATEGORY_FIELDS.find(([k])=>k===field)?.[1]||'Danh mục',values=catalogs[field]||[];const rows=values.map((value,i)=>({value,i})).filter(({value})=>value.toLocaleLowerCase('vi').includes(state.search.trim().toLocaleLowerCase('vi')));
- return `<div class="page-content catalog-page"><div class="catalog-heading"><strong>Danh mục nhân sự</strong><a class="btn ghost" data-nav="people" href="${href('people')}">← Nhân sự</a></div><div class="catalog-tabs" role="group" aria-label="Chọn danh mục">${CATEGORY_FIELDS.map(([key,name])=>`<button type="button" class="${field===key?'active':''}" data-category-tab="${key}" aria-pressed="${field===key}">${escape(name)} <small>${catalogs[key].length}</small></button>`).join('')}</div><section class="panel table-panel catalog-panel"><div class="table-controls"><span class="records-label">${escape(label)} <b>${values.length}</b></span><button class="btn primary" data-action="category-add">${icon('plus',16)} Thêm mục</button></div><div class="table-scroll"><table><thead><tr><th>Tên danh mục</th><th>Nhân sự sử dụng</th><th>Thao tác</th></tr></thead><tbody>${rows.map(({value,i})=>`<tr><td><strong>${escape(value)}</strong></td><td>${store.people.filter(p=>p[field]===value).length}</td><td><span class="row-actions"><button class="row-open" data-category-edit="${i}" title="Sửa ${escape(value)}" aria-label="Sửa ${escape(value)}">${icon('edit',16)}</button><button class="row-open danger-text" data-category-delete="${i}" title="Xóa ${escape(value)}" aria-label="Xóa ${escape(value)}">${icon('trash',16)}</button></span></td></tr>`).join('')}</tbody></table></div><div class="table-footer">Dữ liệu dùng trong biểu mẫu nhân sự; không xóa mục đang có người sử dụng.</div></section></div>`;
+ const field=state.categoryTab,fields=catalogFields(state.catalogScope),label=fields.find(([k])=>k===field)?.[1]||'Danh mục',values=catalogs[field]||[];const owner=catalogOwner(field),heading=state.catalogScope==='people'?'Danh mục nhân sự':EXTRA_CATALOGS[state.catalogScope]?.title||'Danh mục';const rows=values.map((value,i)=>({value,i})).filter(({value})=>value.toLocaleLowerCase('vi').includes(state.search.trim().toLocaleLowerCase('vi')));
+ return `<div class="page-content catalog-page"><div class="catalog-heading"><strong>${escape(heading)}</strong><a class="btn ghost" data-nav="${state.catalogScope}" href="${href(state.catalogScope)}">← ${escape(PAGES[state.catalogScope].title)}</a></div><div class="catalog-tabs" role="group" aria-label="Chọn danh mục">${fields.map(([key,name])=>`<button type="button" class="${field===key?'active':''}" data-category-tab="${key}" aria-pressed="${field===key}">${escape(name)} <small>${catalogs[key].length}</small></button>`).join('')}</div><section class="panel table-panel catalog-panel"><div class="table-controls"><span class="records-label">${escape(label)} <b>${values.length}</b></span><button class="btn primary" data-action="category-add">${icon('plus',16)} Thêm mục</button></div><div class="table-scroll"><table><thead><tr><th>Tên danh mục</th><th>Nhân sự sử dụng</th><th>Thao tác</th></tr></thead><tbody>${rows.map(({value,i})=>`<tr><td><strong>${escape(value)}</strong></td><td>${store[owner.records].filter(p=>p[owner.property]===value).length}</td><td><span class="row-actions"><button class="row-open" data-category-edit="${i}" title="Sửa ${escape(value)}" aria-label="Sửa ${escape(value)}">${icon('edit',16)}</button><button class="row-open danger-text" data-category-delete="${i}" title="Xóa ${escape(value)}" aria-label="Xóa ${escape(value)}">${icon('trash',16)}</button></span></td></tr>`).join('')}</tbody></table></div><div class="table-footer">Dữ liệu dùng trong biểu mẫu nhân sự; không xóa mục đang có người sử dụng.</div></section></div>`;
 }
 function catalogModal(){
- const editing=state.modal==='category-edit',field=state.categoryTab,caption=CATEGORY_FIELDS.find(([k])=>k===field)?.[1],value=editing?state.categoryEdit:'';
+ const editing=state.modal==='category-edit',field=state.categoryTab,caption=catalogFields(state.catalogScope).find(([k])=>k===field)?.[1],value=editing?state.categoryEdit:'';
  return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><h2 id="modal-title">${editing?'Sửa':'Thêm'} ${escape(caption)}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="catalog-form"><div class="catalog-editor"><label>Tên danh mục<input name="value" maxlength="80" minlength="2" required autocomplete="off" value="${escape(value)}" placeholder="Nhập tên mới"></label><small>Trùng tên không được phép. Sửa tên sẽ cập nhật hồ sơ đang sử dụng.</small></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">Lưu danh mục</button></div></form></section></div>`;
 }
 function saveCatalog(form){
@@ -221,13 +235,13 @@ function saveCatalog(form){
  const value=String(new FormData(form).get('value')||'').replace(/\s+/g,' ').trim(),editing=state.modal==='category-edit',old=state.categoryEdit;
  if(value.length<2){state.notice='Tên danh mục phải có ít nhất 2 ký tự';render();return}
  if(list.some(v=>v.toLocaleLowerCase('vi')===value.toLocaleLowerCase('vi')&&(!editing||v!==old))){state.notice='Tên danh mục đã tồn tại';render();return}
- if(editing){const i=list.indexOf(old);if(i<0)return;list[i]=value;for(const p of store.people)if(p[field]===old)p[field]=value;persist()}
+ if(editing){const i=list.indexOf(old);if(i<0)return;list[i]=value;const owner=catalogOwner(field);for(const row of store[owner.records])if(row[owner.property]===old)row[owner.property]=value;persist()}
  else list.push(value);
  persistCatalogs();state.notice=editing?'Đã cập nhật danh mục và hồ sơ liên quan':'Đã thêm danh mục';state.modal='';state.categoryEdit='';render();
 }
 function deleteCatalog(index){
  const field=state.categoryTab,value=catalogs[field]?.[index];if(value===undefined)return;
- if(store.people.some(p=>p[field]===value)){state.notice='Không thể xóa: danh mục đang được nhân sự sử dụng';render();return}
+ const owner=catalogOwner(field);if(store[owner.records].some(p=>p[owner.property]===value)){state.notice='Không thể xóa: danh mục đang được sử dụng';render();return}
  if(!window.confirm(`Xóa danh mục "${value}"?`))return;
  catalogs[field].splice(index,1);persistCatalogs();state.notice='Đã xóa danh mục';render();
 }
@@ -496,7 +510,7 @@ root.addEventListener('click',e=>{
  const categoryTab=e.target.closest('[data-category-tab]');if(categoryTab){state.categoryTab=categoryTab.dataset.categoryTab;state.notice='';render();return}
  const categoryEdit=e.target.closest('[data-category-edit]');if(categoryEdit){state.categoryEdit=catalogs[state.categoryTab]?.[Number(categoryEdit.dataset.categoryEdit)]||'';state.modal='category-edit';render();return}
  const categoryDelete=e.target.closest('[data-category-delete]');if(categoryDelete){deleteCatalog(Number(categoryDelete.dataset.categoryDelete));return}
- const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();setView(nav.dataset.nav)}return}
+ const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(nav.dataset.nav==='categories'){state.catalogScope=nav.dataset.catalogScope||'people';state.categoryTab=catalogFields(state.catalogScope)[0][0]}setView(nav.dataset.nav)}return}
  const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
  const edit=e.target.closest('[data-edit]');if(edit){if(state.view==='shifts')return;state.editId=edit.dataset.edit;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===state.editId)?.photo||''):'';state.modal='edit';render();return}
  const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
@@ -561,7 +575,7 @@ root.addEventListener('change',async function(e){
  if(e.target.matches('[data-select]')){if(e.target.checked)state.selected.add(e.target.dataset.select);else state.selected.delete(e.target.dataset.select);render()}
 });
 window.addEventListener('storage',e=>{if(e.key===CATALOG_KEY){Object.assign(catalogs,readCatalogs());render()}if(e.key===STORAGE_KEY){const fresh=readRecords();for(const key of Object.keys(store))store[key]=fresh[key];state.notice='Dữ liệu đã được đồng bộ từ tab khác';render()}if(e.key===THEME_KEY){const mode=storageGet(THEME_KEY);state.themeMode=['auto','light','dark'].includes(mode)?mode:'auto';state.theme=resolveTheme(state.themeMode);render()}if(e.key===SESSION_KEY)render()});
-window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);state.view=PAGES[p.get('view')]?p.get('view'):'dashboard';state.theme=resolveTheme(state.themeMode);state.drawer=p.get('record')||'';state.search='';state.filter='all';state.selected.clear();render()});
+window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);state.view=PAGES[p.get('view')]?p.get('view'):'dashboard';state.catalogScope=['people','labor','minutes','assets'].includes(p.get('scope'))?p.get('scope'):'people';state.categoryTab=catalogFields(state.catalogScope)[0][0];state.theme=resolveTheme(state.themeMode);state.drawer=p.get('record')||'';state.search='';state.filter='all';state.selected.clear();render()});
 function markField(el){if(!el?.matches('#record-form input:not([type=file]),#record-form select,#catalog-form input'))return;const touched=el.dataset.touched==='1'||String(el.value||'').trim().length>0;const valid=el.checkValidity();el.classList.toggle('is-valid',touched&&valid);el.classList.toggle('is-invalid',touched&&!valid)}
 root.addEventListener('focusout',e=>{if(e.target.matches('#record-form input,#record-form select,#catalog-form input')){e.target.dataset.touched='1';markField(e.target)}});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeStuff();render()}});
