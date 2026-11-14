@@ -428,3 +428,9 @@ html{scrollbar-gutter:stable}
 @media(max-width:900px){.labor-scan-fields{grid-template-columns:minmax(170px,1fr) minmax(190px,2fr)}.labor-scan-fields button{grid-column:1/-1}}
 @media(max-width:600px){.topbar .top-right{grid-template-columns:0px 25px 113px}.topbar .header-clock{width:113px;min-width:113px;max-width:113px}.office-clock-main{font-size:calc(15px * var(--text-scale))}.office-clock-seconds{font-size:calc(11px * var(--text-scale))}.office-clock-period{font-size:calc(9px * var(--text-scale));padding-left:3px}.labor-scan-fields{grid-template-columns:minmax(0,1fr)}.labor-scan-fields button{grid-column:auto}.shift-choice-row{align-items:start}.toast-stack{right:10px;top:58px;width:min(390px,calc(100vw - 20px))}.table-control-right{justify-content:flex-end}}
 @media(prefers-reduced-motion:reduce){.toast-stack .toast,.toast-stack .toast::after{animation:none}}
+
+/* Toasts are nonblocking: they must never intercept table/catalog controls. */
+.toast-stack{top:auto;bottom:16px}
+.toast-stack .toast{pointer-events:none}
+.toast-stack .toast button{pointer-events:auto}
+@media(max-width:600px){.toast-stack{top:auto;bottom:10px}}
