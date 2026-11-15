@@ -238,6 +238,28 @@ with sync_playwright() as p:
  app.locator('input#shift-code').fill('NOT_FOUND')
  app.locator('input#shift-code').press('Enter')
  assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
+ # Pack user and optional desk come from resource catalogs, selected independently of fixed staff fields.
+ app.locator('[data-scan-mode="enter"]').click()
+ app.locator('[data-scan-shift="Ca 2"]').click()
+ app.locator('#shift-code').fill('90000002')
+ assert app.locator('#scan-user-choice').count()==1
+ assert app.locator('#scan-desk-choice').count()==1
+ app.locator('#scan-user-choice').select_option('pp1291.pa20')
+ app.locator('#scan-desk-choice').select_option('Bàn Pack 12')
+ app.locator('#shift-code').press('Enter')
+ assert app.evaluate("document.activeElement.id")=='shift-code'
+ assert app.locator('[data-scan-shift="Ca 2"]').get_attribute('aria-pressed')=='true'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].user")=='pp1291.pa20'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].desk")=='Bàn Pack 12'
+ app.locator('#shift-code').fill('90000003')
+ app.locator('#scan-user-choice').select_option('pp1291.pa20')
+ app.locator('#shift-scan-form button[type="submit"]').click()
+ assert 'đang được sử dụng' in app.locator('.scan-outcome').inner_text()
+ app.locator('[data-scan-mode="exit"]').click()
+ assert app.locator('[data-scan-shift]').count()==0
+ app.locator('#shift-code').fill('90000002')
+ app.locator('#shift-code').press('Enter')
+ assert 'Đã ra ca' in app.locator('.scan-outcome').inner_text()
  app.locator('a.nav-main[href*="view=people"]').click()
  app.screenshot(path=str(root/'preview-people.png'),full_page=True)
  print('testing catalogs',flush=True)
@@ -285,17 +307,40 @@ with sync_playwright() as p:
   assert app.locator(f'[data-category-tab="{field}"]').count()==1
   assert app.locator('.catalog-panel tbody tr').count()>0
   app.locator(f'.catalog-heading a[data-nav="{module}"]').click()
+ print('testing work resources',flush=True)
+ app.locator('a.nav-main[href*="view=resources"]').click()
+ assert app.locator('.catalog-tabs [data-category-tab]').count()==4
+ for tab in ['userTypes','pickUsers','packUsers','packDesks']:
+  app.locator(f'[data-category-tab="{tab}"]').click()
+  assert app.locator('.catalog-panel tbody tr').count()>0
+ app.locator('[data-category-tab="pickUsers"]').click()
+ app.locator('[data-action="category-add"]').click()
+ app.locator('#catalog-form input[name="value"]').fill('pp1291.pk99')
+ app.locator('#catalog-form button[type="submit"]').click()
+ assert app.get_by_text('pp1291.pk99',exact=True).count()==1
+ app.locator('[data-category-edit="20"]').click()
+ authorize()
+ app.locator('#catalog-form input[name="value"]').fill('pp1291.pk98')
+ app.locator('#catalog-form button[type="submit"]').click()
+ assert app.get_by_text('pp1291.pk98',exact=True).count()==1
+ app.locator('[data-category-delete="20"]').click()
+ authorize()
+ assert app.locator('.catalog-panel tbody tr').count()==20
  app.locator('a.nav-main[href*="view=people"]').click()
  print('testing staff columns',flush=True)
  head=app.locator('.people-table thead th').all_inner_texts()
  assert head[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác'],head
  assert app.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
+ assert app.locator('.people-table tbody tr .cell-name small').count()==0
+ assert app.locator('#record-form input[name="user"]').count()==0
+ assert app.locator('#record-form select[name="shift"]').count()==0
  assert app.locator('.table-scroll').last.evaluate("el=>el.scrollWidth>=el.clientWidth")
  app.evaluate('window.scrollTo(0, 600)')
  assert abs(app.locator('.topbar').bounding_box()['y'])<2
  print('testing create',flush=True)
  app.locator('button[data-action="add"]').click()
  assert app.locator('form#record-form').count()==1
+ assert app.locator('#record-form input[name="user"],#record-form select[name="shift"]').count()==0
  app.locator('input[name="id"]').fill('90009999')
  app.locator('input[name="name"]').fill('Nhân viên giả lập bổ sung')
  app.locator('select[name="position"]').select_option('Pick thử')
@@ -374,5 +419,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.9.1 12h clock, capped toasts, passworded modals, all catalogs, paired labor, shift choice, CRUD/QR/XLSX/mobile')
+ print('PASS: v0.9.1 inline shift buttons + focus, role-based user/Pack desk, resource CRUD, staff without fixed user, prior scans/photos/XLSX/mobile')
  browser.close()
