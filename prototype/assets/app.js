@@ -117,7 +117,7 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',confirmData:null};
+const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -404,8 +404,8 @@ let portraitObjectUrl='',portraitObjectId='';
 function portraitDB(){
  return new Promise((resolve,reject)=>{
   if(!('indexedDB' in window))return reject(new Error('Trình duyệt không hỗ trợ lưu ảnh gốc'));
-  const req=indexedDB.open('pickpack1291_demo_portraits_v094',1);
-  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('portraits'))req.result.createObjectStore('portraits')};
+  const req=indexedDB.open('pickpack1291_demo_portraits_v094',2);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('portraits'))req.result.createObjectStore('portraits');if(!req.result.objectStoreNames.contains('minuteImages'))req.result.createObjectStore('minuteImages')};
   req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Không mở được kho ảnh'));
  });
 }
@@ -421,6 +421,65 @@ async function portraitTransaction(id,mode,blob){
  });
 }
 function releasePortraitUrl(){if(portraitObjectUrl)URL.revokeObjectURL(portraitObjectUrl);portraitObjectUrl='';portraitObjectId=''}
+
+const MINUTE_IMAGE_LIMIT=8,minuteUrls=new Set();
+function releaseMinuteUrls(){for(const url of minuteUrls)URL.revokeObjectURL(url);minuteUrls.clear()}
+async function minuteTxn(mode,cb){
+ const db=await portraitDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction('minuteImages',mode),box=tx.objectStore('minuteImages'),req=cb(box);
+  tx.oncomplete=()=>{db.close();resolve(req?.result)};
+  tx.onerror=()=>{db.close();reject(tx.error||new Error('Không lưu được ảnh biên bản'))};
+  tx.onabort=()=>{db.close();reject(tx.error||new Error('Không lưu được ảnh biên bản'))};
+ });
+}
+function minuteGet(id){return minuteTxn('readonly',box=>box.get(id))}
+function minuteWrite(add,del){return minuteTxn('readwrite',box=>{for(const id of del)box.delete(id);for(const [id,blob] of add)box.put(blob,id)})}
+async function minuteReadAll(){
+ const db=await portraitDB();return new Promise((resolve,reject)=>{
+  const tx=db.transaction('minuteImages','readonly'),box=tx.objectStore('minuteImages'),keys=box.getAllKeys(),values=box.getAll();
+  tx.oncomplete=()=>{db.close();resolve(keys.result.map((id,i)=>[id,values.result[i]]))};
+  tx.onerror=()=>{db.close();reject(tx.error||new Error('Không đọc được ảnh biên bản'))};
+ });
+}
+function minuteReplace(entries){return minuteTxn('readwrite',box=>{box.clear();for(const [id,blob] of entries)box.put(blob,id)})}
+function minutePhotoEditor(){
+ return `<section class="minute-photo-editor"><strong>Ảnh biên bản (<span id="minute-image-count">0</span>/${MINUTE_IMAGE_LIMIT})</strong><label class="btn ghost photo-picker">Chọn ảnh<input id="minute-photo" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><small>Chọn nhiều ảnh hoặc dán Ctrl + V. JPEG, PNG, WebP, tối đa 5 MB/ảnh. Lưu bản gốc trên máy và kèm trong bản sao lưu.</small><div id="minute-editor-gallery" class="minute-photo-list"></div></section>`;
+}
+async function renderMinuteImages(){
+ const target=root.querySelector('#minute-editor-gallery')||root.querySelector('#minute-drawer-gallery');if(!target)return;
+ const editing=!!root.querySelector('#minute-editor-gallery'),row=store.minutes.find(x=>x.id===(editing?state.editId:state.drawer));
+ const ids=(row?.imageIds||[]).filter(id=>!editing||!state.minuteRemoved.includes(id));
+ const entries=[];
+ for(const id of ids){const blob=await minuteGet(id);if(blob instanceof Blob)entries.push([id,blob])}
+ if(editing)entries.push(...state.minuteDraftFiles);
+ if(!target.isConnected)return;
+ releaseMinuteUrls();
+ target.innerHTML=entries.map(([id,blob],i)=>{const url=URL.createObjectURL(blob);minuteUrls.add(url);return `<div class="minute-photo-item"><button type="button" class="minute-photo-thumb" data-minute-open="${escape(id)}" title="Xem ảnh"><img src="${url}" alt="Ảnh biên bản ${i+1}"></button>${editing?`<button type="button" class="minute-remove" data-minute-remove="${escape(id)}" aria-label="Bỏ ảnh ${i+1}">×</button>`:''}<span>Ảnh ${i+1}</span></div>`}).join('')||'<small>Chưa có ảnh</small>';
+ const counter=root.querySelector('#minute-image-count');if(counter)counter.textContent=String(entries.length);
+}
+async function addMinuteDraftImages(files){
+ const old=store.minutes.find(x=>x.id===state.editId),remaining=(old?.imageIds||[]).filter(id=>!state.minuteRemoved.includes(id)).length;
+ if(remaining+state.minuteDraftFiles.length+files.length>MINUTE_IMAGE_LIMIT)throw Error('Tối đa '+MINUTE_IMAGE_LIMIT+' ảnh cho mỗi biên bản');
+ for(const file of files)if(!(file instanceof Blob)||!/^image\/(jpeg|png|webp)$/.test(file.type)||!file.size||file.size>5*1024*1024)throw Error('Ảnh phải là JPEG, PNG hoặc WebP và tối đa 5 MB');
+ for(const file of files)state.minuteDraftFiles.push(['MIN-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9),file]);
+ await renderMinuteImages();
+}
+async function saveMinutesForm(form,editing){
+ if(state.minuteSaving)return;
+ const fd=new FormData(form),changes={};for(const [key] of columns.minutes){if(key!=='id')changes[key]=String(fd.get(key)||'').trim()||'—'}
+ if(changes.name.length<2||!catalogs.minutesType.includes(changes.type)){state.notice='Tên hoặc loại biên bản không hợp lệ';refreshToasts();return}
+ const row=editing?store.minutes.find(x=>x.id===state.editId):null;if(editing&&!row)return;
+ const images=[...(row?.imageIds||[]).filter(id=>!state.minuteRemoved.includes(id)),...state.minuteDraftFiles.map(([id])=>id)];
+ const id=row?.id||'BB-'+Date.now().toString(36).toUpperCase();
+ state.minuteSaving=true;
+ try{
+  await minuteWrite(state.minuteDraftFiles,state.minuteRemoved);
+  if(row)Object.assign(row,{...changes,imageIds:images});else store.minutes.unshift({id,...changes,imageIds:images});
+  persist();state.minuteDraftFiles=[];state.minuteRemoved=[];state.minuteSaving=false;state.modal='';state.editId='';state.search='';state.notice=editing?'Đã cập nhật biên bản và ảnh':'Đã tạo biên bản';render();
+ }catch(err){state.minuteSaving=false;state.notice=err?.message||'Không lưu được biên bản';refreshToasts()}
+}
+
 async function renderFullPortrait(){
  const target=root.querySelector('#portrait-original');if(!target||state.view!=='people'||!state.drawer)return;
  const id=state.drawer;
