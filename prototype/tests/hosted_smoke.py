@@ -243,6 +243,8 @@ try:
         second.locator('[data-category-tab="packDesks"]').click()
         assert second.locator('.catalog-panel tbody tr').count()==12
         second.locator('a.nav-main[href*="view=shifts"]').click()
+        assert second.locator('[data-scan-mode="exit"]').get_attribute('aria-pressed')=='true'
+        second.locator('[data-scan-mode="enter"]').click()
         second.locator('[data-scan-shift="Ca 2"]').click()
         second.locator('#shift-code').fill('90000001')
         assert second.locator('#scan-user-choice').count()==1
