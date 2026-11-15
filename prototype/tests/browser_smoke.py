@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.1'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.2'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==8
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.1'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.2'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -341,6 +341,24 @@ with sync_playwright() as p:
  app.locator('button[data-action="add"]').click()
  assert app.locator('form#record-form').count()==1
  assert app.locator('#record-form input[name="user"],#record-form select[name="shift"]').count()==0
+ # Date defaults to the current date in Vietnam, independent of computer timezone.
+ today=app.evaluate("""() => {const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day}""")
+ assert app.locator('#record-form input[name="startDate"]').input_value()==today
+ assert app.locator('#record-form input[name="id"]').get_attribute('inputmode')=='numeric'
+ assert app.locator('#record-form input[name="phone"]').get_attribute('inputmode')=='numeric'
+ app.locator('#record-form input[name="id"]').fill('9Ab-123')
+ assert app.locator('#record-form input[name="id"]').input_value()=='9123'
+ app.locator('#record-form input[name="phone"]').fill('000-12 a345')
+ assert app.locator('#record-form input[name="phone"]').input_value()=='00012345'
+ app.locator('#record-form input[name="name"]').fill('Nguyễn123 Trần!')
+ assert app.locator('#record-form input[name="name"]').input_value()=='Nguyễn Trần'
+ app.locator('#record-form input[name="name"]').fill('Đặng Thị Ánh')
+ assert app.locator('#record-form input[name="name"]').evaluate("el=>el.checkValidity()")
+ # Simulate bypassing live input sanitizer. Save handler must also reject bad values.
+ for key,bad,expected in [('id','AB-09','Mã nhân viên chỉ'),('name','Tên 123','Họ và tên chỉ'),('phone','090A34','Số điện thoại chỉ')]:
+  app.evaluate("""([key,value])=>{const f=document.querySelector('#record-form');f.elements[key].value=value;f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))}""",[key,bad])
+  assert expected in app.locator('#toast-stack .toast').last.inner_text(),(key,app.locator('#toast-stack .toast').all_inner_texts())
+  assert app.locator('.records-label b').inner_text()=='36'
  app.locator('input[name="id"]').fill('90009999')
  app.locator('input[name="name"]').fill('Nhân viên giả lập bổ sung')
  app.locator('select[name="position"]').select_option('Pick thử')
@@ -367,6 +385,13 @@ with sync_playwright() as p:
  app.locator('#record-form input[name="name"]').fill('Nhân viên giả lập đã chỉnh sửa')
  app.locator('#record-form button[type="submit"]').click()
  assert 'đã chỉnh sửa' in app.locator('table tbody tr').first.inner_text()
+ app.locator('table tbody tr').first.locator('[data-edit]').click()
+ authorize()
+ assert app.locator('#record-form input[name="startDate"]').input_value()=='2026-12-01'
+ app.locator('#record-form input[name="startDate"]').fill('2026-10-03')
+ app.locator('#record-form button[type="submit"]').click()
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(p=>p.id==='90009999').startDate")=='03/10/2026'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(p=>p.id==='90009999').phone")=='0001234567'
  print('testing delete',flush=True)
  app.locator('table tbody tr').first.locator('[data-delete]').click()
  assert app.locator('#confirm-form').count()==1
@@ -419,5 +444,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.9.1 inline shift buttons + focus, role-based user/Pack desk, resource CRUD, staff without fixed user, prior scans/photos/XLSX/mobile')
+ print('PASS: v0.9.2 VN today defaults, Unicode names/numeric fields and safe save, shift/resources/portraits/XLSX/mobile')
  browser.close()
