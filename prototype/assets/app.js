@@ -154,7 +154,7 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',confirmData:null};
+const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',confirmData:null};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -260,22 +260,51 @@ function scanPreview(person){
  if(!person)return '<div class="scan-empty">Nhập hoặc quét mã nhân viên để xem hồ sơ.</div>';
  return `<div class="scan-identity">${avatar(person,true)}<div><strong>${escape(person.name)}</strong><small>Mã nhân viên: ${escape(person.id)} · ${escape(person.position||'Chưa có vị trí')}</small></div></div><dl class="scan-fields">${PERSON_DETAILS.filter(([k])=>k!=='name'&&k!=='id').map(([k,l])=>`<div><dt>${escape(l)}</dt><dd>${escape(person[k]||'Chưa cập nhật')}</dd></div>`).join('')}</dl>`;
 }
+
+function workRole(position){
+ const value=String(position||'').toLocaleLowerCase('vi');
+ if(value.includes('pick'))return 'Pick';
+ if(value.includes('pack'))return 'Pack';
+ return '';
+}
+function scanAssignment(person){
+ if(state.scanMode!=='enter'||!person)return '';
+ const role=workRole(person.position);
+ if(!role)return '<p class="scan-no-user">Vị trí này không cần phát User Pick/Pack.</p>';
+ const items=role==='Pick'?catalogs.pickUsers:catalogs.packUsers;
+ const option=(item)=>`<option value="${escape(item)}" ${state.scanUser===item?'selected':''}>${escape(item)}</option>`;
+ return `<div class="scan-allocation-row"><label>User ${role} <select id="scan-user-choice" required><option value="">— Chọn user làm việc —</option>${items.map(option).join('')}</select></label>${role==='Pack'?`<label>Bàn Pack (tùy chọn)<select id="scan-desk-choice"><option value="">— Chưa chọn bàn —</option>${catalogs.packDesks.map(item=>`<option value="${escape(item)}" ${state.scanDesk===item?'selected':''}>${escape(item)}</option>`).join('')}</select></label>`:''}</div>`;
+}
 function shiftScanPanel(){
  const result=state.scanOutcome,person=result?.code?store.people.find(p=>p.id===result.code):null,mode=state.scanMode;
- return `<section class="panel scan-station"><div class="scan-station-head"><span class="scan-mark">${icon('clock',22)}</span><div><h2>Quét mã ra / vào ca</h2><p>Chọn loại thao tác một lần rồi quét liên tiếp. Máy quét gửi Enter sẽ tự ghi nhận.</p></div></div><div class="scan-mode-wrapper shift-choice-row"><div><span class="scan-code-label">Loại thao tác</span><div class="scan-mode" role="group" aria-label="Loại thao tác quét"><button type="button" class="${mode==='enter'?'active':''}" data-scan-mode="enter" aria-pressed="${mode==='enter'}">Vào ca</button><button type="button" class="${mode==='exit'?'active':''}" data-scan-mode="exit" aria-pressed="${mode==='exit'}">Ra ca</button></div></div>${mode==='enter'?`<label class="shift-choice"><span class="scan-code-label">Ca làm việc</span><select id="scan-shift-choice" aria-label="Chọn ca vào" required>${['Ca 1','Ca 2','Ca HC'].map(x=>`<option value="${x}" ${state.scanShift===x?'selected':''}>${x}</option>`).join('')}</select></label>`:''}</div><form id="shift-scan-form" autocomplete="off"><label class="scan-code-label" for="shift-code">Mã nhân viên</label><div class="scan-form-row"><input id="shift-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn primary" type="submit" value="${mode}">${icon('clock',16)} Ghi nhận ${mode==='enter'?'vào ca':'ra ca'}</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="scan-preview">${scanPreview(person)}</div></section>`;
+ return `<section class="panel scan-station"><div class="scan-station-head"><span class="scan-mark">${icon('clock',22)}</span><div><h2>Quét mã ra / vào ca</h2><p>Chọn chế độ và ca một lần, sau đó quét nhân sự. Khi vào ca, cấp user theo vị trí Pick/Pack.</p></div></div><div class="scan-mode-wrapper shift-choice-row"><span class="scan-code-label">Loại thao tác</span><div class="scan-mode" role="group" aria-label="Loại thao tác quét"><button type="button" class="${mode==='enter'?'active':''}" data-scan-mode="enter" aria-pressed="${mode==='enter'}">Vào ca</button><button type="button" class="${mode==='exit'?'active':''}" data-scan-mode="exit" aria-pressed="${mode==='exit'}">Ra ca</button></div>${mode==='enter'?`<span class="scan-code-label">Ca làm việc</span><div class="scan-mode" role="group" aria-label="Ca làm việc">${['Ca 1','Ca 2','Ca HC'].map(v=>`<button type="button" data-scan-shift="${v}" class="${state.scanShift===v?'active':''}" aria-pressed="${state.scanShift===v}">${v}</button>`).join('')}</div>`:''}</div><form id="shift-scan-form" autocomplete="off"><label class="scan-code-label" for="shift-code">Mã nhân viên</label><div class="scan-form-row"><input id="shift-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn primary" type="submit" value="${mode}">${icon('clock',16)} Ghi nhận ${mode==='enter'?'vào ca':'ra ca'}</button></div><div id="scan-allocation">${scanAssignment(state.scanCurrentStaff?store.people.find(p=>p.id===state.scanCurrentStaff):null)}</div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="scan-preview">${scanPreview(person)}</div></section>`;
 }
-function scanShift(code,operation,selectedShift){
+
+
+
+function scanShift(code,operation,selectedShift,workUser,workDesk){
  const staff=String(code||'').trim(),p=store.people.find(x=>x.id===staff),now=new Date();
  const date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
  const time=now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
- const outcome=(ok,message)=>{state.scanOutcome={ok,code:staff,message};state.notice='';render();root.querySelector('#shift-code')?.focus();return ok};
+ const outcome=(ok,message)=>{
+  state.scanOutcome={ok,code:staff,message};
+  if(ok){state.scanCurrentStaff='';state.scanUser='';state.scanDesk=''}
+  state.notice='';
+  render();root.querySelector('#shift-code')?.focus();return ok;
+ };
  if(!p)return outcome(false,'Không tìm thấy mã nhân viên. Vui lòng kiểm tra hoặc bổ sung hồ sơ.');
- if(operation==='enter'&&!['Ca 1','Ca 2','Ca HC'].includes(selectedShift))return outcome(false,'Cần chọn ca hợp lệ trước khi vào ca.');
  const current=store.shifts.find(x=>x.staff===p.id&&x.state==='Trong ca');
  if(operation==='enter'){
+  if(!['Ca 1','Ca 2','Ca HC'].includes(selectedShift))return outcome(false,'Chọn ca hợp lệ trước khi vào ca.');
   if(current)return outcome(false,`Nhân viên ${p.name} đang trong ca, không ghi nhận vào ca lần hai.`);
-  store.shifts.unshift({id:`CA-${Date.now().toString(36).toUpperCase()}`,staff:p.id,name:p.name,date,shift:selectedShift,checkin:time,checkout:'—',user:p.user||'—',state:'Trong ca',checkinAt:now.toISOString(),checkoutAt:''});
-  persist();return outcome(true,`Đã vào ca · ${p.name} · ${selectedShift} · ${date} ${time}`);
+  const role=workRole(p.position),list=role==='Pick'?catalogs.pickUsers:role==='Pack'?catalogs.packUsers:[];
+  if(role&&(!workUser||!list.includes(workUser)))return outcome(false,`Chọn User ${role} từ Quản lý tài nguyên trước khi vào ca.`);
+  if(workUser&&store.shifts.some(x=>x.state==='Trong ca'&&x.user===workUser))return outcome(false,`User ${workUser} đang được sử dụng trong ca khác.`);
+  if(role==='Pack'&&workDesk&&!catalogs.packDesks.includes(workDesk))return outcome(false,'Bàn Pack không hợp lệ.');
+  if(role==='Pack'&&workDesk&&store.shifts.some(x=>x.state==='Trong ca'&&x.desk===workDesk))return outcome(false,`Bàn ${workDesk} đang được sử dụng.`);
+  const assigned=role?workUser:'—',desk=role==='Pack'&&workDesk?workDesk:'—';
+  store.shifts.unshift({id:`CA-${Date.now().toString(36).toUpperCase()}`,staff:p.id,name:p.name,date,shift:selectedShift,checkin:time,checkout:'—',user:assigned,userType:role||'—',desk,state:'Trong ca',checkinAt:now.toISOString(),checkoutAt:''});
+  persist();return outcome(true,`Đã vào ca · ${p.name} · ${selectedShift} · ${assigned} · ${date} ${time}`);
  }
  if(operation==='exit'){
   if(!current)return outcome(false,`Không có lượt vào ca đang mở của ${p.name}. Không thể ghi nhận ra ca.`);
@@ -284,10 +313,8 @@ function scanShift(code,operation,selectedShift){
  }
  return outcome(false,'Thao tác không hợp lệ.');
 }
-function compactPersonPreview(person){
- if(!person)return '<div class="scan-empty">Chưa xác định nhân viên.</div>';
- return `<div class="scan-identity compact-identity">${avatar(person)}<div><strong>${escape(person.name)} · ${escape(person.id)}</strong><small>${escape(person.position||'Chưa cập nhật')} · ${escape(person.shift||'Chưa phân ca')} · User: ${escape(person.user||'—')}</small></div></div>`;
-}
+
+
 function laborScanPanel(){
  const result=state.laborScan,person=result?.code?store.people.find(p=>p.id===result.code):null;
  return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('calendar',20)}</span><div><h2>Quét mã công nhật</h2><p>Quét lần đầu ghi giờ bắt đầu; quét lần sau ghi giờ kết thúc cùng bản ghi.</p></div></div><form id="labor-scan-form" autocomplete="off"><div class="labor-scan-fields"><label class="scan-code-label">Công việc công nhật<select id="labor-work" name="work" required><option value="">— Chọn công việc —</option>${catalogs.laborWork.map(value=>`<option value="${escape(value)}" ${state.laborWork===value?'selected':''}>${escape(value)}</option>`).join('')}</select></label><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên<input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"></label><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div></section>`;
@@ -581,7 +608,7 @@ root.addEventListener('submit',function(e){
  if(e.target.id==='shift-scan-form'){
   e.preventDefault();
   const fd=new FormData(e.target),op=state.scanMode;
-  scanShift(fd.get('employeeCode'),op,root.querySelector('#scan-shift-choice')?.value||state.scanShift);return;
+  scanShift(fd.get('employeeCode'),op,state.scanShift,state.scanUser,state.scanDesk);return;
  }
  if(e.target.id==='labor-scan-form'){e.preventDefault();const values=new FormData(e.target);scanLabor(values.get('employeeCode'),values.get('work'));return}
  if(e.target.id==='pda-scan-form'){e.preventDefault();const fd=new FormData(e.target);scanPda(fd.get('employeeCode'),fd.get('deviceCode'));return}
@@ -601,7 +628,8 @@ root.addEventListener('click',e=>{
  const edit=e.target.closest('[data-edit]');if(edit){if(state.view==='shifts')return;const record=edit.dataset.edit;confirmDialog('Xác nhận sửa dữ liệu',`Nhập mật khẩu trước khi sửa bản ghi ${record}`,()=>{state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;state.modal='edit'});return}
  const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
  const quick=e.target.closest('[data-quick]');if(quick){const id=quick.dataset.quick;confirmDialog('Xác nhận thay đổi',`Nhập mật khẩu trước khi thay đổi bản ghi ${id}`,()=>quickChange(id));return}
- const scanMode=e.target.closest('[data-scan-mode]');if(scanMode){state.scanMode=scanMode.dataset.scanMode==='exit'?'exit':'enter';state.scanOutcome=null;render();root.querySelector('#shift-code')?.focus();return}
+ const scanMode=e.target.closest('[data-scan-mode]');if(scanMode){state.scanMode=scanMode.dataset.scanMode==='exit'?'exit':'enter';state.scanOutcome=null;state.scanCurrentStaff='';state.scanUser='';state.scanDesk='';render();root.querySelector('#shift-code')?.focus();return}
+ const shiftChoice=e.target.closest('[data-scan-shift]');if(shiftChoice){state.scanShift=shiftChoice.dataset.scanShift;root.querySelectorAll('[data-scan-shift]').forEach(b=>{b.classList.toggle('active',b.dataset.scanShift===state.scanShift);b.setAttribute('aria-pressed',String(b.dataset.scanShift===state.scanShift))});root.querySelector('#shift-code')?.focus();return}
  const pdaMode=e.target.closest('[data-pda-mode]');if(pdaMode){state.pdaMode=pdaMode.dataset.pdaMode==='return'?'return':'borrow';state.pdaScan=null;render();root.querySelector('#pda-staff-code')?.focus();return}
  const accent=e.target.closest('[data-accent-choice]');if(accent){const chosen=accent.dataset.accentChoice;if(!ACCENTS.some(([key])=>key===chosen))return;state.accent=chosen;storageSet(ACCENT_KEY,chosen);render();return}
  const font=e.target.closest('[data-font]');if(font){state.fontPct=Math.max(90,Math.min(120,state.fontPct+Number(font.dataset.font)));storageSet(FONT_KEY,String(state.fontPct));render();return}const choice=e.target.closest('[data-theme-choice]');if(choice){const mode=choice.dataset.themeChoice;if(!['auto','light','dark'].includes(mode))return;state.themeMode=mode;state.theme=resolveTheme(mode);storageSet(THEME_KEY,mode);safeHistory('replaceState',href(state.view,state.drawer));render();return}const btn=e.target.closest('[data-action]');if(!btn)return;const act=btn.dataset.action;if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
@@ -622,7 +650,10 @@ root.addEventListener('input',function(e){
  markField(e.target);
  if(e.target.id==='shift-code'){
   const code=e.target.value.trim(),person=store.people.find(p=>p.id===code),preview=root.querySelector('#scan-preview');
+  if(state.scanCurrentStaff!==code){state.scanCurrentStaff=code;state.scanUser='';state.scanDesk=''}
   if(preview)preview.innerHTML=code&&!person?'<div class="scan-empty">Chưa tìm thấy mã nhân viên phù hợp.</div>':scanPreview(person);
+  const area=root.querySelector('#scan-allocation');if(area)area.innerHTML=scanAssignment(person);
+  if(person)void renderScanPortrait(person);
   return;
  }
  if(e.target.id==='labor-staff-code'){
@@ -643,7 +674,7 @@ root.addEventListener('input',function(e){
   const newInput=root.querySelector('#global-search');if(newInput){newInput.focus();newInput.setSelectionRange(pos,pos)}
  }
 });
-root.addEventListener('keydown',e=>{if(e.target.id==='pda-staff-code'&&e.key==='Enter'){e.preventDefault();root.querySelector('#pda-device-code')?.focus()}});
+root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='shift-code'&&state.scanMode==='enter'){const person=store.people.find(p=>p.id===e.target.value.trim());if(person&&workRole(person.position)&&!state.scanUser){e.preventDefault();root.querySelector('#scan-user-choice')?.focus();return}}if(e.target.id==='pda-staff-code'&&e.key==='Enter'){e.preventDefault();root.querySelector('#pda-device-code')?.focus()}});
 root.addEventListener('change',async function(e){
  if(e.target.id==='staff-photo'){
   const file=e.target.files?.[0];if(!file)return;
@@ -657,7 +688,8 @@ root.addEventListener('change',async function(e){
  }
  markField(e.target);
  if(e.target.id==='labor-work'){state.laborWork=e.target.value;return}
- if(e.target.id==='scan-shift-choice'){state.scanShift=e.target.value;return}
+ if(e.target.id==='scan-user-choice'){state.scanUser=e.target.value;return}
+ if(e.target.id==='scan-desk-choice'){state.scanDesk=e.target.value;return}
  if(e.target.id==='status-filter'){state.filter=e.target.value;state.selected.clear();render();return}
  if(e.target.id==='select-all'){const ids=filtered().map(x=>x.id);if(e.target.checked)ids.forEach(id=>state.selected.add(id));else ids.forEach(id=>state.selected.delete(id));render();return}
  if(e.target.matches('[data-select]')){if(e.target.checked)state.selected.add(e.target.dataset.select);else state.selected.delete(e.target.dataset.select);render()}
