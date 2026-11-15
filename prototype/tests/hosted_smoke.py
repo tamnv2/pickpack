@@ -18,7 +18,7 @@ webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
 fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
-assert version=='0.9.4'
+assert version=='0.9.5'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -248,8 +248,13 @@ try:
           g.fillStyle='#668da5';g.fillRect(105,340,270,230);
           return c.toDataURL('image/png').split(',')[1]
         }""")
-        second.locator('#staff-photo').set_input_files({'name':'synthetic-portrait.png','mimeType':'image/png','buffer':base64.b64decode(photo_b64)})
+        second.evaluate("""b64=>{
+          const data=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)),file=new File([data],'portrait.png',{type:'image/png'});
+          const transfer=new DataTransfer();transfer.items.add(file);
+          document.querySelector('#record-form [name="name"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
+        }""",photo_b64)
         second.locator('#photo-preview img').wait_for()
+        assert second.locator('#photo-preview img').evaluate('el=>el.naturalWidth===192')
         second.locator('#record-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text() == '37'
         assert '01/12/2026' in second.locator('.people-table tbody tr').first.inner_text()
@@ -286,6 +291,40 @@ try:
         assert sheet.max_row == 38
         workbook.close()
 
+        # Minutes support real image blobs, pasted images and edit-mode uploads.
+        second.locator('a.nav-main[href*="view=minutes"]').click()
+        second.locator('[data-action="add"]').click()
+        assert second.locator('#minute-photo').count()==1
+        second.locator('#record-form [name="name"]').fill('Biên bản kiểm thử ảnh')
+        second.locator('#record-form [name="type"]').select_option('Thiết bị')
+        second.locator('#record-form [name="date"]').fill('15/11/2026')
+        second.locator('#record-form [name="owner"]').fill('Nhân sự giả lập')
+        second.locator('#record-form [name="state"]').select_option('Đã lưu')
+        second.evaluate("""b64=>{
+          const data=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)),file=new File([data],'minutes.png',{type:'image/png'});
+          const transfer=new DataTransfer();transfer.items.add(file);
+          document.querySelector('#record-form [name="name"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
+        }""",photo_b64)
+        second.locator('#minute-editor-gallery img').wait_for()
+        assert second.locator('#minute-image-count').inner_text()=='1'
+        second.locator('#record-form button[type="submit"]').click()
+        second.wait_for_function("() => JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).minutes[0]?.imageIds?.length===1")
+        second.locator('.table-panel tbody tr').first.locator('[data-record]').click()
+        second.locator('#minute-drawer-gallery img').wait_for()
+        assert second.locator('#minute-drawer-gallery img').evaluate('el=>el.naturalWidth===480')
+        second.locator('#minute-drawer-gallery [data-minute-open]').click()
+        second.locator('.minute-zoom-modal img').wait_for()
+        assert second.locator('.minute-zoom-modal img').evaluate('el=>el.naturalWidth===480')
+        second.locator('.minute-zoom-modal [data-action="close-modal"]').click()
+        second.locator('.detail-head [data-action="close-drawer"]').click()
+        second.locator('.table-panel tbody tr').first.locator('[data-edit]').click()
+        second.locator('#confirm-password').fill('admin')
+        second.locator('#confirm-form button[type="submit"]').click()
+        second.locator('#minute-editor-gallery img').wait_for()
+        second.locator('#minute-photo').set_input_files({'name':'second-minute.png','mimeType':'image/png','buffer':base64.b64decode(photo_b64)})
+        second.wait_for_function("() => document.querySelector('#minute-image-count')?.textContent==='2'")
+        second.locator('#record-form button[type="submit"]').click()
+        second.wait_for_function("() => JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).minutes[0]?.imageIds?.length===2")
         for module,scope in [('labor','laborWork'),('minutes','minutesType'),('assets','assetsType')]:
             second.locator(f'a.nav-main[href*="view={module}"]').click()
             second.locator(f'a[data-catalog-scope="{module}"]').click()
@@ -379,18 +418,20 @@ try:
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.4-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.5-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
         assert snapshot['format']=='pickpack1291-browser-backup'
-        assert snapshot['schema']==1 and snapshot['webVersion']==version
+        assert snapshot['schema']==2 and snapshot['webVersion']==version
         assert snapshot['data']['records']['people'][0]['id']=='90009999'
         assert snapshot['data']['records']['labor'][0]['endTime']!='—'
         assert len(snapshot['data']['records']['pda'])==31
         assert 'Điều phối thử' in snapshot['data']['catalogs']['position']
         assert len(snapshot['data']['catalogs']['packDesks'])==12
         assert len(snapshot['data']['portraits'])==1
+        assert len(snapshot['data']['minuteImages'])==2
+        assert snapshot['data']['records']['minutes'][0]['imageIds'][0]==snapshot['data']['minuteImages'][0]['id']
         assert snapshot['data']['portraits'][0]['id']=='90009999'
         assert snapshot['data']['portraits'][0]['data'].startswith('data:image/png;base64,')
 
@@ -432,6 +473,12 @@ try:
         assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position.includes('Điều phối thử')")
         assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime!='—'")
         assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.length")==31
+        target.locator('a.nav-main[href*="view=minutes"]').click()
+        target.locator('.table-panel tbody tr').first.locator('[data-record]').click()
+        assert target.locator('#minute-drawer-gallery img').count()==2
+        target.locator('#minute-drawer-gallery img').first.wait_for()
+        assert target.locator('#minute-drawer-gallery img').first.evaluate('el=>el.naturalWidth===480')
+        target.locator('.detail-head [data-action="close-drawer"]').click()
         target.locator('a.nav-main[href*="view=people"]').click()
         target.locator('.people-table tbody tr').first.locator('[data-record]').click()
         target.locator('#portrait-original img').wait_for(timeout=5000)
@@ -503,7 +550,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.4 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.5 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
