@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.2
+# PickPack 1291 — Web Office v0.9.3
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -101,3 +101,11 @@ python tests/hosted_smoke.py
 - `Họ và tên` chỉ nhận chữ Unicode (bao gồm chữ Việt có dấu) và dấu cách giữa các từ; loại số/ký hiệu khi nhập/dán. Tạm giữ nguyên văn bản trong thời gian IME gõ tiếng Việt, lọc sau khi hoàn tất composition. Kiểm tra lại cả ba trường trước khi lưu, không chỉ dựa vào form HTML.
 - Kiểm thử tự động Chromium và hosted HTTP: ngày mặc định VN qua mốc nửa đêm, chọn ngày khác, sao chép/dán ký tự không hợp lệ, tên Unicode, giữ số 0 đầu và chặn dữ liệu sai khi bypass thao tác nhập bình thường.
 - **Chỉ demo offline:** kiểm tra phía client không thay thế validation/RBAC ở backend Production; không có phát hành hoặc provider usage mới.
+
+## v0.9.3 — Sao lưu/khôi phục toàn bộ dữ liệu kiểm thử giữa các máy
+- Vào **Quản trị viên → Cài đặt → Dữ liệu kiểm thử**: **Xuất dữ liệu** tải về một tệp `pickpack-1291-v0.9.3-YYYY-MM-DD.json`; **Nhập dữ liệu** để khôi phục trên máy/trình duyệt khác chạy **đúng Web v0.9.3**.
+- File gồm **toàn bộ bản ghi** đang dùng (nhân sự, ra/vào ca, công nhật, biên bản, CCDC, PDA, danh sách thiết bị), **danh mục/tài nguyên**, ảnh đại diện trong hồ sơ, **ảnh chân dung nguyên gốc từ IndexedDB** và chế độ giao diện. Dữ liệu được lưu tại localStorage + IndexedDB của trình duyệt và tự lưu khi thao tác; không có DB/provider server hoặc đồng bộ thời gian thực.
+- Nhập chỉ chấp nhận gói đúng `format`, `schema=1`, `webVersion=0.9.3` và kiểm tra các nhóm dữ liệu, danh mục, ảnh. Chỉ sau khi xác minh mới mở **modal xác nhận ghi đè toàn bộ** + mật khẩu demo admin. Nhập không hợp lệ hoặc bấm Hủy không thay đổi dữ liệu. Khi gặp lỗi lưu, Web cố gắng khôi phục dữ liệu và ảnh cũ, báo nếu khôi phục thất bại.
+- **Quy trình:** Máy A → Xuất dữ liệu → chép file sang máy B → mở Web cùng phiên bản → Đăng nhập demo → Nhập dữ liệu → xác nhận. Sau đó máy B có thể tiếp tục thêm/sửa/xóa mà không cần tạo lại. Muốn chuyển các cập nhật mới nhất thì xuất lại ở máy đang sử dụng và nhập lại ở máy đích (bản nhập sẽ **thay thế** toàn bộ dữ liệu hiện tại; không merge).
+- **Lưu ý:** JSON chưa mã hóa và có thể chứa ảnh/hồ sơ; chỉ lưu và chuyển file giả lập kiểm thử, **không dùng dữ liệu nhân sự thật** trên CDN công khai hoặc chia sẻ tệp ra ngoài. Không đưa file sao lưu vào GitHub. Lưu trữ là theo origin + hồ sơ trình duyệt (xóa dữ liệu site, chế độ ẩn danh và thay đổi thiết bị có thể mất dữ liệu); nên xuất backup thường xuyên.
+- Bản kiểm thử chỉ dùng file tĩnh, không phát sinh Firebase/Cloudflare/OpsCore API. Không cài đặt provider, không merge/phát hành Production.
