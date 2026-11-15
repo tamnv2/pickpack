@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.3
+# PickPack 1291 — Web Office v0.9.4
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -109,3 +109,11 @@ python tests/hosted_smoke.py
 - **Quy trình:** Máy A → Xuất dữ liệu → chép file sang máy B → mở Web cùng phiên bản → Đăng nhập demo → Nhập dữ liệu → xác nhận. Sau đó máy B có thể tiếp tục thêm/sửa/xóa mà không cần tạo lại. Muốn chuyển các cập nhật mới nhất thì xuất lại ở máy đang sử dụng và nhập lại ở máy đích (bản nhập sẽ **thay thế** toàn bộ dữ liệu hiện tại; không merge).
 - **Lưu ý:** JSON chưa mã hóa và có thể chứa ảnh/hồ sơ; chỉ lưu và chuyển file giả lập kiểm thử, **không dùng dữ liệu nhân sự thật** trên CDN công khai hoặc chia sẻ tệp ra ngoài. Không đưa file sao lưu vào GitHub. Lưu trữ là theo origin + hồ sơ trình duyệt (xóa dữ liệu site, chế độ ẩn danh và thay đổi thiết bị có thể mất dữ liệu); nên xuất backup thường xuyên.
 - Bản kiểm thử chỉ dùng file tĩnh, không phát sinh Firebase/Cloudflare/OpsCore API. Không cài đặt provider, không merge/phát hành Production.
+
+## Web v0.9.4 — Khởi tạo dữ liệu trống để người dùng tự nhập
+- **APPROVED:** Mọi danh sách nghiệp vụ, PDA và các danh mục/tài nguyên khởi tạo **0 bản ghi**, không sinh dữ liệu giả tự động. Các dữ liệu mẫu cũ được chuyển thành tệp fixture **chỉ phục vụ CI** `prototype/tests/legacy_fixture.json` (không phân phối cùng Web).
+- Dùng khóa localStorage + IndexedDB riêng cho v0.9.4, nên mở lần đầu bản mới trong trình duyệt đang dùng v0.9.3 cũng **không tự tái sử dụng dữ liệu cũ**. Chức năng **Quản trị viên → Cài đặt → Dữ liệu kiểm thử → Xóa dữ liệu** có cảnh báo + yêu cầu mật khẩu thử nghiệm, chủ động xóa dữ liệu/danh mục/ảnh của v0.9.4 và v0.9.3 **trong trình duyệt hiện tại**; không thể xóa thông tin trên thiết bị khác từ xa. Trước khi xóa, xuất backup nếu cần.
+- Nhập danh mục **Vị trí chính, Nhà cung cấp, Bộ phận, Site, Kho** trước, sau đó tạo hồ sơ nhân sự thủ công. Các danh mục Công nhật, Biên bản, CCDC, Tài nguyên có thể thêm qua Quản lý danh mục / Quản lý tài nguyên. Danh sách PDA trống được bổ sung **Thêm PDA** (mã, seri, nguồn, ghi chú) và sửa/xóa có xác nhận, để có thiết bị thực hiện quét mượn/trả trên Web kiểm thử.
+- Dữ liệu được tự lưu localStorage và ảnh chân dung riêng trong IndexedDB; **Xuất dữ liệu/ Nhập dữ liệu** `.json` đầy đủ như bản v0.9.3, nhưng chỉ chấp nhận **Web v0.9.4** vì có kiểm tra phiên bản chính xác. Xuất ở máy A, mở bản **cùng commit/phiên bản** ở máy B, nhập để ghi đè dữ liệu máy B.
+- **Cảnh báo bảo mật:** Đây vẫn là giao diện chạy qua CDN công khai bên thứ ba, mật khẩu `admin` chỉ mô phỏng. Không nhập ảnh chân dung, tên/mã/số điện thoại nhân sự thật hoặc dữ liệu vận hành nhạy cảm vào bản Web CDN công khai. JSON sao lưu không mã hóa; không đưa lên GitHub, không chia sẻ cho bên không có thẩm quyền. Muốn dùng hồ sơ thật cần bản nội bộ hoặc backend riêng được phê duyệt.
+- **Đảm bảo:** Không có API Firebase/Cloudflare/OpsCore; chưa merge/Production. Xóa dữ liệu ở một máy không tác động dữ liệu máy khác.
