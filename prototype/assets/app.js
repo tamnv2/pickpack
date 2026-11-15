@@ -117,7 +117,7 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',confirmData:null};
+const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',confirmData:null};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -357,8 +357,22 @@ function scanPda(employeeCode,deviceCode){
 }
 function deviceRegistry(){
  const devices=store.pdaDevices||[];
- return `<section class="panel table-panel device-registry"><div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('device',17)}</span><span class="records-label">Danh sách PDA <b>${devices.length}</b></span></div></div><div class="table-scroll"><table><thead><tr><th>Seri PDA</th><th>5 số cuối Seri</th><th>Nguồn</th><th>Tình trạng</th><th>Ghi chú</th></tr></thead><tbody>${devices.map(d=>{const active=store.pda.some(x=>x.name===d.id&&x.state==='Đang mượn');return `<tr><td><span class="mono">${escape(d.serial)}</span></td><td>${escape(d.last5)}</td><td>${escape(d.source)}</td><td>${badge(active?'Đang sử dụng':'Sẵn sàng')}</td><td>${escape(d.note||'—')}</td></tr>`}).join('')}</tbody></table></div></section>`;
+ return `<section class="panel table-panel device-registry"><div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('device',17)}</span><span class="records-label">Danh sách PDA <b>${devices.length}</b></span></div><div class="table-control-right"><button type="button" class="btn primary tiny" data-action="device-add">${icon('plus',15)} Thêm PDA</button></div></div><div class="table-scroll"><table><thead><tr><th>Mã PDA</th><th>Seri PDA</th><th>5 số cuối Seri</th><th>Nguồn</th><th>Tình trạng</th><th>Ghi chú</th><th>Thao tác</th></tr></thead><tbody>${devices.map(d=>{const active=store.pda.some(x=>x.name===d.id&&x.state==='Đang mượn');return `<tr><td><strong>${escape(d.id)}</strong></td><td><span class="mono">${escape(d.serial)}</span></td><td>${escape(d.last5)}</td><td>${escape(d.source)}</td><td>${badge(active?'Đang sử dụng':'Sẵn sàng')}</td><td>${escape(d.note||'—')}</td><td><span class="row-actions"><button type="button" class="row-open" data-device-edit="${escape(d.id)}" title="Sửa PDA">${icon('edit',16)}</button><button type="button" class="row-open danger-text" data-device-delete="${escape(d.id)}" title="Xóa PDA">${icon('trash',16)}</button></span></td></tr>`}).join('')}</tbody></table></div>${devices.length?'':'<div class="empty"><strong>Chưa có PDA</strong><span>Chọn Thêm PDA để nhập thiết bị trước khi ghi nhận mượn/trả.</span></div>'}</section>`;
 }
+function deviceModal(){
+ const device=store.pdaDevices.find(d=>d.id===state.deviceEdit),edit=!!device;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="device-title"><div class="modal-head"><h2 id="device-title">${edit?'Sửa':'Thêm'} thiết bị PDA</h2><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="device-form"><div class="form-grid"><label>Mã PDA<input name="id" maxlength="30" required pattern="[A-Za-z0-9_-]{2,30}" value="${escape(device?.id||'')}" ${edit?'readonly':''} placeholder="Ví dụ: PDA-01"></label><label>Seri PDA<input name="serial" maxlength="120" required value="${escape(device?.serial||'')}" placeholder="Nhập seri / QR thiết bị"></label><label>Nguồn<input name="source" maxlength="80" value="${escape(device?.source||'')}" placeholder="Nguồn thiết bị"></label><label>Ghi chú<input name="note" maxlength="160" value="${escape(device?.note||'')}"></label></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn primary">${edit?'Lưu sửa':'Thêm PDA'}</button></div></form></section></div>`;
+}
+function saveDeviceForm(form){
+ const fd=new FormData(form),id=String(fd.get('id')||'').trim().toUpperCase(),serial=String(fd.get('serial')||'').trim(),source=String(fd.get('source')||'').trim(),note=String(fd.get('note')||'').trim(),current=store.pdaDevices.find(d=>d.id===state.deviceEdit);
+ if(!/^[A-Z0-9_-]{2,30}$/.test(id)||!serial||serial.length>120){state.notice='Mã PDA hoặc seri không hợp lệ';render();return}
+ const last5=serial.slice(-5);
+ if(store.pdaDevices.some(d=>d.id!==current?.id&&(d.id===id||d.serial.toUpperCase()===serial.toUpperCase()||d.last5===last5))){state.notice='Mã PDA, seri hoặc 5 ký tự cuối đã tồn tại';render();return}
+ if(current)Object.assign(current,{serial,last5,source,note});
+ else store.pdaDevices.push({id,serial,last5,source,note,state:'Sẵn sàng'});
+ persist();state.modal='';state.deviceEdit='';state.notice=current?'Đã sửa PDA':'Đã thêm PDA';render();
+}
+
 function quickLabel(){return state.view==='pda'?'Mượn / trả':state.view==='shifts'?'Quét ca':state.view==='labor'?'Xác nhận công':state.view==='minutes'?'Duyệt biên bản':'Đổi trạng thái'}
 function drawer(){
  if(!state.drawer)return '';
@@ -477,6 +491,7 @@ function modal(){
  if(!state.modal)return '';
  if(state.modal==='confirm')return confirmModal();
  if(state.modal==='portrait')return portraitModal();
+ if(state.modal==='device')return deviceModal();
  if(state.modal==='settings')return prefsModal();
  if(state.modal==='notifications')return noticesModal();
  if(state.modal==='category-new'||state.modal==='category-edit')return catalogModal();
@@ -732,11 +747,14 @@ root.addEventListener('submit',function(e){
  if(e.target.id==='confirm-form'){e.preventDefault();finishConfirmation(e.target);return}
  if(e.target.getAttribute('id')==='record-form'){e.preventDefault();saveForm(e.target)}
  if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
+ if(e.target.id==='device-form'){e.preventDefault();saveDeviceForm(e.target)}
 });
 root.addEventListener('click',e=>{
  const closeToast=e.target.closest('[data-toast-close]');if(closeToast){const i=notices.findIndex(x=>x.id===Number(closeToast.dataset.toastClose));if(i>=0)notices.splice(i,1);refreshToasts();return}
  const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())saveForm(form);else form.querySelectorAll('input,select').forEach(el=>{el.dataset.touched='1';markField(el)});return}
  const submitCategory=e.target.closest('#catalog-form button[type="submit"]');if(submitCategory){e.preventDefault();const form=submitCategory.form;if(form?.reportValidity())saveCatalog(form);else form.querySelectorAll('input').forEach(el=>{el.dataset.touched='1';markField(el)});return}
+ const deviceEdit=e.target.closest('[data-device-edit]');if(deviceEdit){const id=deviceEdit.dataset.deviceEdit;confirmDialog('Xác nhận sửa PDA','Nhập mật khẩu trước khi sửa '+id,()=>{state.deviceEdit=id;state.modal='device'});return}
+ const deviceDelete=e.target.closest('[data-device-delete]');if(deviceDelete){const id=deviceDelete.dataset.deviceDelete;if(store.pda.some(r=>r.name===id)){state.notice='PDA đã có lịch sử mượn/trả, không thể xóa';render();return}confirmDialog('Xác nhận xóa PDA','Xóa thiết bị '+id+' khỏi danh sách?',()=>{store.pdaDevices=store.pdaDevices.filter(d=>d.id!==id);persist();state.notice='Đã xóa PDA'});return}
  const categoryTab=e.target.closest('[data-category-tab]');if(categoryTab){state.categoryTab=categoryTab.dataset.categoryTab;state.notice='';render();return}
  const categoryEdit=e.target.closest('[data-category-edit]');if(categoryEdit){const value=catalogs[state.categoryTab]?.[Number(categoryEdit.dataset.categoryEdit)]||'';confirmDialog('Xác nhận sửa danh mục',`Nhập mật khẩu trước khi sửa ${value}`,()=>{state.categoryEdit=value;state.modal='category-edit'});return}
  const categoryDelete=e.target.closest('[data-category-delete]');if(categoryDelete){deleteCatalog(Number(categoryDelete.dataset.categoryDelete));return}
@@ -759,6 +777,7 @@ root.addEventListener('click',e=>{
  case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
  case'bulk-delete':deleteIds([...state.selected]);return;
  
+ case'device-add':state.deviceEdit='';state.modal='device';break;
  case'backup-reset':confirmDialog('Xóa toàn bộ dữ liệu kiểm thử','Thao tác này sẽ XÓA TẤT CẢ dữ liệu nghiệp vụ, danh mục, user, PDA và ảnh đã lưu trên trình duyệt này (gồm dữ liệu Web v0.9.3). Không thể hoàn tác. Hãy xuất file sao lưu trước khi tiếp tục.',()=>{void resetOfflineTestData()});return;
  case'backup-export':void exportOfflineBackup();return;
  case'backup-import':root.querySelector('#backup-import-file')?.click();return;
