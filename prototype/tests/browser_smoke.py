@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.0'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.1'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -32,8 +32,8 @@ with sync_playwright() as p:
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
- assert app.locator('a.nav-main').count()==7
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.0'
+ assert app.locator('a.nav-main').count()==8
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.1'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -42,8 +42,8 @@ with sync_playwright() as p:
  assert float(app.locator('.site-footer').evaluate("el => getComputedStyle(el).opacity"))<=0.75
  assert not app.locator('button.menu-button').is_visible()
  labels=app.locator('.nav-flat .nav-label').all_inner_texts()
- assert len(labels)==7,labels
- assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC']
+ assert len(labels)==8,labels
+ assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên']
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  assert app.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
  assert app.locator('#clock-time').count()==1 and app.locator('#clock-date').count()==0
@@ -95,7 +95,7 @@ with sync_playwright() as p:
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==0
  assert app.locator('.location-chip,.group-title').count()==0
- assert app.locator('.side-link').count()==7
+ assert app.locator('.side-link').count()==8
  assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--text-scale').trim()")=='1.1'
  app.locator('.top-profile').click()
  assert app.locator('.profile-dropdown button[data-action="settings"]').count()==1
@@ -205,22 +205,30 @@ with sync_playwright() as p:
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
  assert app.locator('button[data-scan-mode="enter"]').get_attribute('aria-pressed')=='true'
- assert app.locator('#scan-shift-choice').count()==1
- app.locator('#scan-shift-choice').select_option('Ca HC')
+ assert app.locator('[data-scan-shift]').count()==3
+ app.locator('[data-scan-shift="Ca HC"]').click()
+ assert app.locator('[data-scan-shift="Ca HC"]').get_attribute('aria-pressed')=='true'
  assert app.locator('button[data-action="add"]').count()==0
  app.locator('input#shift-code').fill('90000001')
  assert app.locator('#scan-preview').get_by_text('Mã nhân viên:',exact=False).count()>=1
+ assert app.locator('#scan-user-choice').count()==1
+ assert app.locator('#scan-desk-choice').count()==0
+ app.locator('#scan-user-choice').select_option('pp1291.pk20')
  app.locator('input#shift-code').press('Enter')
+ assert app.evaluate("document.activeElement.id")=='shift-code'
+ assert app.locator('[data-scan-shift="Ca HC"]').get_attribute('aria-pressed')=='true'
+ assert app.locator('[data-scan-mode="enter"]').get_attribute('aria-pressed')=='true'
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
  assert 'Đã vào ca' in app.locator('.scan-outcome').inner_text()
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].shift")=='Ca HC'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].user")=='pp1291.pk20'
  app.locator('input#shift-code').fill('90000001')
- app.locator('input#shift-code').press('Enter')
+ app.locator('#shift-scan-form button[type="submit"]').click()
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
  assert 'không ghi nhận vào ca lần hai' in app.locator('.scan-outcome').inner_text()
  app.locator('button[data-scan-mode="exit"]').click()
  assert app.locator('button[data-scan-mode="exit"]').get_attribute('aria-pressed')=='true'
- assert app.locator('#scan-shift-choice').count()==0
+ assert app.locator('[data-scan-shift]').count()==0
  app.locator('input#shift-code').fill('90000001')
  app.locator('input#shift-code').press('Enter')
  assert 'Đã ra ca' in app.locator('.scan-outcome').inner_text()
@@ -296,7 +304,6 @@ with sync_playwright() as p:
  app.locator('select[name="site"]').select_option('1291')
  app.locator('select[name="warehouse"]').select_option('1291')
  app.locator('input[name="phone"]').fill('0001234567')
- app.locator('select[name="shift"]').select_option('Ca 1')
  assert app.locator('input[name="startDate"]').get_attribute('type')=='date'
  app.locator('input[name="startDate"]').fill('2026-12-01')
  # Tiny PNG fixture is fully synthetic; assert local avatar conversion from image.
@@ -367,5 +374,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.9.0 12h clock, capped toasts, passworded modals, all catalogs, paired labor, shift choice, CRUD/QR/XLSX/mobile')
+ print('PASS: v0.9.1 12h clock, capped toasts, passworded modals, all catalogs, paired labor, shift choice, CRUD/QR/XLSX/mobile')
  browser.close()
