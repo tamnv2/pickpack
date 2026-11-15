@@ -551,7 +551,7 @@ function saveForm(form){
  if(key==='people'){
   const id=String(fd.get('id')||'').trim(),name=String(fd.get('name')||'').trim(),phone=String(fd.get('phone')||'').trim();
   if(!/^[0-9]{2,30}$/.test(id)){state.notice='Mã nhân viên chỉ được chứa chữ số';render();return}
-  if(name.length<2||name.length>120||!/^[\\p{L}\\p{M} ]+$/u.test(name)){state.notice='Họ và tên chỉ được chứa chữ cái và khoảng trắng';render();return}
+  if(name.length<2||name.length>120||!/^[\p{L}\p{M} ]+$/u.test(name)){state.notice='Họ và tên chỉ được chứa chữ cái và khoảng trắng';render();return}
   if(!/^[0-9]*$/.test(phone)){state.notice='Số điện thoại chỉ được chứa chữ số';render();return}
   if(!editing&&store.people.some(p=>p.id===id)){state.notice='Mã nhân viên đã tồn tại';render();return}
   const changes={};for(const [k] of PERSON_EDITOR){if(k==='id')continue;changes[k]=k==='startDate'&&fd.get(k)?String(fd.get(k)).replace(/^(\d{4})-(\d{2})-(\d{2})$/,'$3/$2/$1'):String(fd.get(k)||'').trim()}
@@ -676,7 +676,7 @@ root.addEventListener('click',e=>{
 });
 function filterPersonnelInput(input){
  if(state.view!=='people'||!input?.matches('#record-form input[name="id"],#record-form input[name="phone"],#record-form input[name="name"]')||input.dataset.composing==='1')return;
- const original=input.value,filtered=input.name==='name'?v=>v.replace(/[^\\p{L}\\p{M} ]/gu,''):v=>v.replace(/[^0-9]/g,'');
+ const original=input.value,filtered=input.name==='name'?v=>v.replace(/[^\p{L}\p{M} ]/gu,''):v=>v.replace(/[^0-9]/g,'');
  const next=filtered(original);if(next===original)return;
  const caret=input.selectionStart;
  input.value=next;
