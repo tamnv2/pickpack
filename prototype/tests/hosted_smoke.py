@@ -451,6 +451,8 @@ try:
         assert target.locator('#confirm-form').count()==1
         target.locator('#confirm-form [data-action="close-modal"]').click()
         assert target.locator('.people-table tbody tr').count()==37
+        target.locator('.top-profile').click()
+        target.locator('[data-action="settings"]').click()
         target.locator('[data-action="backup-reset"]').click()
         target.locator('#confirm-password').fill('wrong')
         target.locator('#confirm-form button[type="submit"]').click()
