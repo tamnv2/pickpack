@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.9.4';
+ const WEB_VERSION='0.9.5';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list']];
@@ -28,7 +28,7 @@ plus:'<path d="M12 5v14M5 12h14"/>',
 logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
 };
 function icon(name,size=18){return `<svg class="ui-svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name]||PATHS.grid}</svg>`}
-const ICONS=Object.fromEntries(['grid','users','clock','calendar','file','boxes','device'].map(k=>[k,icon(k)]));
+const ICONS=Object.fromEntries(['grid','users','clock','calendar','file','boxes','device','list'].map(k=>[k,icon(k)]));
 // Completely synthetic, reproducible operational examples. No real employee or device records.
 const STORAGE_KEY='pickpack1291_office_records_v094';
 const LEGACY_STORAGE_KEY='pickpack1291_office_records_v07';
@@ -440,7 +440,14 @@ async function renderFullPortrait(){
 function portraitModal(){return `<div class="modal-overlay" data-action="close-modal"><section class="modal portrait-lightbox" role="dialog" aria-modal="true" aria-label="Ảnh chân dung"><button class="icon-button portrait-close" data-action="close-modal" aria-label="Đóng ảnh">×</button><img src="${portraitObjectUrl}" alt="Ảnh chân dung kích thước gốc"></section></div>`}
 function photoEditor(person){
  const x={name:person?.name||'',photo:state.photoDraft||'',initial:person?.initial||''};
- return `<section class="photo-editor"><div id="photo-preview">${avatar(x,true)}</div><div class="photo-editor-info"><strong>Ảnh đại diện</strong><div class="photo-editor-actions"><label class="btn ghost photo-picker">Chụp / Chọn ảnh<input id="staff-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="user"></label><button class="btn ghost" data-action="remove-photo" type="button">Xóa ảnh</button></div><small>JPEG, PNG, WebP · tối đa 5 MB · CHỈ dùng ảnh giả lập. Web công khai, không nhập ảnh nhân sự thật.</small></div></section>`;
+ return `<section class="photo-editor"><div id="photo-preview">${avatar(x,true)}</div><div class="photo-editor-info"><strong>Ảnh đại diện</strong><div class="photo-editor-actions"><label class="btn ghost photo-picker">Chụp / Chọn ảnh<input id="staff-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="user"></label><button class="btn ghost" data-action="remove-photo" type="button">Xóa ảnh</button></div><small>Chọn ảnh hoặc dán Ctrl + V từ clipboard · JPEG, PNG, WebP, tối đa 5 MB · Chỉ dùng ảnh giả lập. Web công khai, không nhập ảnh nhân sự thật.</small></div></section>`;
+}
+async function applyStaffPhoto(file){
+ const photo=await preparePortrait(file);
+ if(!['new','edit'].includes(state.modal)||state.view!=='people')return;
+ state.photoDraft=photo;state.photoOriginalFile=file;state.photoRemoveOriginal=false;
+ const target=root.querySelector('#photo-preview');
+ if(target)target.innerHTML=avatar({photo,initial:''},true);
 }
 async function preparePortrait(file){
  if(!file||!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>5*1024*1024)throw Error('Ảnh không hợp lệ hoặc vượt 5 MB');
@@ -825,6 +832,16 @@ root.addEventListener('input',function(e){
  }
 });
 root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='shift-code'&&state.scanMode==='enter'){const person=store.people.find(p=>p.id===e.target.value.trim());if(person&&workRole(person.position)&&!state.scanUser){e.preventDefault();root.querySelector('#scan-user-choice')?.focus();return}}if(e.target.id==='pda-staff-code'&&e.key==='Enter'){e.preventDefault();root.querySelector('#pda-device-code')?.focus()}});
+root.addEventListener('paste',async function(e){
+ if(!['new','edit'].includes(state.modal)||!['people','minutes'].includes(state.view))return;
+ const pictures=[...(e.clipboardData?.items||[])].filter(item=>item.kind==='file'&&item.type.startsWith('image/')).map(item=>item.getAsFile()).filter(Boolean);
+ if(!pictures.length)return;
+ e.preventDefault();
+ try{
+  if(state.view==='people')await applyStaffPhoto(pictures[0]);
+  else await addMinuteDraftImages(pictures);
+ }catch(err){state.notice=err?.message||'Không thể dán ảnh';refreshToasts()}
+});
 root.addEventListener('change',async function(e){
  if(e.target.id==='backup-import-file'){
   const file=e.target.files?.[0];e.target.value='';if(file)await importOfflineBackup(file);return;
@@ -832,10 +849,7 @@ root.addEventListener('change',async function(e){
  if(e.target.id==='staff-photo'){
   const file=e.target.files?.[0];if(!file)return;
   try{
-   const photo=await preparePortrait(file);
-   if(state.modal!=='new'&&state.modal!=='edit')return;
-   state.photoDraft=photo;state.photoOriginalFile=file;state.photoRemoveOriginal=false;
-   const target=root.querySelector('#photo-preview');if(target)target.innerHTML=avatar({photo,initial:''},true);
+   await applyStaffPhoto(file);
   }catch(err){state.notice=err?.message||'Không đọc được ảnh';const box=root.querySelector('.photo-editor-info small');if(box)box.textContent=state.notice}
   return;
  }
