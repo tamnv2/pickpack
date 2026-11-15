@@ -17,7 +17,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.9.0'
+assert version=='0.9.1'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -41,7 +41,7 @@ try:
         page.locator('#demo-password').fill('admin')
         page.locator('#login-form button[type="submit"]').click()
         page.wait_for_url('**/app.html?view=dashboard*')
-        assert page.locator('a.nav-main').count() == 7
+        assert page.locator('a.nav-main').count() == 8
         assert page.locator('.side-bottom .web-version').inner_text()==f'Web v{version}'
         assert page.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
         assert page.locator('.side-bottom .site-footer').count()==1
@@ -49,7 +49,7 @@ try:
         assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='static'
         assert not page.locator('button.menu-button').is_visible()
         labels=page.locator('.nav-flat .nav-label').all_inner_texts()
-        assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC'],labels
+        assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên'],labels
         assert page.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
         assert page.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
         assert page.locator('#clock-time').is_visible()
@@ -65,7 +65,7 @@ try:
         assert page.locator('#global-search').is_visible()
         slots=lambda: page.evaluate("""() => ['.top-search','.topbar .notif','.header-clock'].map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return [r.x,r.y,r.width]})""")
         overview_slots=slots()
-        for module in ['people','shifts','pda','labor','minutes','assets','categories']:
+        for module in ['people','shifts','pda','labor','minutes','assets','resources','categories']:
             page.locator(f'a.nav-main[href*="view={module}"]').click() if module!='categories' else page.goto(base + '/app.html?view=categories')
             assert all(abs(a-b)<1 for u,v in zip(overview_slots,slots()) for a,b in zip(u,v)),module
             assert page.locator('#global-search').is_visible()
@@ -159,9 +159,8 @@ try:
         second.locator('#record-form select[name="department"]').select_option('Pick Pack')
         second.locator('#record-form select[name="site"]').select_option('1291')
         second.locator('#record-form select[name="warehouse"]').select_option('1291')
-        second.locator('#record-form select[name="shift"]').select_option('Ca 1')
+        assert second.locator('#record-form [name="user"],#record-form [name="shift"]').count()==0
         second.locator('#record-form input[name="startDate"]').fill('2026-12-01')
-        second.locator('#record-form input[name="user"]').fill('pp1291.pk99')
         # Entirely synthetic high-resolution portrait: 480x640, never contacts a remote service.
         photo_b64=second.evaluate("""() => {
           const c=document.createElement('canvas');c.width=480;c.height=640;const g=c.getContext('2d');
@@ -215,18 +214,47 @@ try:
             assert second.locator('.catalog-panel tbody tr').count()>0
             second.locator(f'.catalog-heading a[data-nav="{module}"]').click()
         second.locator('a.nav-main[href*="view=shifts"]').click()
-        second.locator('#scan-shift-choice').select_option('Ca HC')
+        second.locator('[data-scan-shift="Ca HC"]').click()
+        assert second.locator('[data-scan-shift="Ca HC"]').get_attribute('aria-pressed')=='true'
         second.locator('#shift-code').fill('90009999')
+        second.locator('#scan-portrait .scan-photo-original').wait_for(timeout=5000)
+        assert second.locator('#scan-portrait img').evaluate("el=>el.naturalWidth===480&&el.naturalHeight===640")
+        assert second.locator('#scan-portrait img').evaluate("el=>{const r=el.getBoundingClientRect();return r.height<=211&&Math.abs(r.width/r.height-.75)<.03}")
+        assert second.locator('#scan-user-choice').count()==0 # Non-Pick/Pack is not issued a work account.
         second.locator('#shift-code').press('Enter')
         assert 'Đã vào ca' in second.locator('.scan-outcome').inner_text()
+        assert second.evaluate("document.activeElement.id")=='shift-code'
+        assert second.locator('[data-scan-shift="Ca HC"]').get_attribute('aria-pressed')=='true'
         assert 'Ca HC' in second.locator('.scan-outcome').inner_text()
         second.locator('[data-scan-mode="exit"]').click()
-        assert second.locator('#scan-shift-choice').count()==0
+        assert second.locator('[data-scan-shift]').count()==0
         second.locator('#shift-code').fill('90009999')
         second.locator('#shift-code').press('Enter')
         assert 'Đã ra ca' in second.locator('.scan-outcome').inner_text()
 
         # Start/end labor are one row, with job selected from the live catalog.
+        # All resource catalogs remain editable and accessible from the sidebar.
+        second.locator('a.nav-main[href*="view=resources"]').click()
+        assert second.locator('.catalog-tabs [data-category-tab]').count()==4
+        second.locator('[data-category-tab="pickUsers"]').click()
+        assert second.locator('.catalog-panel tbody tr').count()==20
+        second.locator('[data-category-tab="packUsers"]').click()
+        assert second.locator('.catalog-panel tbody tr').count()==20
+        second.locator('[data-category-tab="packDesks"]').click()
+        assert second.locator('.catalog-panel tbody tr').count()==12
+        second.locator('a.nav-main[href*="view=shifts"]').click()
+        second.locator('[data-scan-shift="Ca 2"]').click()
+        second.locator('#shift-code').fill('90000001')
+        assert second.locator('#scan-user-choice').count()==1
+        assert second.locator('#scan-desk-choice').count()==0
+        second.locator('#scan-user-choice').select_option('pp1291.pk19')
+        second.locator('#shift-code').press('Enter')
+        assert 'Đã vào ca' in second.locator('.scan-outcome').inner_text()
+        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].user")=='pp1291.pk19'
+        second.locator('[data-scan-mode="exit"]').click()
+        second.locator('#shift-code').fill('90000001')
+        second.locator('#shift-code').press('Enter')
+        assert 'Đã ra ca' in second.locator('.scan-outcome').inner_text()
         second.locator('a.nav-main[href*="view=labor"]').click()
         assert second.locator('#labor-scan-form').count()==1
         assert second.locator('[data-catalog-scope="labor"]').count()==1
@@ -291,7 +319,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.0 AM/PM, catalog CRUD, high-res IndexedDB portrait, password, labor/shift scans, XLSX, zero external API')
+        print('HOSTED_SMOKE_PASS: v0.9.1 original photo proportions in staff scan, persistent shift choice, assigned Pick account, resource catalogs, XLSX, zero API')
         browser.close()
 finally:
     server.shutdown()
