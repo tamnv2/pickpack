@@ -87,18 +87,18 @@ function seedRecords(){
    id:String(90000001+i),name,phone:'000'+String(1000000+i).slice(-7),position,supplier:['Nội bộ','Đối tác A','Đối tác B'][i%3],
    department:'Pick Pack',site:'1291',warehouse:'1291',startDate:`${String(1+i%27).padStart(2,'0')}/${String(1+i%11).padStart(2,'0')}/2026`,
    note:'',updatedBy:'Quản trị viên',updatedAt:'14/11/2026 08:00:00',photo:'',
-   shift:i%3===0?'Ca 2':'Ca 1',user:`pp1291.${['pk','pa','au','dc'][i%4]}${String(Math.floor(i/4)+1).padStart(2,'0')}`,
+   
    initial:name.split(' ').at(-1).slice(0,2)
   }});
  const shifts=Array.from({length:42},(_,i)=>{const p=people[(i*13)%people.length],day=14-Math.floor(i/7),pending=i%9===0,ended=i>7||i%5===0;return{
-  id:`CA-${String(261101+i)}`,name:p.name,staff:p.id,date:`${String(day).padStart(2,'0')}/11/2026`,shift:p.shift,
-  checkin:pending?'—':`${p.shift==='Ca 1'?'05':'13'}:${String(26+(i*7)%32).padStart(2,'0')}`,
-  checkout:ended&&!pending?`${p.shift==='Ca 1'?'14':'22'}:${String((i*9)%50).padStart(2,'0')}`:'—',
-  user:p.user,state:pending?'Chờ vào ca':ended?'Đã ra ca':'Trong ca'
+  id:`CA-${String(261101+i)}`,name:p.name,staff:p.id,date:`${String(day).padStart(2,'0')}/11/2026`,shift:i%3===0?'Ca 2':'Ca 1',
+  checkin:pending?'—':`${i%3===0?'13':'05'}:${String(26+(i*7)%32).padStart(2,'0')}`,
+  checkout:ended&&!pending?`${i%3===0?'22':'14'}:${String((i*9)%50).padStart(2,'0')}`:'—',
+  user:`pp1291.${p.position.toLowerCase().includes('pick')?'pk':'pa'}${String(i%20+1).padStart(2,'0')}`,userType:p.position.toLowerCase().includes('pick')?'Pick':'Pack',state:pending?'Chờ vào ca':ended?'Đã ra ca':'Trong ca'
  }});
  const labor=Array.from({length:42},(_,i)=>{const p=people[(i*7)%people.length];return{
    id:`CN-${String(261101+i)}`,name:p.name,date:`${String(14-Math.floor(i/9)).padStart(2,'0')}/11/2026`,
-   shift:p.shift,work:p.position,staff:p.id,startTime:`${String(5+i%5).padStart(2,'0')}:30:00`,endTime:i%4===3?'—':`${String(13+i%5).padStart(2,'0')}:30:00`
+   shift:i%3===0?'Ca 2':'Ca 1',work:p.position,staff:p.id,startTime:`${String(5+i%5).padStart(2,'0')}:30:00`,endTime:i%4===3?'—':`${String(13+i%5).padStart(2,'0')}:30:00`
  }});
  const topics=['Bàn giao ca khu Pick','Kiểm tra thiết bị đầu ca','Bàn giao vật tư Pack','Ghi nhận tình trạng dụng cụ','Xác nhận hoàn trả CCDC','Ghi nhận sai lệch bàn giao','Kiểm tra an toàn khu vực','Bàn giao PDA cuối ca','Kiểm tra khu đóng gói','Bàn giao khu Auto'];
  const types=['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'];
@@ -116,7 +116,7 @@ function seedRecords(){
  }));
  const pda=Array.from({length:30},(_,i)=>{const p=people[(i*7+3)%people.length],active=i<2;return{
     id:`MT-${String(261101+i)}`,name:`PDA-${String(i%3+1).padStart(2,'0')}`,staff:p.id,
-    holder:p.name,user:p.user,borrow:`${String(5+(i%5)).padStart(2,'0')}:${String(15+(i*7)%42).padStart(2,'0')}`,
+    holder:p.name,user:'—',borrow:`${String(5+(i%5)).padStart(2,'0')}:${String(15+(i*7)%42).padStart(2,'0')}`,
     return:active?'—':`${14+i%4}:${String(10+(i*9)%39).padStart(2,'0')}`,state:active?'Đang mượn':'Đã trả'
   }});
   const pdaDevices=Array.from({length:3},(_,i)=>({id:`PDA-${String(i+1).padStart(2,'0')}`,serial:`SYNTHETIC-1291-${String(i+1).padStart(5,'0')}`,last5:String(i+1).padStart(5,'0'),source:'Thiết bị kiểm thử',state:i<2?'Đang sử dụng':'Sẵn sàng',note:''}));
@@ -151,7 +151,7 @@ const columns={
  assets:[['name','Tên CCDC'],['id','Mã'],['type','Loại'],['qty','Số lượng'],['holder','Vị trí'],['state','Trạng thái']],
  pda:[['name','Thiết bị'],['holder','Người mượn'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['returner','Người trả'],['state','Trạng thái']]
 };
-const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['shift','Ca được phân'],['user','User làm việc'],['note','Ghi chú']];
+const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
 const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',confirmData:null};
@@ -216,7 +216,7 @@ function dashboard(){
  const todayScans=store.shifts.filter(r=>r.date===todayDate&&r.checkin!=='—').length;
  return `<div class="page-content overview-page">${pageHead()}<div id="dashboard-search-results" aria-live="polite">${dashboardSearchResults()}</div><div class="metrics overview-metrics">${stat('Tổng nhân sự',store.people.length,'Hồ sơ đang quản lý','blue','users')}${stat('Đã phân ca',store.people.filter(r=>r.shift).length,'Nhân sự có thông tin ca','green','calendar')}${stat('Đang trong ca',inShift,'Lượt ra/vào chưa kết thúc','green','clock')}${stat('Vào ca hôm nay',todayScans,todayDate,'blue','clock')}${stat('Công nhật chưa chốt',pendingLabor,'Chưa xác nhận','orange','calendar')}${stat('Biên bản chờ duyệt',pendingMinutes,'Chờ xác nhận','orange','file')}${stat('CCDC cần kiểm tra',flaggedAssets,'Theo tình trạng thiết bị','purple','boxes')}${stat('PDA đang mượn',`${borrowed} / ${store.pdaDevices.length}`,'Thiết bị hiện quản lý','purple','device')}</div><div class="overview-sections">${coveragePanel()}${panelAttention()}</div><div class="two-col lower">${workload()}${activity()}</div></div>`;
 }
-function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong>${view==='people'?`<small>${escape(row.user)}</small>`:''}</div></div>`;if(key==='state')return badge(row[key]);if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key]??'—')}
+function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong></div></div>`;if(key==='state')return badge(row[key]);if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key]??'—')}
 function filtered(){const set=store[state.view]||[];let rows=set.filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);return rows}
 function controls(){
  const statuses=['people','labor'].includes(state.view)?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
@@ -335,7 +335,7 @@ function scanPda(employeeCode,deviceCode){
  const open=store.pda.find(row=>row.name===device.id&&row.state==='Đang mượn');
  if(state.pdaMode==='borrow'){
   if(open)return out(false,`${device.id} đang được mượn bởi ${open.holder}. Không được mượn trùng.`);
-  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:device.id,staff:p.id,holder:p.name,user:p.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',returner:'—',state:'Đang mượn'});
+  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:device.id,staff:p.id,holder:p.name,user:store.shifts.find(x=>x.staff===p.id&&x.state==='Trong ca')?.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',returner:'—',state:'Đang mượn'});
   persist();return out(true,`Đã mượn ${device.id} · ${p.name} · ${date} ${time}`);
  }
  if(state.pdaMode==='return'){
