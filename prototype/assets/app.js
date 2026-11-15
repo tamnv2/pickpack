@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.9.3';
+ const WEB_VERSION='0.9.4';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list']];
@@ -30,11 +30,13 @@ logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/
 function icon(name,size=18){return `<svg class="ui-svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name]||PATHS.grid}</svg>`}
 const ICONS=Object.fromEntries(['grid','users','clock','calendar','file','boxes','device'].map(k=>[k,icon(k)]));
 // Completely synthetic, reproducible operational examples. No real employee or device records.
-const STORAGE_KEY='pickpack1291_office_records_v07';
-const CATALOG_KEY='pickpack1291_office_catalogs_v083';
+const STORAGE_KEY='pickpack1291_office_records_v094';
+const LEGACY_STORAGE_KEY='pickpack1291_office_records_v07';
+const CATALOG_KEY='pickpack1291_office_catalogs_v094';
+const LEGACY_CATALOG_KEY='pickpack1291_office_catalogs_v083';
 const CATEGORY_FIELDS=[['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho']];
 const RESOURCE_FIELDS=[['userTypes','Loại user'],['pickUsers','User Pick'],['packUsers','User Pack'],['packDesks','Bàn Pack']];
-const RESOURCE_DEFAULTS={userTypes:['Pick','Pack'],pickUsers:Array.from({length:20},(_,i)=>'pp1291.pk'+String(i+1).padStart(2,'0')),packUsers:Array.from({length:20},(_,i)=>'pp1291.pa'+String(i+1).padStart(2,'0')),packDesks:Array.from({length:12},(_,i)=>'Bàn Pack '+String(i+1).padStart(2,'0'))};
+const RESOURCE_DEFAULTS={};
 const EXTRA_CATALOGS={
  labor:{key:'laborWork',label:'Công việc công nhật',records:'labor',property:'work',title:'Danh mục công nhật'},
  minutes:{key:'minutesType',label:'Loại biên bản',records:'minutes',property:'type',title:'Danh mục biên bản'},
@@ -81,54 +83,9 @@ function storageGet(key){try{return localStorage.getItem(key)}catch{return null}
 function storageSet(key,val){try{localStorage.setItem(key,val);return true}catch{return false}}
 function storageRemove(key){try{localStorage.removeItem(key)}catch{}}
 function demoSession(){return storageGet(SESSION_KEY)==='demo-admin-only'||(location.protocol==='file:'&&new URLSearchParams(location.search).get('demo')==='1')}
-function seedRecords(){
- // 100% synthetic fixtures, deterministic across browsers and reloads; no real operational records.
- let num=129114;const rand=()=>{num=(num*1664525+1013904223)>>>0;return num/4294967296};
- const first=['Nguyễn','Trần','Lê','Phạm','Hoàng','Vũ','Đặng','Bùi','Đỗ','Phan','Ngô','Hồ'];
- const second=['Văn','Thị','Minh','Quang','Ngọc','Thanh','Đức','Hồng','Gia','Tuấn','Đình','Khánh'];
- const last=['An','Bình','Châu','Dũng','Giang','Hà','Hải','Hạnh','Hiếu','Huy','Khánh','Lan','Linh','Long','Mai','Nam','Nhi','Phúc','Quân','Sơn','Trang','Vy','Yến','Thảo','Tiến','Đạt','Phương','Nhung'];
- const teams=['Pick','Pack thường','Pack Auto','Điều phối'];
- const pick=(arr)=>arr[Math.floor(rand()*arr.length)];
- const people=Array.from({length:36},(_,i)=>{const name=`${pick(first)} ${pick(second)} ${pick(last)}`,position=teams[i%4];return{
-   id:String(90000001+i),name,phone:'000'+String(1000000+i).slice(-7),position,supplier:['Nội bộ','Đối tác A','Đối tác B'][i%3],
-   department:'Pick Pack',site:'1291',warehouse:'1291',startDate:`${String(1+i%27).padStart(2,'0')}/${String(1+i%11).padStart(2,'0')}/2026`,
-   note:'',updatedBy:'Quản trị viên',updatedAt:'14/11/2026 08:00:00',photo:'',
-   
-   initial:name.split(' ').at(-1).slice(0,2)
-  }});
- const shifts=Array.from({length:42},(_,i)=>{const p=people[(i*13)%people.length],day=14-Math.floor(i/7),pending=i%9===0,ended=i>7||i%5===0;return{
-  id:`CA-${String(261101+i)}`,name:p.name,staff:p.id,date:`${String(day).padStart(2,'0')}/11/2026`,shift:i%3===0?'Ca 2':'Ca 1',
-  checkin:pending?'—':`${i%3===0?'13':'05'}:${String(26+(i*7)%32).padStart(2,'0')}`,
-  checkout:ended&&!pending?`${i%3===0?'22':'14'}:${String((i*9)%50).padStart(2,'0')}`:'—',
-  user:`pp1291.${p.position.toLowerCase().includes('pick')?'pk':'pa'}${String(i%20+1).padStart(2,'0')}`,userType:p.position.toLowerCase().includes('pick')?'Pick':'Pack',state:pending?'Chờ vào ca':ended?'Đã ra ca':'Trong ca'
- }});
- const labor=Array.from({length:42},(_,i)=>{const p=people[(i*7)%people.length];return{
-   id:`CN-${String(261101+i)}`,name:p.name,date:`${String(14-Math.floor(i/9)).padStart(2,'0')}/11/2026`,
-   shift:i%3===0?'Ca 2':'Ca 1',work:p.position,staff:p.id,startTime:`${String(5+i%5).padStart(2,'0')}:30:00`,endTime:i%4===3?'—':`${String(13+i%5).padStart(2,'0')}:30:00`
- }});
- const topics=['Bàn giao ca khu Pick','Kiểm tra thiết bị đầu ca','Bàn giao vật tư Pack','Ghi nhận tình trạng dụng cụ','Xác nhận hoàn trả CCDC','Ghi nhận sai lệch bàn giao','Kiểm tra an toàn khu vực','Bàn giao PDA cuối ca','Kiểm tra khu đóng gói','Bàn giao khu Auto'];
- const types=['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'];
- const minutes=Array.from({length:30},(_,i)=>({
-  id:`BB-${String(261101+i)}`,name:`${topics[i%topics.length]} - ${String(14-Math.floor(i/6)).padStart(2,'0')}/11`,
-  type:types[i%5],date:`${String(14-Math.floor(i/6)).padStart(2,'0')}/11/2026`,
-  owner:people[(i*11)%people.length].name,state:['Chờ xác nhận','Đã lưu','Đã xác nhận'][i%3]
- }));
- const goods=['Máy quét mã vạch','Khay phân loại','Bộ sạc thiết bị','Xe đẩy hàng','Bộ niêm phong','Dây sạc','Giỏ nhựa','Kệ để hàng','Bộ đàm','Kéo an toàn','Găng tay','Bảng kê','Bộ pin dự phòng','Máy in tem','Bàn cân'];
- const assets=Array.from({length:30},(_,i)=>({
-   id:`CCDC-${String(260201+i)}`,name:`${goods[i%goods.length]} - ${Math.floor(i/15)+1}`,
-   type:i%5===0?'Thiết bị':'Dụng cụ',qty:1+(i*7%22),unit:['chiếc','cái','bộ'][i%3],
-   holder:['Kho CCDC','Khu Pick','Khu Pack','Khu Auto','Bàn điều phối'][i%5],
-   state:['Sẵn sàng','Đang sử dụng','Sẵn sàng','Cần kiểm tra'][i%4]
- }));
- const pda=Array.from({length:30},(_,i)=>{const p=people[(i*7+3)%people.length],active=i<2;return{
-    id:`MT-${String(261101+i)}`,name:`PDA-${String(i%3+1).padStart(2,'0')}`,staff:p.id,
-    holder:p.name,user:'—',borrow:`${String(5+(i%5)).padStart(2,'0')}:${String(15+(i*7)%42).padStart(2,'0')}`,
-    return:active?'—':`${14+i%4}:${String(10+(i*9)%39).padStart(2,'0')}`,state:active?'Đang mượn':'Đã trả'
-  }});
-  const pdaDevices=Array.from({length:3},(_,i)=>({id:`PDA-${String(i+1).padStart(2,'0')}`,serial:`SYNTHETIC-1291-${String(i+1).padStart(5,'0')}`,last5:String(i+1).padStart(5,'0'),source:'Thiết bị kiểm thử',state:i<2?'Đang sử dụng':'Sẵn sàng',note:''}));
- return {people,shifts,labor,minutes,assets,pda,pdaDevices};
-}
-function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(seedRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500)){for(const person of data.people){delete person.user;delete person.shift}return data}}catch{}return seedRecords()}
+function emptyRecords(){return {people:[],shifts:[],labor:[],minutes:[],assets:[],pda:[],pdaDevices:[]}}
+
+function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(emptyRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500)){for(const person of data.people){delete person.user;delete person.shift}return data}}catch{}return emptyRecords()}
 const store=readRecords();
 function readCatalogs(){
  const fields=[...CATEGORY_FIELDS,...Object.values(EXTRA_CATALOGS).map(x=>[x.key,x.label]),...RESOURCE_FIELDS];
@@ -493,7 +450,7 @@ function notificationItems(){return [
 ].filter(x=>x.count>0)}
 function prefsModal(){
  const accentRow=state.theme==='light'?`<div class="setting-row accent-setting"><div><strong>Màu chủ đạo</strong><small>Chọn một trong bảy màu cho giao diện sáng</small></div><div class="accent-swatches" role="group" aria-label="Màu giao diện sáng">${ACCENTS.map(([key,label])=>`<button type="button" data-accent-choice="${key}" class="accent-swatch accent-${key} ${state.accent===key?'active':''}" aria-label="${label}" title="${label}" aria-pressed="${state.accent===key}">${state.accent===key?'✓':''}</button>`).join('')}</div></div>`:'';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Chế độ Tự động: sáng 06:00–17:59, tối 18:00–05:59 (giờ Việt Nam)</small></div><div class="theme-steps"><button class="${state.themeMode==='auto'?'active':''}" data-theme-choice="auto" aria-pressed="${state.themeMode==='auto'}">${icon('clock',15)} Tự động</button><button class="${state.themeMode==='light'?'active':''}" data-theme-choice="light" aria-pressed="${state.themeMode==='light'}">${icon('sun',15)} Sáng</button><button class="${state.themeMode==='dark'?'active':''}" data-theme-choice="dark" aria-pressed="${state.themeMode==='dark'}">${icon('moon',15)} Tối</button></div></div>${accentRow}<div class="setting-row backup-setting"><div><strong>Dữ liệu kiểm thử</strong><small>Lưu toàn bộ dữ liệu và ảnh gốc vào một file JSON trên máy. Chỉ nhập trên đúng phiên bản Web v${WEB_VERSION}.</small></div><div class="backup-actions"><button type="button" class="btn ghost" data-action="backup-export">${icon('download',15)} Xuất dữ liệu</button><button type="button" class="btn ghost" data-action="backup-import">${icon('plus',15)} Nhập dữ liệu</button><input id="backup-import-file" type="file" accept=".json,application/json" hidden></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn mới</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Chế độ Tự động: sáng 06:00–17:59, tối 18:00–05:59 (giờ Việt Nam)</small></div><div class="theme-steps"><button class="${state.themeMode==='auto'?'active':''}" data-theme-choice="auto" aria-pressed="${state.themeMode==='auto'}">${icon('clock',15)} Tự động</button><button class="${state.themeMode==='light'?'active':''}" data-theme-choice="light" aria-pressed="${state.themeMode==='light'}">${icon('sun',15)} Sáng</button><button class="${state.themeMode==='dark'?'active':''}" data-theme-choice="dark" aria-pressed="${state.themeMode==='dark'}">${icon('moon',15)} Tối</button></div></div>${accentRow}<div class="setting-row backup-setting"><div><strong>Dữ liệu kiểm thử</strong><small>Lưu toàn bộ dữ liệu và ảnh gốc vào một file JSON trên máy. Chỉ nhập trên đúng phiên bản Web v${WEB_VERSION}.</small></div><div class="backup-actions"><button type="button" class="btn ghost" data-action="backup-export">${icon('download',15)} Xuất dữ liệu</button><button type="button" class="btn ghost" data-action="backup-import">${icon('plus',15)} Nhập dữ liệu</button><button type="button" class="btn danger" data-action="backup-reset">${icon('trash',15)} Xóa dữ liệu</button><input id="backup-import-file" type="file" accept=".json,application/json" hidden></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn mới</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
 }
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
 
@@ -714,6 +671,34 @@ async function commitOfflineBackup(checked){
   state.notice='Nhập dữ liệu thất bại: '+(err?.message||'Lỗi lưu cục bộ')+'.'+rollbackError;refreshToasts();
  }
 }
+async function resetOfflineTestData(){
+ const preserved=[STORAGE_KEY,CATALOG_KEY,LEGACY_STORAGE_KEY,LEGACY_CATALOG_KEY].map(key=>[key,localStorage.getItem(key)]);
+ let currentPhotos=null;
+ try{
+  currentPhotos=await readAllPortraits();
+  await replaceAllPortraits([]);
+  // Legacy v0.9.3 original photos are isolated from the new version by database name.
+  await new Promise((resolve,reject)=>{
+   const request=indexedDB.deleteDatabase('pickpack1291_demo_portraits_v1');
+   request.onsuccess=()=>resolve();
+   request.onerror=()=>reject(request.error||new Error('Không xóa được ảnh phiên bản cũ'));
+   request.onblocked=()=>reject(new Error('Đóng các tab Web v0.9.3 trước khi xóa ảnh cũ'));
+  });
+  for(const [key] of preserved)localStorage.removeItem(key);
+  const fresh=emptyRecords();
+  for(const key of Object.keys(store))store[key]=fresh[key];
+  for(const key of Object.keys(catalogs))catalogs[key]=[];
+  // Store explicit empty values to avoid reloading any formerly generated fixtures.
+  persist();persistCatalogs();
+  state.search='';state.filter='all';state.selected.clear();state.drawer='';state.view='dashboard';
+  releasePortraitUrl();safeHistory('replaceState',href('dashboard'));
+  state.notice='Đã xóa dữ liệu, danh mục và ảnh kiểm thử trong trình duyệt này';render();
+ }catch(err){
+  for(const [key,value] of preserved)try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value)}catch{}
+  if(currentPhotos)try{await replaceAllPortraits(currentPhotos)}catch{}
+  state.notice='Xóa dữ liệu chưa hoàn tất: '+(err?.message||'Lỗi lưu trữ trên máy')+'. Không tiếp tục sử dụng trước khi kiểm tra lại.';refreshToasts();
+ }
+}
 async function importOfflineBackup(file){
  if(!file)return;
  try{
@@ -774,6 +759,7 @@ root.addEventListener('click',e=>{
  case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
  case'bulk-delete':deleteIds([...state.selected]);return;
  
+ case'backup-reset':confirmDialog('Xóa toàn bộ dữ liệu kiểm thử','Thao tác này sẽ XÓA TẤT CẢ dữ liệu nghiệp vụ, danh mục, user, PDA và ảnh đã lưu trên trình duyệt này (gồm dữ liệu Web v0.9.3). Không thể hoàn tác. Hãy xuất file sao lưu trước khi tiếp tục.',()=>{void resetOfflineTestData()});return;
  case'backup-export':void exportOfflineBackup();return;
  case'backup-import':root.querySelector('#backup-import-file')?.click();return;
  case'export':exportExcel();return;
