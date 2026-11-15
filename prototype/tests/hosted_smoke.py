@@ -17,7 +17,8 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.9.3'
+fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
+assert version=='0.9.4'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -29,7 +30,31 @@ base = f'http://127.0.0.1:{server.server_port}'
 try:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=['--no-sandbox'])
+        # Browser without preexisting storage starts with no synthetic records or catalogs.
+        blank_context=browser.new_context(viewport={'width': 1440, 'height': 900})
+        blank=blank_context.new_page()
+        assert blank.goto(base+'/index.html').ok
+        blank.locator('#demo-user').fill('admin')
+        blank.locator('#demo-password').fill('admin')
+        blank.locator('#login-form button[type="submit"]').click()
+        blank.wait_for_url('**/app.html?view=dashboard*')
+        assert blank.locator('.metrics .metric-number').first.inner_text()=='0'
+        blank.locator('a.nav-main[href*="view=people"]').click()
+        assert blank.locator('.records-label b').inner_text()=='0'
+        blank.locator('[data-catalog-scope="people"]').click()
+        assert blank.locator('.catalog-panel tbody tr').count()==0
+        blank.locator('a.nav-main[href*="view=resources"]').click()
+        assert blank.locator('.catalog-panel tbody tr').count()==0
+        blank.locator('a.nav-main[href*="view=pda"]').click()
+        assert blank.locator('.device-registry tbody tr').count()==0
+        blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
+        # Regression fixtures live in tests/, never in the public app's initialization.
+        seed='''(() => {const fixture=__FIXTURE__;if(localStorage.getItem("pickpack1291_office_records_v094")===null){
+          localStorage.setItem("pickpack1291_office_records_v094",JSON.stringify(fixture.records));
+          localStorage.setItem("pickpack1291_office_catalogs_v094",JSON.stringify(fixture.catalogs));
+        }})()'''.replace('__FIXTURE__',json.dumps(fixture,ensure_ascii=False))
+        context.add_init_script(seed)
         page = context.new_page()
         errors, external = [], []
         page.on('pageerror', lambda e: errors.append(str(e)))
@@ -158,7 +183,7 @@ try:
         second.locator('#catalog-form input[name="value"]').fill('Điều phối thử')
         second.locator('#catalog-form button[type="submit"]').click()
         assert 'Điều phối thử' in second.locator('.catalog-panel').inner_text()
-        assert 'Điều phối thử' in second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v083')).position")
+        assert 'Điều phối thử' in second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position")
         second.locator('.catalog-heading a[data-nav="people"]').click()
         second.locator('button[data-action="add"]').click()
         assert second.locator('#record-form input[name="startDate"]').input_value()==second.evaluate("""() => {const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day}""")
@@ -192,7 +217,7 @@ try:
         assert second.locator('.records-label b').inner_text() == '37'
         assert '01/12/2026' in second.locator('.people-table tbody tr').first.inner_text()
         assert 'Quản trị viên' in second.locator('.people-table tbody tr').first.inner_text()
-        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').position")=='Điều phối thử'
+        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(x=>x.id==='90009999').position")=='Điều phối thử'
         second.locator('.people-table tbody tr').first.locator('[data-record]').click()
         second.locator('#portrait-original img').wait_for(timeout=5000)
         assert second.locator('#portrait-original img').evaluate("el=>el.naturalWidth===480 && el.naturalHeight===640")
@@ -269,7 +294,7 @@ try:
         second.locator('#scan-user-choice').select_option('pp1291.pk19')
         second.locator('#shift-code').press('Enter')
         assert 'Đã vào ca' in second.locator('.scan-outcome').inner_text()
-        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].user")=='pp1291.pk19'
+        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].user")=='pp1291.pk19'
         second.locator('[data-scan-mode="exit"]').click()
         second.locator('#shift-code').fill('90000001')
         second.locator('#shift-code').press('Enter')
@@ -317,7 +342,7 @@ try:
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.3-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.4-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -341,7 +366,7 @@ try:
         target.locator('#demo-password').fill('admin')
         target.locator('#login-form button[type="submit"]').click()
         target.wait_for_url('**/app.html?view=dashboard*')
-        assert target.locator('.metrics .metric-number').first.inner_text()=='36'
+        assert target.locator('.metrics .metric-number').first.inner_text()=='0'
         target.locator('.top-profile').click()
         target.locator('button[data-action="settings"]').click()
         assert target.locator('#backup-import-file').count()==1
@@ -366,10 +391,10 @@ try:
         target.locator('#confirm-form button[type="submit"]').click()
         target.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim()==='37'",timeout=10000)
         assert 'Đã nhập dữ liệu thành công' in target.locator('.toast-stack .toast').last.inner_text()
-        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').phone")=='000123456'
-        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v083')).position.includes('Điều phối thử')")
-        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).labor[0].endTime!='—'")
-        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).pda.length")==31
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(x=>x.id==='90009999').phone")=='000123456'
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position.includes('Điều phối thử')")
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime!='—'")
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.length")==31
         target.locator('a.nav-main[href*="view=people"]').click()
         target.locator('.people-table tbody tr').first.locator('[data-record]').click()
         target.locator('#portrait-original img').wait_for(timeout=5000)
@@ -381,6 +406,31 @@ try:
         target.locator('#record-form input[name="name"]').fill('Nhân viên sau khi nhập')
         target.locator('#record-form button[type="submit"]').click()
         assert 'Nhân viên sau khi nhập' in target.locator('.people-table tbody tr').first.inner_text()
+        # Explicit reset must erase imported data and previous-version keys only after confirmation.
+        target.evaluate("() => localStorage.setItem('pickpack1291_office_records_v07','LEGACY_TEST_VALUE')")
+        target.locator('.top-profile').click()
+        target.locator('button[data-action="settings"]').click()
+        target.locator('[data-action="backup-reset"]').click()
+        assert target.locator('#confirm-form').count()==1
+        target.locator('#confirm-form [data-action="close-modal"]').click()
+        assert target.locator('.people-table tbody tr').count()==37
+        target.locator('[data-action="backup-reset"]').click()
+        target.locator('#confirm-password').fill('wrong')
+        target.locator('#confirm-form button[type="submit"]').click()
+        assert 'Mật khẩu không đúng' in target.locator('#confirm-error').inner_text()
+        assert target.locator('.people-table tbody tr').count()==37
+        target.locator('#confirm-password').fill('admin')
+        target.locator('#confirm-form button[type="submit"]').click()
+        target.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim()==='0'",timeout=10000)
+        assert target.evaluate("localStorage.getItem('pickpack1291_office_records_v07')") is None
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.length")==0
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position.length")==0
+        target.reload()
+        assert target.locator('.metrics .metric-number').first.inner_text()=='0'
+        target.locator('a.nav-main[href*="view=people"]').click()
+        assert target.locator('.records-label b').inner_text()=='0'
+        target.locator('[data-catalog-scope="people"]').click()
+        assert target.locator('.catalog-panel tbody tr').count()==0
         assert not target_errors,target_errors
         isolated.close()
         mobile_context = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True)
@@ -414,7 +464,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.3 full offline snapshot import/export across isolated browsers with original portraits, version/schema guards, edit continuation, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.4 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
