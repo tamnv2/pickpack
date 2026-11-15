@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.1
+# PickPack 1291 — Web Office v0.9.2
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -94,3 +94,10 @@ python tests/hosted_smoke.py
 - **Quản lý tài nguyên:** tab trái mới có 4 danh mục `Loại user`, `User Pick`, `User Pack`, `Bàn Pack`, mỗi loại cho phép thêm/sửa/xóa và chặn xóa tài nguyên đã có tham chiếu; tất cả dữ liệu giả lập tại localStorage, không phải tài khoản Firebase hay role backend.
 - **Ảnh tại màn quét:** chân dung nằm trọn bên trái thông tin nhân sự, chiều cao giới hạn theo vùng preview, chiều rộng tự theo tỷ lệ ảnh gốc; nếu đã tải ảnh kiểm thử thì đọc blob nguyên bản từ IndexedDB, không kéo giãn/cắt ảnh. Khi không có ảnh, hiện placeholder; không suy đoán ảnh thật.
 - **Giới hạn:** Đây vẫn là demo công khai, không nhập user credential hoặc ảnh/nhân sự thật. Không gọi Firebase/Cloudflare/OpsCore, không có đồng bộ đa thiết bị hoặc bảo mật server-side. Chỉ code và kiểm thử trong Draft PR #2, chưa Production.
+
+## Web Office v0.9.2 — Kiểm tra trường dữ liệu nhân sự
+- Khi **tạo** hồ sơ, `Ngày nhận việc` tự điền ngày hiện tại theo múi giờ Việt Nam `Asia/Ho_Chi_Minh` và vẫn sửa được; khi **sửa**, giữ ngày đã lưu.
+- `Mã nhân viên` và `Số điện thoại` là chuỗi ký tự số 0–9 (giữ số 0 ở đầu); tự loại ký tự khác ngay khi nhập/dán. Mã nhân viên dài 2–30 ký tự; số điện thoại không bị ép về số nguyên, không tự thêm điều kiện độ dài mới.
+- `Họ và tên` chỉ nhận chữ Unicode (bao gồm chữ Việt có dấu) và dấu cách giữa các từ; loại số/ký hiệu khi nhập/dán. Tạm giữ nguyên văn bản trong thời gian IME gõ tiếng Việt, lọc sau khi hoàn tất composition. Kiểm tra lại cả ba trường trước khi lưu, không chỉ dựa vào form HTML.
+- Kiểm thử tự động Chromium và hosted HTTP: ngày mặc định VN qua mốc nửa đêm, chọn ngày khác, sao chép/dán ký tự không hợp lệ, tên Unicode, giữ số 0 đầu và chặn dữ liệu sai khi bypass thao tác nhập bình thường.
+- **Chỉ demo offline:** kiểm tra phía client không thay thế validation/RBAC ở backend Production; không có phát hành hoặc provider usage mới.
