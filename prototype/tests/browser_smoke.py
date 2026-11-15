@@ -356,7 +356,7 @@ with sync_playwright() as p:
  assert app.locator('#record-form input[name="name"]').evaluate("el=>el.checkValidity()")
  # Simulate bypassing live input sanitizer. Save handler must also reject bad values.
  for key,bad,expected in [('id','AB-09','Mã nhân viên chỉ'),('name','Tên 123','Họ và tên chỉ'),('phone','090A34','Số điện thoại chỉ')]:
-  app.evaluate("""([key,value])=>{const f=document.querySelector('#record-form');f.elements[key].value=value;f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))}""",[key,bad])
+  app.evaluate("""([key,value])=>{const f=document.querySelector('#record-form');f.elements['id'].value='90009999';f.elements['name'].value='Nhân viên kiểm thử';f.elements['phone'].value='0001234567';f.elements[key].value=value;f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))}""",[key,bad])
   assert expected in app.locator('#toast-stack .toast').last.inner_text(),(key,app.locator('#toast-stack .toast').all_inner_texts())
   assert app.locator('.records-label b').inner_text()=='36'
  app.locator('input[name="id"]').fill('90009999')
