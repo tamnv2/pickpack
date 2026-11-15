@@ -481,3 +481,9 @@ html{scrollbar-gutter:stable}
  .scan-photo-box span.person-avatar{height:185px;max-width:100%}
  .scan-person-layout .scan-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Offline test snapshots: keep portable backup controls inside the profile settings. */
+.backup-setting{align-items:flex-start}
+.backup-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+.backup-actions .btn{white-space:nowrap}
+@media(max-width:740px){.backup-setting{flex-direction:column}.backup-actions{width:100%;justify-content:flex-start}.backup-actions .btn{flex:1}}
