@@ -390,7 +390,7 @@ let portraitObjectUrl='',portraitObjectId='';
 function portraitDB(){
  return new Promise((resolve,reject)=>{
   if(!('indexedDB' in window))return reject(new Error('Trình duyệt không hỗ trợ lưu ảnh gốc'));
-  const req=indexedDB.open('pickpack1291_demo_portraits_v1',1);
+  const req=indexedDB.open('pickpack1291_demo_portraits_v094',1);
   req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('portraits'))req.result.createObjectStore('portraits')};
   req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Không mở được kho ảnh'));
  });
