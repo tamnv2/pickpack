@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.0
+# PickPack 1291 — Web Office v0.9.1
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -87,3 +87,10 @@ python tests/hosted_smoke.py
 - Thêm nhân sự / Quản lý danh mục, Tạo biên bản / Quản lý danh mục, Thêm CCDC / Quản lý danh mục chuyển cạnh Xuất Excel. Danh mục Loại biên bản và Loại CCDC dùng làm nguồn select, chống xóa giá trị đang được tham chiếu.
 - Web tĩnh 100% dữ liệu giả lập trong localStorage/IndexedDB, không gọi Firebase/Cloudflare/OpsCore; URL CDN miễn phí phục vụ file tĩnh nhưng **không có SLA**. Mỗi thiết bị/trình duyệt giữ dữ liệu riêng. GitHub Actions standard public runner miễn phí, không phát sinh provider usage; không tự động thay thế Production.
 - Test source commit `07220190e06049a7fe168e8d19308ea34395a240`, [Actions #43626063941](https://github.com/tamnv2/pickpack/actions/runs/43626063941), 7 tệp 213255 byte, Chromium + hosted browser + public CDN PASS.
+
+## Web Office v0.9.1 — Ra/vào ca và tài nguyên
+- **UI:** Hai nhãn `Loại thao tác` và `Ca làm việc` nằm cùng hàng ngang với nhóm button, ca chọn bằng `Ca 1 / Ca 2 / Ca HC` thay vì select. Trạng thái chế độ và ca giữ nguyên xuyên các lượt quét/đổi màn hình; luôn focus lại mã nhân viên sau khi ghi nhận. Khi chọn Ra ca, ẩn ca.
+- **Cấp user khi vào ca:** Dựa trên trường Vị trí chính: Pick → chọn từ User Pick; Pack thường/Auto → chọn từ User Pack và tùy chọn Bàn Pack. User đang được sử dụng trong ca khác bị chặn cấp trùng; Bàn Pack trùng cũng bị chặn. User/ca chỉ lưu trên lịch sử ca, không đặt cố định trong nhân sự. PDA lấy user từ ca hoạt động.
+- **Quản lý tài nguyên:** tab trái mới có 4 danh mục `Loại user`, `User Pick`, `User Pack`, `Bàn Pack`, mỗi loại cho phép thêm/sửa/xóa và chặn xóa tài nguyên đã có tham chiếu; tất cả dữ liệu giả lập tại localStorage, không phải tài khoản Firebase hay role backend.
+- **Ảnh tại màn quét:** chân dung nằm trọn bên trái thông tin nhân sự, chiều cao giới hạn theo vùng preview, chiều rộng tự theo tỷ lệ ảnh gốc; nếu đã tải ảnh kiểm thử thì đọc blob nguyên bản từ IndexedDB, không kéo giãn/cắt ảnh. Khi không có ảnh, hiện placeholder; không suy đoán ảnh thật.
+- **Giới hạn:** Đây vẫn là demo công khai, không nhập user credential hoặc ảnh/nhân sự thật. Không gọi Firebase/Cloudflare/OpsCore, không có đồng bộ đa thiết bị hoặc bảo mật server-side. Chỉ code và kiểm thử trong Draft PR #2, chưa Production.
