@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.9.2';
+ const WEB_VERSION='0.9.3';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list']];
@@ -75,6 +75,8 @@ const ACCENT_KEY='pickpack1291_office_light_accent_v08';
 const FONT_MIGRATED_KEY='pickpack1291_office_font_boost_v08';
 const ACCENTS=[['red','Đỏ'],['orange','Cam'],['yellow','Vàng'],['green','Lục'],['blue','Lam'],['indigo','Chàm'],['violet','Tím']];
 const SESSION_KEY='pickpack1291_office_session_v06';
+const BACKUP_FORMAT='pickpack1291-browser-backup';
+const BACKUP_SCHEMA=1;
 function storageGet(key){try{return localStorage.getItem(key)}catch{return null}}
 function storageSet(key,val){try{localStorage.setItem(key,val);return true}catch{return false}}
 function storageRemove(key){try{localStorage.removeItem(key)}catch{}}
@@ -491,7 +493,7 @@ function notificationItems(){return [
 ].filter(x=>x.count>0)}
 function prefsModal(){
  const accentRow=state.theme==='light'?`<div class="setting-row accent-setting"><div><strong>Màu chủ đạo</strong><small>Chọn một trong bảy màu cho giao diện sáng</small></div><div class="accent-swatches" role="group" aria-label="Màu giao diện sáng">${ACCENTS.map(([key,label])=>`<button type="button" data-accent-choice="${key}" class="accent-swatch accent-${key} ${state.accent===key?'active':''}" aria-label="${label}" title="${label}" aria-pressed="${state.accent===key}">${state.accent===key?'✓':''}</button>`).join('')}</div></div>`:'';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Chế độ Tự động: sáng 06:00–17:59, tối 18:00–05:59 (giờ Việt Nam)</small></div><div class="theme-steps"><button class="${state.themeMode==='auto'?'active':''}" data-theme-choice="auto" aria-pressed="${state.themeMode==='auto'}">${icon('clock',15)} Tự động</button><button class="${state.themeMode==='light'?'active':''}" data-theme-choice="light" aria-pressed="${state.themeMode==='light'}">${icon('sun',15)} Sáng</button><button class="${state.themeMode==='dark'?'active':''}" data-theme-choice="dark" aria-pressed="${state.themeMode==='dark'}">${icon('moon',15)} Tối</button></div></div>${accentRow}<div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn mới</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Chế độ Tự động: sáng 06:00–17:59, tối 18:00–05:59 (giờ Việt Nam)</small></div><div class="theme-steps"><button class="${state.themeMode==='auto'?'active':''}" data-theme-choice="auto" aria-pressed="${state.themeMode==='auto'}">${icon('clock',15)} Tự động</button><button class="${state.themeMode==='light'?'active':''}" data-theme-choice="light" aria-pressed="${state.themeMode==='light'}">${icon('sun',15)} Sáng</button><button class="${state.themeMode==='dark'?'active':''}" data-theme-choice="dark" aria-pressed="${state.themeMode==='dark'}">${icon('moon',15)} Tối</button></div></div>${accentRow}<div class="setting-row backup-setting"><div><strong>Dữ liệu kiểm thử</strong><small>Lưu toàn bộ dữ liệu và ảnh gốc vào một file JSON trên máy. Chỉ nhập trên đúng phiên bản Web v${WEB_VERSION}.</small></div><div class="backup-actions"><button type="button" class="btn ghost" data-action="backup-export">${icon('download',15)} Xuất dữ liệu</button><button type="button" class="btn ghost" data-action="backup-import">${icon('plus',15)} Nhập dữ liệu</button><input id="backup-import-file" type="file" accept=".json,application/json" hidden></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn mới</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
 }
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
 
@@ -618,6 +620,108 @@ function makeExcel(rows,fields,title){
  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF26476B"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs></styleSheet>`;
  return zipStored([['[Content_Types].xml',types],['_rels/.rels',rootRels],['xl/workbook.xml',workbook],['xl/_rels/workbook.xml.rels',workbookRels],['xl/worksheets/sheet1.xml',sheet],['xl/styles.xml',styles]]);
 }
+
+function readAllPortraits(){
+ return portraitDB().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction('portraits','readonly'),bucket=tx.objectStore('portraits');
+  const keys=bucket.getAllKeys(),values=bucket.getAll();
+  tx.oncomplete=()=>{db.close();resolve(keys.result.map((id,i)=>[id,values.result[i]]))};
+  tx.onerror=()=>{db.close();reject(tx.error||new Error('Không thể đọc kho ảnh cục bộ'))};
+ }));
+}
+function replaceAllPortraits(entries){
+ return portraitDB().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction('portraits','readwrite'),bucket=tx.objectStore('portraits');
+  bucket.clear();for(const [id,blob] of entries)bucket.put(blob,id);
+  tx.oncomplete=()=>{db.close();resolve()};
+  tx.onerror=()=>{db.close();reject(tx.error||new Error('Không thể thay thế ảnh cục bộ'))};
+  tx.onabort=()=>{db.close();reject(tx.error||new Error('Thao tác lưu ảnh bị hủy'))};
+ }));
+}
+function portraitToDataURL(blob){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onload=()=>resolve(reader.result);
+  reader.onerror=()=>reject(reader.error||new Error('Không thể xuất ảnh'));
+  reader.readAsDataURL(blob);
+ });
+}
+function decodeBackupPortrait(item){
+ if(!item||typeof item.id!=='string'||typeof item.data!=='string')throw Error('Dữ liệu ảnh không hợp lệ');
+ const match=/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(item.data);
+ if(!match)throw Error('Định dạng ảnh trong file không hợp lệ');
+ const raw=atob(match[2]);
+ if(raw.length>5*1024*1024)throw Error('Ảnh gốc vượt 5 MB');
+ const bytes=new Uint8Array(raw.length);
+ for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+ return [item.id,new Blob([bytes],{type:'image/'+match[1]})];
+}
+function validateOfflineBackup(snapshot){
+ if(!snapshot||snapshot.format!==BACKUP_FORMAT||snapshot.schema!==BACKUP_SCHEMA)throw Error('File không phải bản sao lưu PickPack hợp lệ');
+ if(snapshot.webVersion!==WEB_VERSION)throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở đúng Web v'+WEB_VERSION+' để nhập');
+ const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits;
+ if(!records||!catalogData||!Array.isArray(pictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
+ for(const key of Object.keys(store)){
+  const list=records[key];
+  if(!Array.isArray(list)||list.length>=500||list.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw Error('Dữ liệu '+key+' không hợp lệ');
+ }
+ const names=[...CATEGORY_FIELDS,...Object.values(EXTRA_CATALOGS).map(v=>[v.key,v.label]),...RESOURCE_FIELDS].map(([key])=>key);
+ for(const key of names){
+  const list=catalogData[key];
+  if(!Array.isArray(list)||list.length>=200||list.some(v=>typeof v!=='string'||v.length>80))throw Error('Danh mục '+key+' không hợp lệ');
+ }
+ if(pictures.length>500)throw Error('Số lượng ảnh quá giới hạn');
+ const ids=new Set(records.people.map(p=>p.id)),seen=new Set(),photos=[];
+ for(const item of pictures){
+  if(!ids.has(item?.id)||seen.has(item.id))throw Error('Ảnh nhân sự trùng hoặc không tồn tại trong danh sách');
+  seen.add(item.id);photos.push(decodeBackupPortrait(item));
+ }
+ const prefs=data.preferences||{};
+ if(!['auto','light','dark'].includes(prefs.theme)||!ACCENTS.some(([key])=>key===prefs.accent)||!Number.isInteger(prefs.fontPct)||prefs.fontPct<90||prefs.fontPct>120)throw Error('Thiết lập giao diện không hợp lệ');
+ return {records,catalogData,photos,prefs};
+}
+async function exportOfflineBackup(){
+ try{
+  const photos=await readAllPortraits(),pictures=[];
+  for(const [id,blob] of photos){if(blob instanceof Blob)pictures.push({id,data:await portraitToDataURL(blob)})}
+  const snapshot={format:BACKUP_FORMAT,schema:BACKUP_SCHEMA,webVersion:WEB_VERSION,exportedAt:new Date().toISOString(),
+   data:{records:store,catalogs,portraits:pictures,preferences:{theme:state.themeMode,accent:state.accent,fontPct:state.fontPct}}};
+  const file=new Blob([JSON.stringify(snapshot)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(file),anchor=document.createElement('a');
+  anchor.href=url;anchor.download='pickpack-1291-v'+WEB_VERSION+'-'+vnTodayISO()+'.json';
+  document.body.appendChild(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  state.notice='Đã xuất dữ liệu '+store.people.length+' nhân sự và '+pictures.length+' ảnh gốc';render();
+ }catch(err){state.notice='Xuất dữ liệu thất bại: '+(err?.message||'Không thể tạo file');render()}
+}
+async function commitOfflineBackup(checked){
+ const keys=[STORAGE_KEY,CATALOG_KEY,THEME_KEY,ACCENT_KEY,FONT_KEY],previous=keys.map(key=>localStorage.getItem(key));
+ let previousPhotos=null;
+ try{
+  previousPhotos=await readAllPortraits();
+  const next=[JSON.stringify(checked.records),JSON.stringify(checked.catalogData),checked.prefs.theme,checked.prefs.accent,String(checked.prefs.fontPct)];
+  await replaceAllPortraits(checked.photos);
+  for(let i=0;i<keys.length;i++)localStorage.setItem(keys[i],next[i]);
+  for(const key of Object.keys(store))store[key]=checked.records[key];
+  for(const key of Object.keys(catalogs))catalogs[key]=checked.catalogData[key];
+  state.themeMode=checked.prefs.theme;state.theme=resolveTheme(state.themeMode);state.accent=checked.prefs.accent;state.fontPct=checked.prefs.fontPct;
+  state.view='dashboard';state.drawer='';state.search='';state.filter='all';state.selected.clear();
+  releasePortraitUrl();safeHistory('replaceState',href('dashboard'));render();
+  state.notice='Đã nhập dữ liệu thành công: '+store.people.length+' nhân sự và '+checked.photos.length+' ảnh gốc';refreshToasts();
+ }catch(err){
+  let rollbackError='';
+  for(let i=0;i<keys.length;i++)try{if(previous[i]===null)localStorage.removeItem(keys[i]);else localStorage.setItem(keys[i],previous[i])}catch{rollbackError=' Không khôi phục được toàn bộ dữ liệu cũ.'}
+  if(previousPhotos)try{await replaceAllPortraits(previousPhotos)}catch{rollbackError=' Không khôi phục được toàn bộ ảnh cũ.'}
+  state.notice='Nhập dữ liệu thất bại: '+(err?.message||'Lỗi lưu cục bộ')+'.'+rollbackError;refreshToasts();
+ }
+}
+async function importOfflineBackup(file){
+ if(!file)return;
+ try{
+  const snapshot=JSON.parse(await file.text()),checked=validateOfflineBackup(snapshot);
+  confirmDialog('Nhập dữ liệu kiểm thử','Gói Web v'+snapshot.webVersion+' gồm '+checked.records.people.length+' nhân sự và '+checked.photos.length+' ảnh gốc. Nhập sẽ THAY THẾ toàn bộ dữ liệu và danh mục của trình duyệt này. Hãy xuất bản sao lưu hiện tại trước khi tiếp tục.',()=>{void commitOfflineBackup(checked)});
+ }catch(err){state.notice='Không thể nhập file: '+(err?.message||'File không hợp lệ');refreshToasts()}
+}
+
 function exportExcel(){
  if(state.view==='dashboard')return;
  const rows=filtered(),fields=columns[state.view],blob=makeExcel(rows,fields,PAGES[state.view].title);
@@ -670,6 +774,8 @@ root.addEventListener('click',e=>{
  case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
  case'bulk-delete':deleteIds([...state.selected]);return;
  
+ case'backup-export':void exportOfflineBackup();return;
+ case'backup-import':root.querySelector('#backup-import-file')?.click();return;
  case'export':exportExcel();return;
  }
  render();
@@ -715,6 +821,9 @@ root.addEventListener('input',function(e){
 });
 root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='shift-code'&&state.scanMode==='enter'){const person=store.people.find(p=>p.id===e.target.value.trim());if(person&&workRole(person.position)&&!state.scanUser){e.preventDefault();root.querySelector('#scan-user-choice')?.focus();return}}if(e.target.id==='pda-staff-code'&&e.key==='Enter'){e.preventDefault();root.querySelector('#pda-device-code')?.focus()}});
 root.addEventListener('change',async function(e){
+ if(e.target.id==='backup-import-file'){
+  const file=e.target.files?.[0];e.target.value='';if(file)await importOfflineBackup(file);return;
+ }
  if(e.target.id==='staff-photo'){
   const file=e.target.files?.[0];if(!file)return;
   try{
