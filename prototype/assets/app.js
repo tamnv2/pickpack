@@ -800,6 +800,110 @@ async function importOfflineBackup(file){
  }catch(err){state.notice='Không thể nhập file: '+(err?.message||'File không hợp lệ');refreshToasts()}
 }
 
+
+const IMPORT_FIELDS=PERSON_EDITOR.map(([key,label])=>[key,label]);
+function downloadPersonnelTemplate(){
+ const blob=makeExcel([],IMPORT_FIELDS,'Mau nhan su',true),url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='pickpack-mau-nhan-su-v'+WEB_VERSION+'.xlsx';
+ document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ state.notice='Mẫu Excel đã tải: điền từ dòng 2; giữ tiêu đề và định dạng Text của mã nhân viên, điện thoại';refreshToasts();
+}
+async function readXlsxParts(file){
+ if(file.size>8*1024*1024)throw Error('File Excel vượt 8 MB');
+ const data=new Uint8Array(await file.arrayBuffer()),view=new DataView(data.buffer),xml={};
+ let tail=-1;
+ for(let i=data.length-22;i>=Math.max(0,data.length-66000);i--)if(view.getUint32(i,true)===0x06054b50){tail=i;break}
+ if(tail<0)throw Error('File không phải Excel XLSX');
+ const count=view.getUint16(tail+10,true),offset=view.getUint32(tail+16,true),decoder=new TextDecoder();
+ if(count>64||offset>=data.length)throw Error('Cấu trúc file Excel không hợp lệ');
+ let cursor=offset;
+ for(let i=0;i<count;i++){
+  if(cursor+46>data.length||view.getUint32(cursor,true)!==0x02014b50)throw Error('File ZIP của Excel bị hỏng');
+  const flag=view.getUint16(cursor+8,true),method=view.getUint16(cursor+10,true),size=view.getUint32(cursor+20,true);
+  const n=view.getUint16(cursor+28,true),e=view.getUint16(cursor+30,true),c=view.getUint16(cursor+32,true),start=view.getUint32(cursor+42,true);
+  if(cursor+46+n+e+c>data.length||flag&1)throw Error('Excel bị hỏng hoặc đã mã hóa');
+  const filename=decoder.decode(data.subarray(cursor+46,cursor+46+n));cursor+=46+n+e+c;
+  if(!['xl/worksheets/sheet1.xml','xl/sharedStrings.xml'].includes(filename))continue;
+  if(start+30>data.length||view.getUint32(start,true)!==0x04034b50)throw Error('Nội dung ZIP không hợp lệ');
+  const begin=start+30+view.getUint16(start+26,true)+view.getUint16(start+28,true);
+  if(size>6*1024*1024||begin+size>data.length)throw Error('Bảng Excel quá lớn');
+  let bytes=data.slice(begin,begin+size);
+  if(method===8){
+   if(typeof DecompressionStream==='undefined')throw Error('Trình duyệt không hỗ trợ Excel nén');
+   bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  }else if(method!==0)throw Error('Excel dùng định dạng nén chưa hỗ trợ');
+  if(bytes.length>7*1024*1024)throw Error('Dữ liệu Excel quá lớn');
+  xml[filename]=decoder.decode(bytes);
+ }
+ if(!xml['xl/worksheets/sheet1.xml'])throw Error('Không tìm thấy sheet đầu tiên. Hãy dùng file mẫu tải từ Web');
+ return xml;
+}
+function parseExcelXml(source){
+ const doc=new DOMParser().parseFromString(source,'application/xml');
+ if(doc.querySelector('parsererror'))throw Error('File XML trong Excel không hợp lệ');
+ return doc;
+}
+function parseExcelDate(raw){
+ const text=String(raw||'').trim();if(!text)return vnTodayISO().split('-').reverse().join('/');
+ let y,m,d;
+ if(/^[0-9]{5}(\.0+)?$/.test(text)){const day=new Date(Date.UTC(1899,11,30)+Number(text)*86400000);y=day.getUTCFullYear();m=day.getUTCMonth()+1;d=day.getUTCDate()}
+ else if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(text)){[y,m,d]=text.split('-').map(Number)}
+ else if(/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(text)){[d,m,y]=text.split('/').map(Number)}
+ else throw Error('Ngày nhận việc không hợp lệ: '+text);
+ const date=new Date(Date.UTC(y,m-1,d));
+ if(date.getUTCFullYear()!==y||date.getUTCMonth()+1!==m||date.getUTCDate()!==d)throw Error('Ngày nhận việc không hợp lệ: '+text);
+ return String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
+}
+async function parsePersonnelExcel(file){
+ const files=await readXlsxParts(file),doc=parseExcelXml(files['xl/worksheets/sheet1.xml']);
+ const strings=files['xl/sharedStrings.xml']?Array.from(parseExcelXml(files['xl/sharedStrings.xml']).getElementsByTagNameNS('*','si')).map(si=>Array.from(si.getElementsByTagNameNS('*','t')).map(t=>t.textContent).join('')):[];
+ const rows=[];
+ for(const row of Array.from(doc.getElementsByTagNameNS('*','row'))){
+  const cells=[];
+  for(const cell of Array.from(row.getElementsByTagNameNS('*','c'))){
+   const match=/^[A-Z]+/.exec(cell.getAttribute('r')||'');if(!match)continue;
+   let pos=0;for(const c of match[0])pos=pos*26+c.charCodeAt(0)-64;pos--;
+   if(pos<0||pos>60)continue;
+   if(cell.getElementsByTagNameNS('*','f').length)throw Error('Không nhập công thức trong cột nhân sự');
+   const type=cell.getAttribute('t'),raw=cell.getElementsByTagNameNS('*','v')[0]?.textContent||'';
+   const val=type==='inlineStr'?Array.from(cell.getElementsByTagNameNS('*','t')).map(t=>t.textContent).join(''):type==='s'?strings[Number(raw)]??'':raw;
+   cells[pos]=String(val??'').trim();
+  }
+  if(cells.length)rows.push({line:Number(row.getAttribute('r')||rows.length+1),cells});
+ }
+ if(!rows.length||IMPORT_FIELDS.some(([,label],i)=>rows[0].cells[i]!==label))throw Error('Tiêu đề Excel không đúng mẫu đã tải từ Web');
+ rows.shift();const output=[],seen=new Set();
+ for(const {line,cells} of rows){
+  if(cells.every(x=>!x))continue;
+  if(cells.some((x,i)=>i>=IMPORT_FIELDS.length&&x))throw Error('Dòng '+line+': Có dữ liệu ngoài cột mẫu');
+  const record=Object.fromEntries(IMPORT_FIELDS.map(([key],i)=>[key,String(cells[i]||'').trim()]));
+  if(!/^[0-9]{2,30}$/.test(record.id))throw Error('Dòng '+line+': Mã nhân viên không hợp lệ hoặc mất số 0 đầu');
+  if(!/^[\p{L}\p{M} ]{2,120}$/u.test(record.name))throw Error('Dòng '+line+': Tên nhân viên chỉ được chứa chữ và dấu cách');
+  if(!/^[0-9]*$/.test(record.phone))throw Error('Dòng '+line+': Số điện thoại chỉ được chứa số');
+  if(seen.has(record.id)||store.people.some(p=>p.id===record.id))throw Error('Dòng '+line+': Mã nhân viên '+record.id+' đã tồn tại. Chưa nhập dòng nào');
+  seen.add(record.id);record.startDate=parseExcelDate(record.startDate);record.initial=record.name.split(' ').at(-1).slice(0,2);
+  record.photo='';record.updatedBy='Quản trị viên';record.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});
+  output.push(record);if(output.length+store.people.length>=500)throw Error('Tối đa 499 nhân sự cho bản kiểm thử');
+ }
+ if(!output.length)throw Error('File chưa có dữ liệu. Hãy điền từ dòng 2');
+ return output;
+}
+async function importPersonnelExcel(file){
+ try{
+  const rows=await parsePersonnelExcel(file),toAdd={};
+  for(const [key] of CATEGORY_FIELDS)toAdd[key]=[...new Set(rows.map(r=>r[key]).filter(x=>x&&!catalogs[key].includes(x)))];
+  const newCategories=Object.values(toAdd).reduce((total,x)=>total+x.length,0);
+  confirmDialog('Nhập nhân sự từ Excel','Thêm '+rows.length+' nhân sự và '+newCategories+' mục danh mục. Không ghi đè bản ghi có sẵn. Ảnh nhân sự bổ sung bằng chọn ảnh hoặc Ctrl + V. Tiếp tục?',()=>{
+   const old=store.people.slice(),previous=Object.fromEntries(CATEGORY_FIELDS.map(([key])=>[key,catalogs[key].slice()]));
+   try{
+    for(const [key,values] of Object.entries(toAdd))catalogs[key].push(...values);
+    store.people.push(...rows);persist();persistCatalogs();
+    state.notice='Đã thêm '+rows.length+' nhân sự từ Excel';render();
+   }catch(err){store.people=old;for(const key of Object.keys(previous))catalogs[key]=previous[key];state.notice='Lỗi nhập Excel: '+err.message;render()}
+  });
+ }catch(err){state.notice='Không thể nhập Excel: '+(err?.message||'File không hợp lệ');refreshToasts()}
+}
+
 function exportExcel(){
  if(state.view==='dashboard')return;
  const rows=filtered(),fields=columns[state.view],blob=makeExcel(rows,fields,PAGES[state.view].title);
