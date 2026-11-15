@@ -641,7 +641,7 @@ root.addEventListener('submit',function(e){
  if(e.target.id==='labor-scan-form'){e.preventDefault();const values=new FormData(e.target);scanLabor(values.get('employeeCode'),values.get('work'));return}
  if(e.target.id==='pda-scan-form'){e.preventDefault();const fd=new FormData(e.target);scanPda(fd.get('employeeCode'),fd.get('deviceCode'));return}
  if(e.target.id==='confirm-form'){e.preventDefault();finishConfirmation(e.target);return}
- if(e.target.id==='record-form'){e.preventDefault();saveForm(e.target)}
+ if(e.target.getAttribute('id')==='record-form'){e.preventDefault();saveForm(e.target)}
  if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
 });
 root.addEventListener('click',e=>{
