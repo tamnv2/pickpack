@@ -19,7 +19,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.2'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.3'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==8
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.2'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.3'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -102,6 +102,9 @@ with sync_playwright() as p:
  app.locator('button[data-action="settings"]').click()
  assert app.get_by_text('Cỡ chữ',exact=True).count()==1
  assert app.locator('.font-steps output').inner_text()=='100%'
+ assert app.locator('[data-action="backup-export"]').is_visible()
+ assert app.locator('[data-action="backup-import"]').is_visible()
+ assert app.locator('#backup-import-file[type="file"]').count()==1
  app.locator('button[data-font="5"]').click()
  assert app.locator('.font-steps output').inner_text()=='105%'
  app.locator('button[data-theme-choice="light"]').click()
@@ -444,5 +447,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.9.2 VN today defaults, Unicode names/numeric fields and safe save, shift/resources/portraits/XLSX/mobile')
+ print('PASS: v0.9.3 offline backup controls, VN date/Unicode names/numeric fields, existing shifts/portraits/XLSX/mobile')
  browser.close()
