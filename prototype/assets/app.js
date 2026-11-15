@@ -183,7 +183,7 @@ function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">
 function filtered(){const set=store[state.view]||[];let rows=set.filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);return rows}
 function controls(){
  const statuses=['people','labor'].includes(state.view)?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
- return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${['people','labor','minutes','assets'].includes(state.view)?`<a class="btn ghost tiny" data-nav="categories" data-catalog-scope="${state.view}" href="${href('categories').replace(/&scope=[^&]*/, '&scope='+state.view)}">${icon('list',15)} Quản lý danh mục</a>`:''}${['people','minutes','assets'].includes(state.view)?`<button class="btn primary tiny" data-action="add">${icon('plus',15)} ${state.view==='people'?'Thêm nhân sự':state.view==='minutes'?'Tạo biên bản':'Thêm CCDC'}</button>`:''}${state.view==='shifts'?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}</div></div>`;
+ return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${state.view==='people'?`<button type="button" class="btn ghost tiny" data-action="excel-template">${icon('download',15)} Tải mẫu Excel</button><button type="button" class="btn ghost tiny" data-action="excel-import">${icon('plus',15)} Nhập Excel</button><input id="staff-excel-import" hidden type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">`:''}${['people','labor','minutes','assets'].includes(state.view)?`<a class="btn ghost tiny" data-nav="categories" data-catalog-scope="${state.view}" href="${href('categories').replace(/&scope=[^&]*/, '&scope='+state.view)}">${icon('list',15)} Quản lý danh mục</a>`:''}${['people','minutes','assets'].includes(state.view)?`<button class="btn primary tiny" data-action="add">${icon('plus',15)} ${state.view==='people'?'Thêm nhân sự':state.view==='minutes'?'Tạo biên bản':'Thêm CCDC'}</button>`:''}${state.view==='shifts'?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}</div></div>`;
 }
 function recordActions(r){
  if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button></span>`;
@@ -963,6 +963,8 @@ root.addEventListener('click',e=>{
  
  case'device-add':state.deviceEdit='';state.modal='device';break;
  case'backup-reset':confirmDialog('Xóa toàn bộ dữ liệu kiểm thử','Thao tác này sẽ XÓA TẤT CẢ dữ liệu nghiệp vụ, danh mục, user, PDA và ảnh đã lưu trên trình duyệt này (gồm dữ liệu Web v0.9.3). Không thể hoàn tác. Hãy xuất file sao lưu trước khi tiếp tục.',()=>{void resetOfflineTestData()});return;
+ case'excel-template':downloadPersonnelTemplate();return;
+ case'excel-import':root.querySelector('#staff-excel-import')?.click();return;
  case'backup-export':void exportOfflineBackup();return;
  case'backup-import':root.querySelector('#backup-import-file')?.click();return;
  case'export':exportExcel();return;
@@ -1020,6 +1022,7 @@ root.addEventListener('paste',async function(e){
  }catch(err){state.notice=err?.message||'Không thể dán ảnh';refreshToasts()}
 });
 root.addEventListener('change',async function(e){
+ if(e.target.id==='staff-excel-import'){const file=e.target.files?.[0];e.target.value='';if(file)await importPersonnelExcel(file);return}
  if(e.target.id==='backup-import-file'){
   const file=e.target.files?.[0];e.target.value='';if(file)await importOfflineBackup(file);return;
  }
