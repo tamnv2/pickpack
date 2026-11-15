@@ -287,7 +287,7 @@ function scanAssignment(person){
  if(!role)return '<p class="scan-no-user">Vị trí này không cần phát User Pick/Pack.</p>';
  const items=role==='Pick'?catalogs.pickUsers:catalogs.packUsers;
  const option=(item)=>`<option value="${escape(item)}" ${state.scanUser===item?'selected':''}>${escape(item)}</option>`;
- return `<div class="scan-allocation-row"><label>User ${role} <select id="scan-user-choice" required><option value="">— Chọn user làm việc —</option>${items.map(option).join('')}</select></label>${role==='Pack'?`<label>Bàn Pack (tùy chọn)<select id="scan-desk-choice"><option value="">— Chưa chọn bàn —</option>${catalogs.packDesks.map(item=>`<option value="${escape(item)}" ${state.scanDesk===item?'selected':''}>${escape(item)}</option>`).join('')}</select></label>`:''}</div>`;
+ return `<div class="scan-allocation-row"><label>User ${role} <select id="scan-user-choice" aria-required="true"><option value="">— Chọn user làm việc —</option>${items.map(option).join('')}</select></label>${role==='Pack'?`<label>Bàn Pack (tùy chọn)<select id="scan-desk-choice"><option value="">— Chưa chọn bàn —</option>${catalogs.packDesks.map(item=>`<option value="${escape(item)}" ${state.scanDesk===item?'selected':''}>${escape(item)}</option>`).join('')}</select></label>`:''}</div>`;
 }
 function shiftScanPanel(){
  const result=state.scanOutcome,person=result?.code?store.people.find(p=>p.id===result.code):null,mode=state.scanMode;
