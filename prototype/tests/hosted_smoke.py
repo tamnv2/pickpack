@@ -4,13 +4,15 @@ No real data and no external host. This validates navigation that inline-DOM smo
 """
 from contextlib import closing
 import base64
+from io import BytesIO
+from xml.sax.saxutils import escape as xml_escape
 from datetime import datetime, timezone
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import json
 from threading import Thread
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from openpyxl import load_workbook
 from playwright.sync_api import sync_playwright
 
@@ -84,6 +86,40 @@ try:
         blank.locator('#pda-device-code').fill('PDA-11')
         blank.locator('#pda-device-code').press('Enter')
         assert 'Đã trả PDA-11' in blank.locator('.scan-outcome').inner_text()
+        # Personnel Excel template + compressed Excel import, all offline.
+        blank.locator('a.nav-main[href*="view=people"]').click()
+        assert blank.locator('[data-action="excel-template"]').count()==1
+        with blank.expect_download() as template_download:
+            blank.locator('[data-action="excel-template"]').click()
+        template_bytes=Path(template_download.value.path()).read_bytes()
+        with ZipFile(BytesIO(template_bytes)) as zin:
+            assert zin.testzip() is None
+            style_xml=zin.read('xl/styles.xml').decode()
+            assert 'numFmtId="49"' in style_xml  # ID and phone are text.
+            original=zin.read('xl/worksheets/sheet1.xml').decode()
+            assert 'Mã nhân viên' in original and 'Ngày nhận việc' in original
+        def filled_template(employee_id):
+            values=[employee_id,'Trần Thị Bảo','0912345600','Pack thường','Nhà cung cấp B','Pick Pack','1291','HY1','17/11/2026','Kiểm thử']
+            row='<row r="2">'+''.join('<c r="'+chr(65+i)+'2" t="inlineStr"><is><t>'+xml_escape(val)+'</t></is></c>' for i,val in enumerate(values))+'</row>'
+            content=BytesIO()
+            with ZipFile(BytesIO(template_bytes)) as source,ZipFile(content,'w',compression=ZIP_DEFLATED) as target_zip:
+                for name in source.namelist():
+                    raw=source.read(name)
+                    if name=='xl/worksheets/sheet1.xml':raw=original.replace('</sheetData>',row+'</sheetData>').encode()
+                    target_zip.writestr(name,raw)
+            return content.getvalue()
+        assert blank.locator('.records-label b').inner_text()=='1'
+        blank.locator('#staff-excel-import').set_input_files({'name':'bad-staff.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':filled_template('98765432')})
+        assert blank.locator('#confirm-form').count()==0
+        assert 'đã tồn tại' in blank.locator('.toast-stack .toast').last.inner_text()
+        assert blank.locator('.records-label b').inner_text()=='1'
+        blank.locator('#staff-excel-import').set_input_files({'name':'good-staff.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':filled_template('00129999')})
+        assert 'Thêm 1 nhân sự' in blank.locator('#confirm-message').inner_text()
+        blank.locator('#confirm-password').fill('admin')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        assert blank.locator('.records-label b').inner_text()=='2'
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.some(x=>x.id==='00129999'&&x.phone==='0912345600')") is True
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position.includes('Pack thường')") is True
         blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
         # Regression fixtures live in tests/, never in the public app's initialization.
