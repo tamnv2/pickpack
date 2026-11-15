@@ -78,7 +78,7 @@ const FONT_MIGRATED_KEY='pickpack1291_office_font_boost_v08';
 const ACCENTS=[['red','Đỏ'],['orange','Cam'],['yellow','Vàng'],['green','Lục'],['blue','Lam'],['indigo','Chàm'],['violet','Tím']];
 const SESSION_KEY='pickpack1291_office_session_v06';
 const BACKUP_FORMAT='pickpack1291-browser-backup';
-const BACKUP_SCHEMA=1;
+const BACKUP_SCHEMA=2;
 function storageGet(key){try{return localStorage.getItem(key)}catch{return null}}
 function storageSet(key,val){try{localStorage.setItem(key,val);return true}catch{return false}}
 function storageRemove(key){try{localStorage.removeItem(key)}catch{}}
@@ -699,8 +699,8 @@ function decodeBackupPortrait(item){
 function validateOfflineBackup(snapshot){
  if(!snapshot||snapshot.format!==BACKUP_FORMAT||snapshot.schema!==BACKUP_SCHEMA)throw Error('File không phải bản sao lưu PickPack hợp lệ');
  if(snapshot.webVersion!==WEB_VERSION)throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở đúng Web v'+WEB_VERSION+' để nhập');
- const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits;
- if(!records||!catalogData||!Array.isArray(pictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
+ const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits,minutePictures=data.minuteImages;
+ if(!records||!catalogData||!Array.isArray(pictures)||!Array.isArray(minutePictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
  for(const key of Object.keys(store)){
   const list=records[key];
   if(!Array.isArray(list)||list.length>=500||list.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw Error('Dữ liệu '+key+' không hợp lệ');
@@ -716,16 +716,24 @@ function validateOfflineBackup(snapshot){
   if(!ids.has(item?.id)||seen.has(item.id))throw Error('Ảnh nhân sự trùng hoặc không tồn tại trong danh sách');
   seen.add(item.id);photos.push(decodeBackupPortrait(item));
  }
+ const allowed=new Set(records.minutes.flatMap(r=>Array.isArray(r.imageIds)?r.imageIds:[]));
+ if(allowed.size>2000||minutePictures.length!==allowed.size)throw Error('Số lượng ảnh biên bản không khớp');
+ const minuteImages=[],minuteSeen=new Set();
+ for(const item of minutePictures){
+  if(!allowed.has(item?.id)||minuteSeen.has(item.id))throw Error('Ảnh biên bản trùng hoặc không thuộc hồ sơ');
+  minuteSeen.add(item.id);minuteImages.push(decodeBackupPortrait(item));
+ }
  const prefs=data.preferences||{};
  if(!['auto','light','dark'].includes(prefs.theme)||!ACCENTS.some(([key])=>key===prefs.accent)||!Number.isInteger(prefs.fontPct)||prefs.fontPct<90||prefs.fontPct>120)throw Error('Thiết lập giao diện không hợp lệ');
- return {records,catalogData,photos,prefs};
+ return {records,catalogData,photos,minuteImages,prefs};
 }
 async function exportOfflineBackup(){
  try{
-  const photos=await readAllPortraits(),pictures=[];
+  const photos=await readAllPortraits(),minutes=await minuteReadAll(),pictures=[],minutePictures=[];
   for(const [id,blob] of photos){if(blob instanceof Blob)pictures.push({id,data:await portraitToDataURL(blob)})}
+  const used=new Set(store.minutes.flatMap(r=>r.imageIds||[]));for(const [id,blob] of minutes)if(used.has(id)&&blob instanceof Blob)minutePictures.push({id,data:await portraitToDataURL(blob)});
   const snapshot={format:BACKUP_FORMAT,schema:BACKUP_SCHEMA,webVersion:WEB_VERSION,exportedAt:new Date().toISOString(),
-   data:{records:store,catalogs,portraits:pictures,preferences:{theme:state.themeMode,accent:state.accent,fontPct:state.fontPct}}};
+   data:{records:store,catalogs,portraits:pictures,minuteImages:minutePictures,preferences:{theme:state.themeMode,accent:state.accent,fontPct:state.fontPct}}};
   const file=new Blob([JSON.stringify(snapshot)],{type:'application/json;charset=utf-8'});
   const url=URL.createObjectURL(file),anchor=document.createElement('a');
   anchor.href=url;anchor.download='pickpack-1291-v'+WEB_VERSION+'-'+vnTodayISO()+'.json';
@@ -735,11 +743,11 @@ async function exportOfflineBackup(){
 }
 async function commitOfflineBackup(checked){
  const keys=[STORAGE_KEY,CATALOG_KEY,THEME_KEY,ACCENT_KEY,FONT_KEY],previous=keys.map(key=>localStorage.getItem(key));
- let previousPhotos=null;
+ let previousPhotos=null,previousMinutes=null;
  try{
-  previousPhotos=await readAllPortraits();
+  previousPhotos=await readAllPortraits();previousMinutes=await minuteReadAll();
   const next=[JSON.stringify(checked.records),JSON.stringify(checked.catalogData),checked.prefs.theme,checked.prefs.accent,String(checked.prefs.fontPct)];
-  await replaceAllPortraits(checked.photos);
+  await replaceAllPortraits(checked.photos);await minuteReplace(checked.minuteImages);
   for(let i=0;i<keys.length;i++)localStorage.setItem(keys[i],next[i]);
   for(const key of Object.keys(store))store[key]=checked.records[key];
   for(const key of Object.keys(catalogs))catalogs[key]=checked.catalogData[key];
@@ -751,15 +759,16 @@ async function commitOfflineBackup(checked){
   let rollbackError='';
   for(let i=0;i<keys.length;i++)try{if(previous[i]===null)localStorage.removeItem(keys[i]);else localStorage.setItem(keys[i],previous[i])}catch{rollbackError=' Không khôi phục được toàn bộ dữ liệu cũ.'}
   if(previousPhotos)try{await replaceAllPortraits(previousPhotos)}catch{rollbackError=' Không khôi phục được toàn bộ ảnh cũ.'}
+  if(previousMinutes)try{await minuteReplace(previousMinutes)}catch{rollbackError=' Không khôi phục được ảnh biên bản cũ.'}
   state.notice='Nhập dữ liệu thất bại: '+(err?.message||'Lỗi lưu cục bộ')+'.'+rollbackError;refreshToasts();
  }
 }
 async function resetOfflineTestData(){
  const preserved=[STORAGE_KEY,CATALOG_KEY,LEGACY_STORAGE_KEY,LEGACY_CATALOG_KEY].map(key=>[key,localStorage.getItem(key)]);
- let currentPhotos=null;
+ let currentPhotos=null,currentMinutes=null;
  try{
-  currentPhotos=await readAllPortraits();
-  await replaceAllPortraits([]);
+  currentPhotos=await readAllPortraits();currentMinutes=await minuteReadAll();
+  await replaceAllPortraits([]);await minuteReplace([]);
   // Legacy v0.9.3 original photos are isolated from the new version by database name.
   await new Promise((resolve,reject)=>{
    const request=indexedDB.deleteDatabase('pickpack1291_demo_portraits_v1');
@@ -779,6 +788,7 @@ async function resetOfflineTestData(){
  }catch(err){
   for(const [key,value] of preserved)try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value)}catch{}
   if(currentPhotos)try{await replaceAllPortraits(currentPhotos)}catch{}
+  if(currentMinutes)try{await minuteReplace(currentMinutes)}catch{}
   state.notice='Xóa dữ liệu chưa hoàn tất: '+(err?.message||'Lỗi lưu trữ trên máy')+'. Không tiếp tục sử dụng trước khi kiểm tra lại.';refreshToasts();
  }
 }
