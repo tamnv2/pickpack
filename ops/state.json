@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-15",
-  "phase": "OFFICE_UI_V093_PORTABLE_BROWSER_BACKUP_VERIFIED",
-  "application_code": "WEB_OFFICE_STATIC_V093_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43722860436_SOURCE_ba2058aea83da60378b6d6df38fcd7abc0c6d21a",
+  "phase": "OFFICE_UI_V094_BLANK_MANUAL_DATA_PREVIEW_VERIFIED",
+  "application_code": "WEB_OFFICE_STATIC_V094_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43730107051_SOURCE_e2cd2de93b4300868b7e33fa6c8c494587dc9622",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V093_OWNER_UI_REVIEW_PENDING",
+  "owner_business_acceptance": "V094_OWNER_UI_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner visual acceptance of v0.9.3 full browser-local dataset import/export",
-    "Real identity/RBAC and private employee storage remain unverified/blocked; no external database required for prototype",
-    "APK, Production, provider work and RELEASE_PASS/FIELD_PASS/OWNER_PASS not authorized"
+    "Owner visual and business review of empty Web v0.9.4 and manual data flow",
+    "Public CDN must use synthetic/anonymized data only; private real-staff data backend remains unapproved and blocked",
+    "Real identity/RBAC/private storage, Field tests, APK, Production RELEASE_PASS/FIELD_PASS/OWNER_PASS not authorized"
   ],
-  "latest_checkpoint": "PP-20261115-027",
+  "latest_checkpoint": "PP-20261115-028",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -48,7 +48,7 @@
     "provider_usage": "ZERO_FIREBASE_CLOUDFLARE_OPSCORE_BUSINESS_API_CALLS_STATIC_CDN_NETWORK_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.9.3",
+    "version": "0.9.4",
     "login": "admin/admin MOCK_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -121,15 +121,19 @@
     "verification_v091": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_7c5d0143e4e90e6602548fd84aaa78efdc947bcb_RUN_43660958766_BUILD_7_FILES_222374_BYTES_CHROMIUM_HOSTED_ORIGINAL_PHOTO_RATIO_BUTTONS_STICKY_CHOICES_QR_XLSX_MOBILE_ZERO_EXTERNAL_CALLS",
     "personnel_validation": "NEW_START_DATE_TODAY_ASIA_HO_CHI_MINH_EDITABLE_EXISTING_DATE_PRESERVED_DIGITS_ONLY_ID_2_TO_30_AND_OPTIONAL_PHONE_KEEP_LEADING_ZERO_UNICODE_LETTERS_SPACES_NAME_IME_SAFE_LIVE_AND_SAVE_VALIDATION",
     "verification_v092": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_a917883ac90c814f80331695b5129f951f152848_RUN_43687690166_BUILD_7_FILES_224448_BYTES_CHROMIUM_HOSTED_VN_MIDNIGHT_EDIT_DATE_INPUT_PASTE_BYPASS_XLSX_QR_MOBILE_ZERO_API",
-    "portable_snapshot": "USER_SETTINGS_EXPORT_IMPORT_FULL_RECORDS_CATALOGS_RESOURCES_THUMBNAILS_INDEXEDDB_ORIGINAL_PHOTOS_THEME_FONT_JSON_EXACT_WEB_VERSION_AND_SCHEMA_GUARDS_NO_EXTERNAL_DB",
-    "verification_v093": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_ba2058aea83da60378b6d6df38fcd7abc0c6d21a_RUN_43722860436_BUILD_7_FILES_232842_BYTES_CHROMIUM_HOSTED_SEPARATE_CONTEXTS_PORTRAIT_480x640_CATALOGS_LABOR_PDA_WRONG_VERSION_INVALID_SCHEMA_EDIT_CONTINUATION_NO_API"
+    "portable_snapshot": "MANUAL_LOCAL_JSON_IMPORT_EXPORT_VERSION_0_9_4_EXACT_FULL_RECORDS_CATALOGS_PORTRAITS_NO_EXTERNAL_DB",
+    "verification_v093": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_ba2058aea83da60378b6d6df38fcd7abc0c6d21a_RUN_43722860436_BUILD_7_FILES_232842_BYTES_CHROMIUM_HOSTED_SEPARATE_CONTEXTS_PORTRAIT_480x640_CATALOGS_LABOR_PDA_WRONG_VERSION_INVALID_SCHEMA_EDIT_CONTINUATION_NO_API",
+    "initial_dataset": "ZERO_BUSINESS_RECORDS_ZERO_CATALOGS_ZERO_PICK_PACK_WORK_USERS_ZERO_PDA_DEVICES_MANUAL_ENTRY",
+    "local_cleanup": "CONFIRMED_DEMO_PASSWORD_ERASES_BROWSER_ONLY_V093_AND_V094_LOCALSTORAGE_AND_PORTRAITS_NOT_REMOTE",
+    "pda_registry": "ADD_EDIT_DELETE_DEVICES_MANUAL_PDA_TESTS_NO_SEED",
+    "verification_v094": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_e2cd2de93b4300868b7e33fa6c8c494587dc9622_RUN_43730107051_BUILD_7_FILES_234386_BYTES_BLANK_BOOTSTRAP_MANUAL_EMPLOYEE_PDA_CATALOGS_LOAN_RETURN_FULL_SNAPSHOT_SEPARATE_CONTEXT_RESET_CONFIRM_PASSWORD_ZERO_EXTERNAL_API"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/ba2058aea83da60378b6d6df38fcd7abc0c6d21a/prototype/index.html",
-    "verified_commit": "ba2058aea83da60378b6d6df38fcd7abc0c6d21a",
-    "verified_run": "43722860436",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/e2cd2de93b4300868b7e33fa6c8c494587dc9622/prototype/index.html",
+    "verified_commit": "e2cd2de93b4300868b7e33fa6c8c494587dc9622",
+    "verified_run": "43730107051",
     "public_access": true,
     "credentials": "admin/admin_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
