@@ -145,7 +145,7 @@ function persist(){storageSet(STORAGE_KEY,JSON.stringify(store))}
 function updateRecord(key,id,changes){const row=store[key]?.find(r=>r.id===id);if(!row)return false;Object.assign(row,changes);persist();return true}
 const columns={
  people:[['name','Họ và tên'],['id','Mã nhân viên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['updatedBy','Cập nhật bởi']],
- shifts:[['name','Họ và tên'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['state','Trạng thái']],
+ shifts:[['name','Họ và tên'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['desk','Bàn Pack'],['state','Trạng thái']],
  labor:[['name','Nhân sự'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['work','Công việc công nhật'],['startTime','Giờ bắt đầu'],['endTime','Giờ kết thúc']],
  minutes:[['name','Tên biên bản'],['id','Mã'],['type','Loại'],['date','Ngày'],['owner','Người lập'],['state','Trạng thái']],
  assets:[['name','Tên CCDC'],['id','Mã'],['type','Loại'],['qty','Số lượng'],['holder','Vị trí'],['state','Trạng thái']],
