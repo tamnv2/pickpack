@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.9.1';
+ const WEB_VERSION='0.9.2';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list']];
@@ -46,6 +46,10 @@ const LEGACY_FONT_KEY='pickpack1291_office_font_v06';
  const FONT_KEY='pickpack1291_office_font_setting_v082';
 const THEME_KEY='pickpack1291_office_theme_v06';
 const VN_ZONE='Asia/Ho_Chi_Minh';
+function vnTodayISO(now=new Date()){
+ const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).map(p=>[p.type,p.value]));
+ return parts.year+'-'+parts.month+'-'+parts.day;
+}
 const VN_TIME=new Intl.DateTimeFormat('en-US',{timeZone:VN_ZONE,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
 const VN_HOUR=new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,hour:'2-digit',hourCycle:'h23'});
 function resolveTheme(mode,now=new Date()){if(mode!=='auto')return mode;const hour=Number(VN_HOUR.format(now));return hour>=6&&hour<18?'light':'dark'}
@@ -408,7 +412,7 @@ const STATES_BY_MODULE={people:['Đang làm việc','Chờ vào ca','Nghỉ ca']
 const INITIAL_STATE={people:'Đang làm việc',shifts:'Chờ vào ca',labor:'Tạm tính',minutes:'Chờ xác nhận',assets:'Sẵn sàng',pda:'Đang mượn'};
 function fieldInput(key,label,value,editing=false){
  const v=String(value??'');
- if(key==='id')return `<label>${escape(label)}<input name="id" value="${escape(v)}" maxlength="30" pattern="[A-Za-z0-9-]{2,30}" ${editing?'readonly':''} required autocomplete="off"></label>`;
+ if(key==='id')return `<label>${escape(label)}<input name="id" value="${escape(v)}" maxlength="30" inputmode="numeric" pattern="[0-9]{2,30}" ${editing?'readonly':''} required autocomplete="off"></label>`;
  const listKey=state.view==='people'&&CATEGORY_FIELDS.some(([k])=>k===key)?key:state.view==='labor'&&key==='work'?'laborWork':state.view==='minutes'&&key==='type'?'minutesType':state.view==='assets'&&key==='type'?'assetsType':'';
  if(listKey){const choices=catalogs[listKey]||[];return `<label>${escape(label)}<select name="${key}" required><option value="">— Chọn ${escape(label.toLowerCase())} —</option>${[...new Set([...choices,...(v&&!choices.includes(v)?[v]:[])])].filter(Boolean).map(x=>`<option value="${escape(x)}" ${x===v?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`}
  const opts=key==='state'?STATES_BY_MODULE[state.view==='dashboard'?'minutes':state.view]:FIELD_OPTIONS[key];
@@ -416,6 +420,8 @@ function fieldInput(key,label,value,editing=false){
  if(key==='startDate'){const parts=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v),iso=parts?`${parts[3]}-${parts[2]}-${parts[1]}`:v;return `<label>${escape(label)}<input type="date" name="startDate" value="${escape(iso)}" autocomplete="off"></label>`}
  if(key==='startTime'||key==='endTime')return `<label>${escape(label)}<input name="${key}" type="time" step="1" value="${v==='—'?'':escape(v)}" ${key==='startTime'?'required':''}></label>`;
  if(key==='qty')return `<label>${escape(label)}<input type="number" min="0" max="99999" name="${key}" value="${escape(v)}" required></label>`;
+ if(state.view==='people'&&key==='name')return `<label>${escape(label)}<input name="name" value="${escape(v)}" maxlength="120" minlength="2" pattern="[\\p{L}\\p{M} ]{2,120}" placeholder="${escape(label)}" required autocomplete="off"></label>`;
+ if(state.view==='people'&&key==='phone')return `<label>${escape(label)}<input type="tel" name="phone" inputmode="numeric" pattern="[0-9]*" maxlength="120" value="${escape(v)}" placeholder="${escape(label)}" autocomplete="off"></label>`;
  if(key==='note')return `<label class="wide-field">${escape(label)}<textarea name="note" rows="2" maxlength="500">${escape(v)}</textarea></label>`;
  return `<label>${escape(label)}<input name="${key}" maxlength="120" value="${escape(v)}" placeholder="${escape(label)}" ${key==='name'?'minlength="2" required':''} ${key==='phone'?'type="tel"':''} autocomplete="off"></label>`;
 }
@@ -521,7 +527,7 @@ function modal(){
  const editing=state.modal==='edit'&&!!existing;
  const title=editing?`Sửa ${PAGES[key].title.toLowerCase()}`:`Thêm ${PAGES[key].title.toLowerCase()}`;
  const fields=key==='people'?PERSON_EDITOR:key==='labor'?[['work','Công việc công nhật'],['startTime','Giờ bắt đầu'],['endTime','Giờ kết thúc']]:columns[key].filter(([k])=>k!=='id');
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>QUẢN LÝ DỮ LIỆU</span><h2 id="modal-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><form id="record-form">${key==='people'?photoEditor(existing):''}<div class="form-grid">${fields.map(([k,l])=>fieldInput(k,l,editing?existing[k]:k==='state'?INITIAL_STATE[key]:'',editing)).join('')}</div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu chỉnh sửa':'Tạo bản ghi'}</button></div></form></section></div>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>QUẢN LÝ DỮ LIỆU</span><h2 id="modal-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><form id="record-form">${key==='people'?photoEditor(existing):''}<div class="form-grid">${fields.map(([k,l])=>fieldInput(k,l,editing?existing[k]:key==='people'&&k==='startDate'?vnTodayISO():k==='state'?INITIAL_STATE[key]:'',editing)).join('')}</div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu chỉnh sửa':'Tạo bản ghi'}</button></div></form></section></div>`;
 }
 function toast(){return `<div id="toast-stack" class="toast-stack" aria-live="polite">${toastItems()}</div>`}
 function render(){document.documentElement.setAttribute('data-theme',state.theme);document.documentElement.setAttribute('data-accent',state.accent);document.documentElement.style.setProperty('--text-scale',String(state.fontPct/100*1.1));if(document.body.dataset.screen==='login'){renderLogin();return}if(!demoSession()){root.innerHTML=`<main class="auth-required"><img src="assets/supra-mark.png" alt="The Supra"><h2>Vui lòng đăng nhập</h2><p>Đăng nhập Quản trị viên trước khi sử dụng giao diện và các tab nghiệp vụ.</p><a class="btn primary" href="index.html">Đăng nhập</a></main>`;return}root.innerHTML=`${side()}<div class="screen-shade ${state.sidebar?'show':''}" data-action="close-nav"></div><div class="app-main">${top()}${state.view==='dashboard'?dashboard():['categories','resources'].includes(state.view)?categoriesPage():modulePage()}</div>${drawer()}${modal()}${toast()}`;if(state.view==='people'&&state.drawer)requestAnimationFrame(renderFullPortrait);if(state.view==='shifts'&&state.scanOutcome?.code){const p=store.people.find(x=>x.id===state.scanOutcome.code);if(p)requestAnimationFrame(()=>renderScanPortrait(p))}}
@@ -543,8 +549,10 @@ function saveForm(form){
   state.notice='Đã cập nhật công nhật';state.modal='';state.editId='';render();return;
  }
  if(key==='people'){
-  const id=String(fd.get('id')||'').trim(),name=String(fd.get('name')||'').trim();
-  if(!/^[A-Za-z0-9-]{2,30}$/.test(id)||name.length<2){state.notice='Mã nhân viên hoặc họ tên không hợp lệ';render();return}
+  const id=String(fd.get('id')||'').trim(),name=String(fd.get('name')||'').trim(),phone=String(fd.get('phone')||'').trim();
+  if(!/^[0-9]{2,30}$/.test(id)){state.notice='Mã nhân viên chỉ được chứa chữ số';render();return}
+  if(name.length<2||name.length>120||!/^[\\p{L}\\p{M} ]+$/u.test(name)){state.notice='Họ và tên chỉ được chứa chữ cái và khoảng trắng';render();return}
+  if(!/^[0-9]*$/.test(phone)){state.notice='Số điện thoại chỉ được chứa chữ số';render();return}
   if(!editing&&store.people.some(p=>p.id===id)){state.notice='Mã nhân viên đã tồn tại';render();return}
   const changes={};for(const [k] of PERSON_EDITOR){if(k==='id')continue;changes[k]=k==='startDate'&&fd.get(k)?String(fd.get(k)).replace(/^(\d{4})-(\d{2})-(\d{2})$/,'$3/$2/$1'):String(fd.get(k)||'').trim()}
   changes.photo=state.photoDraft||'';
@@ -666,7 +674,18 @@ root.addEventListener('click',e=>{
  }
  render();
 });
+function filterPersonnelInput(input){
+ if(state.view!=='people'||!input?.matches('#record-form input[name="id"],#record-form input[name="phone"],#record-form input[name="name"]')||input.dataset.composing==='1')return;
+ const original=input.value,filtered=input.name==='name'?v=>v.replace(/[^\\p{L}\\p{M} ]/gu,''):v=>v.replace(/[^0-9]/g,'');
+ const next=filtered(original);if(next===original)return;
+ const caret=input.selectionStart;
+ input.value=next;
+ if(caret!==null)input.setSelectionRange(filtered(original.slice(0,caret)).length,filtered(original.slice(0,caret)).length);
+}
+root.addEventListener('compositionstart',e=>{if(e.target.matches('#record-form input[name="name"]'))e.target.dataset.composing='1'});
+root.addEventListener('compositionend',e=>{if(e.target.matches('#record-form input[name="name"]')){delete e.target.dataset.composing;filterPersonnelInput(e.target);markField(e.target)}});
 root.addEventListener('input',function(e){
+ if(!e.isComposing)filterPersonnelInput(e.target);
  markField(e.target);
  if(e.target.id==='shift-code'){
   const code=e.target.value.trim(),person=store.people.find(p=>p.id===code),preview=root.querySelector('#scan-preview');
