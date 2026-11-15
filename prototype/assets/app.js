@@ -880,6 +880,7 @@ async function parsePersonnelExcel(file){
   if(!/^[0-9]{2,30}$/.test(record.id))throw Error('Dòng '+line+': Mã nhân viên không hợp lệ hoặc mất số 0 đầu');
   if(!/^[\p{L}\p{M} ]{2,120}$/u.test(record.name))throw Error('Dòng '+line+': Tên nhân viên chỉ được chứa chữ và dấu cách');
   if(!/^[0-9]*$/.test(record.phone))throw Error('Dòng '+line+': Số điện thoại chỉ được chứa số');
+  for(const [key,label] of CATEGORY_FIELDS)if(!record[key]||record[key].length>80)throw Error('Dòng '+line+': Cần nhập '+label+' (tối đa 80 ký tự)');
   if(seen.has(record.id)||store.people.some(p=>p.id===record.id))throw Error('Dòng '+line+': Mã nhân viên '+record.id+' đã tồn tại. Chưa nhập dòng nào');
   seen.add(record.id);record.startDate=parseExcelDate(record.startDate);record.initial=record.name.split(' ').at(-1).slice(0,2);
   record.photo='';record.updatedBy='Quản trị viên';record.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});
