@@ -434,3 +434,50 @@ html{scrollbar-gutter:stable}
 .toast-stack .toast{pointer-events:none}
 .toast-stack .toast button{pointer-events:auto}
 @media(max-width:600px){.toast-stack{top:auto;bottom:10px}}
+
+
+/* Web Office v0.9.1 — scan station choices and original-aspect-ratio portrait. */
+.shift-choice-row{align-items:center!important;gap:10px!important;flex-direction:row!important;flex-wrap:wrap}
+.shift-choice-row .scan-code-label{white-space:nowrap;font-weight:750;margin:0 1px 0 0}
+.shift-choice-row .scan-mode{width:auto;flex:none}
+.shift-choice-row .scan-mode button{min-width:77px;min-height:32px;padding:5px 14px}
+.shift-choice-row .scan-mode:first-of-type{margin-right:20px}
+.scan-allocation-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
+.scan-allocation-row label{display:flex;flex-direction:column;gap:6px;font-size:calc(11.5px * var(--text-scale));font-weight:700;min-width:min(230px,100%);max-width:360px}
+.scan-allocation-row select{min-height:39px;width:100%;min-width:0;background:var(--control);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:7px 10px}
+.scan-allocation-row select:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.scan-no-user{margin:10px 0 0;color:var(--muted);font-size:calc(11px * var(--text-scale))}
+.scan-preview:has(.scan-person-layout){padding:12px}
+.scan-person-layout{display:flex;align-items:stretch;gap:17px;min-height:200px}
+.scan-photo-box{height:210px;width:auto;flex:0 0 auto;max-width:min(32%,250px);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.scan-photo-box img{display:block;max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;object-position:center}
+.scan-photo-box .person-avatar{width:auto;height:auto;max-height:100%;max-width:100%;object-fit:contain;border-radius:6px}
+.scan-photo-box span.person-avatar{width:150px;height:200px;display:grid;place-items:center;font-size:calc(32px * var(--text-scale));background:var(--primary-soft);color:var(--primary)}
+.scan-person-info{min-width:0;flex:1}
+.scan-person-layout .scan-identity{margin:0 0 11px;min-height:41px}
+.scan-person-layout .scan-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 12px}
+.scan-person-layout .scan-fields div{padding-top:7px}
+.scan-person-layout .scan-fields dt{margin-bottom:5px}
+.scan-person-layout .scan-fields dd{line-height:1.35}
+@media(max-width:1020px){
+ .scan-photo-box{height:185px;max-width:35%}
+ .scan-person-layout .scan-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+ .shift-choice-row{gap:7px!important;align-items:center!important}
+ .shift-choice-row .scan-mode{flex:1;min-width:0}
+ .shift-choice-row .scan-mode:first-of-type{margin-right:0}
+ .shift-choice-row .scan-mode button{min-width:0;flex:1;padding-inline:7px}
+ .shift-choice-row .scan-code-label{width:100%;margin-top:4px}
+ .scan-person-layout{gap:10px;min-height:165px}
+ .scan-photo-box{height:165px;max-width:38%}
+ .scan-photo-box span.person-avatar{width:110px;height:165px}
+ .scan-person-layout .scan-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 9px}
+ .scan-person-layout .scan-identity{min-height:0;margin-bottom:6px}
+}
+@media(max-width:420px){
+ .scan-person-layout{flex-direction:column}
+ .scan-photo-box{height:185px;max-width:100%;width:100%}
+ .scan-photo-box span.person-avatar{height:185px;max-width:100%}
+ .scan-person-layout .scan-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
