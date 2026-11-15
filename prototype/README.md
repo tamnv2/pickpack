@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.4
+# PickPack 1291 — Web Office v0.9.5
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -117,3 +117,12 @@ python tests/hosted_smoke.py
 - Dữ liệu được tự lưu localStorage và ảnh chân dung riêng trong IndexedDB; **Xuất dữ liệu/ Nhập dữ liệu** `.json` đầy đủ như bản v0.9.3, nhưng chỉ chấp nhận **Web v0.9.4** vì có kiểm tra phiên bản chính xác. Xuất ở máy A, mở bản **cùng commit/phiên bản** ở máy B, nhập để ghi đè dữ liệu máy B.
 - **Cảnh báo bảo mật:** Đây vẫn là giao diện chạy qua CDN công khai bên thứ ba, mật khẩu `admin` chỉ mô phỏng. Không nhập ảnh chân dung, tên/mã/số điện thoại nhân sự thật hoặc dữ liệu vận hành nhạy cảm vào bản Web CDN công khai. JSON sao lưu không mã hóa; không đưa lên GitHub, không chia sẻ cho bên không có thẩm quyền. Muốn dùng hồ sơ thật cần bản nội bộ hoặc backend riêng được phê duyệt.
 - **Đảm bảo:** Không có API Firebase/Cloudflare/OpsCore; chưa merge/Production. Xóa dữ liệu ở một máy không tác động dữ liệu máy khác.
+
+## Web v0.9.5 — Chân dung, biên bản ảnh và Excel nhân sự (môi trường kiểm thử cục bộ)
+- **Icon:** sửa menu Quản lý tài nguyên hiển thị sai `undefined` vì `list` chưa có trong bản đồ SVG sidebar.
+- **Nhân sự:** chọn ảnh hoặc dán **Ctrl + V** trực tiếp vào form Thêm/Sửa; chung giới hạn JPEG/PNG/WebP ≤5 MB, ảnh thu nhỏ dùng làm avatar, ảnh gốc lưu IndexedDB. Không dùng ảnh thật trên CDN công khai.
+- **Excel nhân sự:** trong Quản lý nhân sự cạnh Xuất Excel thêm **Tải mẫu Excel** và **Nhập Excel**. File mẫu `.xlsx` có các cột Mã nhân viên, Họ và tên, Số điện thoại, Vị trí chính, Nhà cung cấp, Bộ phận, Site, Kho, Ngày nhận việc, Ghi chú; ID/điện thoại định dạng Text để giữ số 0 đầu. Nhập từ **sheet đầu tiên theo đúng cấu trúc mẫu** hỗ trợ XLSX ZIP stored/deflate, chuỗi sharedStrings, ngày dạng dd/mm/yyyy, yyyy-mm-dd hoặc số Excel. Kiểm tra tất cả hàng, mã trùng, chữ số/Unicode/ngày hợp lệ **trước khi ghi**. Chỉ thêm mới, không ghi đè hồ sơ hiện có; giá trị danh mục mới được thêm sau xác nhận mật khẩu demo. Excel không chứa ảnh; ảnh thêm thủ công, dữ liệu đầy đủ/ảnh xuất bằng backup JSON.
+- **Biên bản ảnh:** Thêm/Sửa hỗ trợ upload nhiều JPEG/PNG/WebP hoặc dán Ctrl + V, tối đa 8 ảnh/biên bản và 5 MB/ảnh. Bản gốc lưu riêng ở IndexedDB; xem ảnh thu nhỏ ở form/chi tiết, nhấn để phóng to. Bỏ ảnh trong form không xóa cho tới khi ấn Lưu; Hủy không làm thay đổi ảnh đã lưu. Khi xóa biên bản, xóa ảnh liên kết.
+- **Backup JSON:** định dạng `schema=2`, `webVersion=0.9.5` gồm các bản ghi, danh mục, chân dung và ảnh biên bản. Có kiểm tra tính toàn vẹn trước khi thay thế dữ liệu và rollback nếu lỗi ghi. **Cần đúng Web v0.9.5 cho cả hai máy**; file backup v0.9.4 không được chấp nhận tự động.
+- **UI:** thêm khoảng đệm phía dưới form quản lý danh mục và thiết bị, bảo đảm nút Lưu/Hủy không chạm bo góc hộp.
+- **Giới hạn an toàn:** GitHub repo và GitHack CDN đều public; chỉ dùng dữ liệu/ảnh giả lập hoặc ẩn danh. `admin/admin` không phải xác thực bảo mật, dữ liệu trong trình duyệt và file JSON không được bảo vệ như hệ thống nhân sự Production. Không có kết nối CSDL, Firebase/Cloudflare/OpsCore, chưa triển khai Production.
