@@ -487,3 +487,23 @@ html{scrollbar-gutter:stable}
 .backup-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
 .backup-actions .btn{white-space:nowrap}
 @media(max-width:740px){.backup-setting{flex-direction:column}.backup-actions{width:100%;justify-content:flex-start}.backup-actions .btn{flex:1}}
+
+/* v0.9.5 modal action spacing and multi-image minutes. */
+#catalog-form .modal-actions{padding:4px 22px 22px;margin-top:6px}
+#device-form .modal-actions{padding:8px 22px 22px;margin-top:8px}
+#catalog-form .modal-actions .btn,#device-form .modal-actions .btn{min-height:39px}
+.minute-photo-editor{border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:15px;background:var(--chip)}
+.minute-photo-editor>strong{display:block;margin-bottom:8px;font-size:calc(12px * var(--text-scale))}
+.minute-photo-editor small{display:block;color:var(--muted);font-size:calc(10px * var(--text-scale));margin-top:8px}
+.minute-photo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:9px;margin-top:12px}
+.minute-photo-item{position:relative;min-height:115px;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.minute-photo-item img{height:92px;width:100%;object-fit:contain;background:var(--control)}
+.minute-photo-item span{font-size:calc(10px * var(--text-scale));color:var(--muted);padding:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.minute-photo-item button{position:absolute;top:4px;right:4px;min-height:26px;min-width:26px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer}
+.minute-photo-item button:hover{color:#c44d4d}
+.minute-drawer-photos{margin:18px 0;border-top:1px solid var(--border);padding-top:13px}
+.minute-drawer-photos>strong{display:block;margin-bottom:8px;font-size:calc(12px * var(--text-scale))}
+.minute-drawer-photos .minute-photo-list img{cursor:zoom-in}
+.minute-zoom-modal{width:min(94vw,1050px);height:min(94dvh,850px);display:flex;align-items:center;justify-content:center;position:relative}
+.minute-zoom-modal>img{max-width:100%;max-height:100%;object-fit:contain}
+.minute-zoom-modal>.icon-button{position:absolute;top:10px;right:10px;z-index:2;background:var(--card);border-radius:7px}
