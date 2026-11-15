@@ -47,6 +47,43 @@ try:
         assert blank.locator('.catalog-panel tbody tr').count()==0
         blank.locator('a.nav-main[href*="view=pda"]').click()
         assert blank.locator('.device-registry tbody tr').count()==0
+        assert blank.locator('[data-action="device-add"]').is_visible()
+        blank.locator('[data-action="device-add"]').click()
+        blank.locator('#device-form [name="id"]').fill('PDA-11')
+        blank.locator('#device-form [name="serial"]').fill('SYNTHETIC-54321')
+        blank.locator('#device-form [name="source"]').fill('Kho thử nghiệm')
+        blank.locator('#device-form button[type="submit"]').click()
+        assert blank.locator('.device-registry tbody tr').count()==1
+        assert '54321' in blank.locator('.device-registry tbody tr').first.inner_text()
+        blank.locator('a.nav-main[href*="view=people"]').click()
+        blank.locator('[data-catalog-scope="people"]').click()
+        for field,value in [('position','Pick'),('supplier','Nhà cung cấp A'),('department','Pick Pack'),('site','1291'),('warehouse','HY1')]:
+            blank.locator(f'[data-category-tab="{field}"]').click()
+            blank.locator('[data-action="category-add"]').click()
+            blank.locator('#catalog-form [name="value"]').fill(value)
+            blank.locator('#catalog-form button[type="submit"]').click()
+            assert blank.locator('.catalog-panel tbody tr').count()==1
+        blank.locator('.catalog-heading a[data-nav="people"]').click()
+        blank.locator('[data-action="add"]').click()
+        blank.locator('#record-form [name="id"]').fill('98765432')
+        blank.locator('#record-form [name="name"]').fill('Nguyễn Thị Lan')
+        blank.locator('#record-form [name="phone"]').fill('0123456789')
+        for field,value in [('position','Pick'),('supplier','Nhà cung cấp A'),('department','Pick Pack'),('site','1291'),('warehouse','HY1')]:
+            blank.locator(f'#record-form [name="{field}"]').select_option(value)
+        blank.locator('#record-form button[type="submit"]').click()
+        assert blank.locator('.records-label b').inner_text()=='1'
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people[0].id")=='98765432'
+        blank.locator('a.nav-main[href*="view=pda"]').click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-staff-code').press('Enter')
+        blank.locator('#pda-device-code').fill('PDA-11')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'Đã mượn PDA-11' in blank.locator('.scan-outcome').inner_text()
+        blank.locator('[data-pda-mode="return"]').click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').fill('PDA-11')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'Đã trả PDA-11' in blank.locator('.scan-outcome').inner_text()
         blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
         # Regression fixtures live in tests/, never in the public app's initialization.
