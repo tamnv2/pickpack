@@ -329,6 +329,12 @@ function scanShift(code,operation,selectedShift,workUser,workDesk){
 }
 
 
+function compactPersonPreview(person){
+ if(!person)return '<div class="scan-empty">Chưa xác định nhân viên.</div>';
+ const active=store.shifts.find(x=>x.staff===person.id&&x.state==='Trong ca');
+ const detail=active?`${active.shift} · User: ${active.user||'—'}`:'Chưa vào ca';
+ return `<div class="scan-identity compact-identity">${avatar(person)}<div><strong>${escape(person.name)} · ${escape(person.id)}</strong><small>${escape(person.position||'Chưa cập nhật')} · ${escape(detail)}</small></div></div>`;
+}
 function laborScanPanel(){
  const result=state.laborScan,person=result?.code?store.people.find(p=>p.id===result.code):null;
  return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('calendar',20)}</span><div><h2>Quét mã công nhật</h2><p>Quét lần đầu ghi giờ bắt đầu; quét lần sau ghi giờ kết thúc cùng bản ghi.</p></div></div><form id="labor-scan-form" autocomplete="off"><div class="labor-scan-fields"><label class="scan-code-label">Công việc công nhật<select id="labor-work" name="work" required><option value="">— Chọn công việc —</option>${catalogs.laborWork.map(value=>`<option value="${escape(value)}" ${state.laborWork===value?'selected':''}>${escape(value)}</option>`).join('')}</select></label><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên<input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"></label><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div></section>`;
