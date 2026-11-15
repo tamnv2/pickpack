@@ -1,25 +1,28 @@
 from pathlib import Path
 import os
 import base64
+import json
 from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 js=(root/'assets/app.js').read_text(encoding='utf-8')
 css=(root/'assets/styles.css').read_text(encoding='utf-8')
+fixture=json.loads((root/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,executable_path=os.environ['CHROMIUM_PATH'] if os.environ.get('CHROMIUM_PATH') else None,args=['--no-sandbox'])
  ctx=browser.new_context(viewport={'width':1440,'height':900},accept_downloads=True)
  ctx.set_default_timeout(2000)
- def new_screen(screen='app',mobile=False):
+ def new_screen(screen='app',mobile=False,seed=True):
   pg=(browser.new_context(viewport={'width':390,'height':844},is_mobile=True) if mobile else ctx).new_page()
   pg.set_default_timeout(2000)
   pg.set_content(f'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body data-screen="{screen}"><div id="root"></div></body></html>')
   pg.evaluate("""() => {let m = new Map([['pickpack1291_office_session_v06','demo-admin-only']]);Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}})}""")
+  if seed:pg.evaluate("""fixture=>{localStorage.setItem('pickpack1291_office_records_v094',JSON.stringify(fixture.records));localStorage.setItem('pickpack1291_office_catalogs_v094',JSON.stringify(fixture.catalogs))}""",fixture)
   pg.add_style_tag(content=css)
   pg.add_script_tag(content=js)
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.3'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.4'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -30,10 +33,22 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='admin'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
+ # A fresh Web v0.9.4 browser must have no test records or catalogs.
+ clean=new_screen(seed=False)
+ assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
+ for module in ['people','shifts','labor','minutes','assets','pda','resources']:
+  clean.locator(f'a.nav-main[href*="view={module}"]').click()
+  assert not clean.locator('.module-table tbody tr,.people-table tbody tr').count(),module
+  if module=='pda':assert clean.locator('.device-registry tbody tr').count()==0
+  if module=='resources':assert clean.locator('.catalog-panel tbody tr').count()==0
+ clean.locator('a.nav-main[href*="view=people"]').click()
+ clean.locator('[data-catalog-scope="people"]').click()
+ assert clean.locator('.catalog-panel tbody tr').count()==0
+ clean.close()
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
  assert app.locator('a.nav-main').count()==8
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.3'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.4'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -172,7 +187,7 @@ with sync_playwright() as p:
  app.locator('#labor-staff-code').press('Enter')
  assert 'Đã kết thúc công nhật' in app.locator('.scan-outcome').inner_text()
  assert app.locator('.records-label b').inner_text()=='43'
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).labor[0].endTime!='—'")
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime!='—'")
  app.locator('#labor-staff-code').fill('NOT_FOUND')
  app.locator('#labor-staff-code').press('Enter')
  assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
@@ -198,7 +213,7 @@ with sync_playwright() as p:
  app.locator('#pda-device-code').fill('PDA-03')
  app.locator('#pda-device-code').press('Enter')
  assert 'Đã trả PDA-03' in app.locator('.scan-outcome').inner_text()
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).pda.find(x=>x.name==='PDA-03'&&x.state==='Đã trả').returnStaff")=='90000035'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.find(x=>x.name==='PDA-03'&&x.state==='Đã trả').returnStaff")=='90000035'
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='31'
  app.locator('#pda-staff-code').fill('90000034')
  app.locator('#pda-device-code').fill('PDA-03')
@@ -223,8 +238,8 @@ with sync_playwright() as p:
  assert app.locator('[data-scan-mode="enter"]').get_attribute('aria-pressed')=='true'
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
  assert 'Đã vào ca' in app.locator('.scan-outcome').inner_text()
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].shift")=='Ca HC'
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].user")=='pp1291.pk20'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].shift")=='Ca HC'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].user")=='pp1291.pk20'
  app.locator('input#shift-code').fill('90000001')
  app.locator('#shift-scan-form button[type="submit"]').click()
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
@@ -252,8 +267,8 @@ with sync_playwright() as p:
  app.locator('#shift-code').press('Enter')
  assert app.evaluate("document.activeElement.id")=='shift-code'
  assert app.locator('[data-scan-shift="Ca 2"]').get_attribute('aria-pressed')=='true'
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].user")=='pp1291.pa20'
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).shifts[0].desk")=='Bàn Pack 12'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].user")=='pp1291.pa20'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].desk")=='Bàn Pack 12'
  app.locator('#shift-code').fill('90000003')
  app.locator('#scan-user-choice').select_option('pp1291.pa20')
  app.locator('#shift-scan-form button[type="submit"]').click()
@@ -276,7 +291,7 @@ with sync_playwright() as p:
  assert 'is-valid' in app.locator('#catalog-form input[name="value"]').get_attribute('class')
  app.locator('#catalog-form button[type="submit"]').click()
  assert app.get_by_text('Pick thử',exact=True).count()==1
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people[0].position")=='Pick thử'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people[0].position")=='Pick thử'
  app.locator('.catalog-panel [data-category-delete="0"]').click()
  assert 'Không thể xóa' in app.locator('.toast-stack .toast').last.inner_text()
  app.locator('button[data-action="category-add"]').click()
@@ -381,7 +396,7 @@ with sync_playwright() as p:
  assert app.locator('.records-label b').inner_text()=='37'
  assert '01/12/2026' in app.locator('.people-table tbody tr').first.inner_text()
  assert 'Quản trị viên' in app.locator('.people-table tbody tr').first.inner_text()
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
  print('testing edit',flush=True)
  app.locator('table tbody tr').first.locator('[data-edit]').click()
  authorize()
@@ -393,8 +408,8 @@ with sync_playwright() as p:
  assert app.locator('#record-form input[name="startDate"]').input_value()=='2026-12-01'
  app.locator('#record-form input[name="startDate"]').fill('2026-10-03')
  app.locator('#record-form button[type="submit"]').click()
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(p=>p.id==='90009999').startDate")=='03/10/2026'
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(p=>p.id==='90009999').phone")=='0001234567'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(p=>p.id==='90009999').startDate")=='03/10/2026'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(p=>p.id==='90009999').phone")=='0001234567'
  print('testing delete',flush=True)
  app.locator('table tbody tr').first.locator('[data-delete]').click()
  assert app.locator('#confirm-form').count()==1
@@ -447,5 +462,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.9.3 offline backup controls, VN date/Unicode names/numeric fields, existing shifts/portraits/XLSX/mobile')
+ print('PASS: v0.9.4 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
