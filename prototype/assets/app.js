@@ -747,7 +747,7 @@ root.addEventListener('submit',function(e){
  if(e.target.id==='confirm-form'){e.preventDefault();finishConfirmation(e.target);return}
  if(e.target.getAttribute('id')==='record-form'){e.preventDefault();saveForm(e.target)}
  if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
- if(e.target.id==='device-form'){e.preventDefault();saveDeviceForm(e.target)}
+ if(e.target.getAttribute('id')==='device-form'){e.preventDefault();saveDeviceForm(e.target)}
 });
 root.addEventListener('click',e=>{
  const closeToast=e.target.closest('[data-toast-close]');if(closeToast){const i=notices.findIndex(x=>x.id===Number(closeToast.dataset.toastClose));if(i>=0)notices.splice(i,1);refreshToasts();return}
