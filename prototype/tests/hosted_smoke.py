@@ -17,7 +17,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.9.1'
+assert version=='0.9.2'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -115,6 +115,15 @@ try:
         assert time_probe.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
         assert time_probe.locator('.flip-digit,.flip-pane,.flip-flap').count()==0
         time_probe.close()
+        # Midnight in Vietnam is 17:00 UTC; date must not depend on local browser timezone.
+        midnight=context.new_page()
+        midnight.clock.install(time=datetime(2026,11,15,17,0,1,tzinfo=timezone.utc))
+        assert midnight.goto(base+'/app.html?view=people').ok
+        midnight.locator('button[data-action="add"]').click()
+        assert midnight.locator('#record-form input[name="startDate"]').input_value()=='2026-11-16'
+        midnight.locator('#record-form input[name="startDate"]').fill('2026-11-12')
+        assert midnight.locator('#record-form input[name="startDate"]').input_value()=='2026-11-12'
+        midnight.close()
         # Check the exact 18:00 Vietnam transition with Playwright's deterministic browser clock.
         page.locator('.top-profile').click()
         page.locator('button[data-action="settings"]').click()
@@ -152,8 +161,16 @@ try:
         assert 'Điều phối thử' in second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v083')).position")
         second.locator('.catalog-heading a[data-nav="people"]').click()
         second.locator('button[data-action="add"]').click()
+        assert second.locator('#record-form input[name="startDate"]').input_value()==second.evaluate("""() => {const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day}""")
+        second.locator('#record-form input[name="id"]').fill('ABC-90009999')
+        assert second.locator('#record-form input[name="id"]').input_value()=='90009999'
         second.locator('#record-form input[name="id"]').fill('90009999')
+        second.locator('#record-form input[name="name"]').fill('Nhân viên kiểm thử liên tab 12!')
+        assert second.locator('#record-form input[name="name"]').input_value()=='Nhân viên kiểm thử liên tab'
         second.locator('#record-form input[name="name"]').fill('Nhân viên kiểm thử liên tab')
+        second.locator('#record-form input[name="phone"]').fill('000-123a456')
+        assert second.locator('#record-form input[name="phone"]').input_value()=='000123456'
+        assert second.locator('#record-form input[name="name"]').evaluate('el=>el.checkValidity()')
         second.locator('#record-form select[name="position"]').select_option('Điều phối thử')
         second.locator('#record-form select[name="supplier"]').select_option('Nội bộ')
         second.locator('#record-form select[name="department"]').select_option('Pick Pack')
@@ -321,7 +338,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.1 original photo proportions in staff scan, persistent shift choice, assigned Pick account, resource catalogs, XLSX, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.2 Vietnam midnight today, editable date, numeric ID/phone, Unicode name, original portraits, shift/resources/XLSX, zero API')
         browser.close()
 finally:
     server.shutdown()
