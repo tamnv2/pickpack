@@ -17,7 +17,7 @@ from playwright.sync_api import sync_playwright
 webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
-assert version=='0.9.2'
+assert version=='0.9.3'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -308,6 +308,81 @@ try:
         second.locator('#pda-device-code').press('Enter')
         assert 'Đã trả PDA-03' in second.locator('.scan-outcome').inner_text()
         assert second.locator('.table-panel').last.locator('.records-label b').inner_text() == '31'
+        # Full offline transfer: export records/catalogs/portraits from this browser,
+        # import into another isolated browser context, then check parity and continued editing.
+        second.locator('.top-profile').click()
+        second.locator('button[data-action="settings"]').click()
+        assert second.locator('[data-action="backup-export"]').is_visible()
+        assert second.locator('[data-action="backup-import"]').is_visible()
+        with second.expect_download() as backed_up:
+            second.locator('[data-action="backup-export"]').click()
+        backup=backed_up.value
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.3-')
+        assert backup.suggested_filename.endswith('.json')
+        backup_bytes=Path(backup.path()).read_bytes()
+        snapshot=json.loads(backup_bytes)
+        assert snapshot['format']=='pickpack1291-browser-backup'
+        assert snapshot['schema']==1 and snapshot['webVersion']==version
+        assert snapshot['data']['records']['people'][0]['id']=='90009999'
+        assert snapshot['data']['records']['labor'][0]['endTime']!='—'
+        assert len(snapshot['data']['records']['pda'])==31
+        assert 'Điều phối thử' in snapshot['data']['catalogs']['position']
+        assert len(snapshot['data']['catalogs']['packDesks'])==12
+        assert len(snapshot['data']['portraits'])==1
+        assert snapshot['data']['portraits'][0]['id']=='90009999'
+        assert snapshot['data']['portraits'][0]['data'].startswith('data:image/png;base64,')
+
+        isolated=browser.new_context(viewport={'width': 1440, 'height': 900},accept_downloads=True)
+        target=isolated.new_page()
+        target_errors=[]
+        target.on('pageerror',lambda e:target_errors.append(str(e)))
+        assert target.goto(base+'/index.html').ok
+        target.locator('#demo-user').fill('admin')
+        target.locator('#demo-password').fill('admin')
+        target.locator('#login-form button[type="submit"]').click()
+        target.wait_for_url('**/app.html?view=dashboard*')
+        assert target.locator('.metrics .metric-number').first.inner_text()=='36'
+        target.locator('.top-profile').click()
+        target.locator('button[data-action="settings"]').click()
+        assert target.locator('#backup-import-file').count()==1
+        wrong={**snapshot,'webVersion':'0.9.0'}
+        target.locator('#backup-import-file').set_input_files({'name':'wrong-version.json','mimeType':'application/json','buffer':json.dumps(wrong,ensure_ascii=False).encode('utf-8')})
+        assert target.locator('#confirm-form').count()==0
+        assert 'File dành cho Web v0.9.0' in target.locator('.toast-stack .toast').last.inner_text()
+        # Invalid structure must not prompt for overwrite or alter the source browser data.
+        bad=json.loads(backup_bytes)
+        bad['data']['catalogs']['position']='INVALID'
+        target.locator('#backup-import-file').set_input_files({'name':'bad-content.json','mimeType':'application/json','buffer':json.dumps(bad,ensure_ascii=False).encode('utf-8')})
+        assert target.locator('#confirm-form').count()==0
+        assert 'Danh mục position không hợp lệ' in target.locator('.toast-stack .toast').last.inner_text()
+        target.locator('#backup-import-file').set_input_files({'name':'pickpack-test.json','mimeType':'application/json','buffer':backup_bytes})
+        assert target.locator('#confirm-form').count()==1
+        assert '37 nhân sự và 1 ảnh gốc' in target.locator('#confirm-message').inner_text()
+        target.locator('#confirm-password').fill('wrong')
+        target.locator('#confirm-form button[type="submit"]').click()
+        assert 'Mật khẩu không đúng' in target.locator('#confirm-error').inner_text()
+        assert target.locator('#confirm-form').count()==1
+        target.locator('#confirm-password').fill('admin')
+        target.locator('#confirm-form button[type="submit"]').click()
+        target.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim()==='37'",timeout=10000)
+        assert 'Đã nhập dữ liệu thành công' in target.locator('.toast-stack .toast').last.inner_text()
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).people.find(x=>x.id==='90009999').phone")=='000123456'
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v083')).position.includes('Điều phối thử')")
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).labor[0].endTime!='—'")
+        assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v07')).pda.length")==31
+        target.locator('a.nav-main[href*="view=people"]').click()
+        target.locator('.people-table tbody tr').first.locator('[data-record]').click()
+        target.locator('#portrait-original img').wait_for(timeout=5000)
+        assert target.locator('#portrait-original img').evaluate("el=>el.naturalWidth===480&&el.naturalHeight===640")
+        target.locator('.detail-head [data-action="close-drawer"]').click()
+        target.locator('.people-table tbody tr').first.locator('[data-edit]').click()
+        target.locator('#confirm-password').fill('admin')
+        target.locator('#confirm-form button[type="submit"]').click()
+        target.locator('#record-form input[name="name"]').fill('Nhân viên sau khi nhập')
+        target.locator('#record-form button[type="submit"]').click()
+        assert 'Nhân viên sau khi nhập' in target.locator('.people-table tbody tr').first.inner_text()
+        assert not target_errors,target_errors
+        isolated.close()
         mobile_context = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True)
         mobile = mobile_context.new_page()
         assert mobile.goto(base + '/index.html').ok
@@ -338,7 +413,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.2 Vietnam midnight today, editable date, numeric ID/phone, Unicode name, original portraits, shift/resources/XLSX, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.3 full offline snapshot import/export across isolated browsers with original portraits, version/schema guards, edit continuation, zero API')
         browser.close()
 finally:
     server.shutdown()
