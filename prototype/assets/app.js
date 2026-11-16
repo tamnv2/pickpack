@@ -1191,7 +1191,7 @@ root.addEventListener('change',async function(e){
  }
  if(e.target.id==='minute-photo'){const files=Array.from(e.target.files||[]);e.target.value='';if(files.length)try{await addMinuteDraftImages(files)}catch(err){state.notice=err.message;refreshToasts()}return}
  if(e.target.id==='staff-photo'){
-  const file=e.target.files?.[0];if(!file)return;
+  const file=e.target.files?.[0];e.target.value='';if(!file)return;
   try{
    await applyStaffPhoto(file);
   }catch(err){state.notice=err?.message||'Không đọc được ảnh';const box=root.querySelector('.photo-editor-info small');if(box)box.textContent=state.notice}
