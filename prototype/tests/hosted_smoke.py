@@ -541,6 +541,8 @@ try:
         assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position.includes('Điều phối thử')")
         assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime!='—'")
         assert target.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.length")==31
+        assert target.locator('#period-preset').input_value()=='today'
+        target.locator('#period-preset').select_option('all')
         target.locator('a.nav-main[href*="view=minutes"]').click()
         target.locator('.table-panel tbody tr').first.locator('[data-record]').click()
         target.wait_for_function("() => [...document.querySelectorAll('#minute-drawer-gallery img')].length===2 && [...document.querySelectorAll('#minute-drawer-gallery img')].every(img=>img.complete&&img.naturalWidth>0)",timeout=10000)
