@@ -104,7 +104,7 @@ function readDemoUsers(){
    const role=u.username==='superadmin'?'superadmin':(['admin','mod'].includes(u.role)?u.role:'mod');
    const base=defaultPermissions(role);
    for(const key of PERMISSION_AREAS)for(const [action] of PERMISSION_ACTIONS)if(role!=='superadmin')base[key][action]=!!u.permissions?.[key]?.[action];
-   return {username:u.username,fullName:String(u.fullName||u.username).slice(0,100),password:String(u.password||'1').slice(0,100),role,permissions:base};
+   return {username:u.username,fullName:String(u.fullName||u.username).slice(0,100),password:String(u.password||'1').slice(0,100),role,permissions:base,photo:typeof u.photo==='string'&&u.photo.length<250000&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(u.photo)?u.photo:''};
   });
   if(!fallback.every(u=>names.has(u.username)))return fallback;
   return output;
@@ -159,7 +159,7 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null,previewUser:'',accessUser:'dieuphoile',accountEdit:'',categoryInputs:1};
+const state={profilePhotoDraft:null,view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null,previewUser:'',accessUser:'dieuphoile',accountEdit:'',categoryInputs:1};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -181,7 +181,7 @@ function side(){
 }
 function top(){
  const me=actualUser(),preview=me?.role==='superadmin';
- return `<header class="topbar"><div class="top-left"><button class="icon-button menu-button" data-action="toggle-nav" aria-label="Mở danh mục" title="Mở danh mục">${icon('grid',17)}<span>Mục</span></button><div class="profile-area"><button type="button" class="top-profile" data-action="profile-menu" aria-expanded="${state.profileMenu}" aria-haspopup="menu" aria-label="Tài khoản và tùy chọn cá nhân">${avatar({initial:(me?.username||'NV').slice(0,2).toUpperCase()})}<span class="profile-name"><strong>${escape(me?.fullName||'Người dùng')}</strong><small>${escape(me?.role||'')}</small></span><span class="caret">⌄</span></button>${state.profileMenu?`<div class="profile-dropdown" role="menu"><div class="profile-role">Tài khoản kiểm thử · ${escape(me?.username||'')}</div><button type="button" role="menuitem" data-action="settings">${icon('settings',16)} Cài đặt cá nhân</button><button type="button" role="menuitem" data-action="logout">${icon('logout',16)} Đăng xuất</button></div>`:''}</div>${preview?`<label class="role-preview">Hiển thị theo quyền <select id="role-preview" aria-label="Kiểm thử giao diện theo tài khoản"><option value="">Superadmin (đầy đủ)</option>${demoUsers.filter(u=>u.username!==me.username).map(u=>`<option value="${escape(u.username)}" ${state.previewUser===u.username?'selected':''}>${escape(u.username)} · ${escape(u.role)}</option>`).join('')}</select></label>`:''}</div><div class="top-right"><div class="top-search">${icon('search',17)}<input id="global-search" type="search" placeholder="Tìm trong ${escape(PAGES[state.view].title.toLowerCase())}..." value="${escape(state.search)}" aria-label="Tìm nhanh"></div><div class="header-theme" role="group" aria-label="Chế độ sáng tối"><button type="button" data-theme-choice="auto" class="${state.themeMode==='auto'?'active':''}" title="Tự động">${icon('clock',15)}</button><button type="button" data-theme-choice="light" class="${state.themeMode==='light'?'active':''}" title="Sáng">${icon('sun',15)}</button><button type="button" data-theme-choice="dark" class="${state.themeMode==='dark'?'active':''}" title="Tối">${icon('moon',15)}</button></div><button class="icon-button notif" data-action="notifications" title="Thông báo" aria-label="Thông báo">${icon("bell",19)}${notificationItems().length?'<i></i>':''}</button>${clockMarkup()}</div></header>`;
+ return `<header class="topbar"><div class="top-left"><button class="icon-button menu-button" data-action="toggle-nav" aria-label="Mở danh mục" title="Mở danh mục">${icon('grid',17)}<span>Mục</span></button><div class="profile-area"><button type="button" class="top-profile" data-action="profile-menu" aria-expanded="${state.profileMenu}" aria-haspopup="menu" aria-label="Tài khoản và tùy chọn cá nhân">${avatar({photo:me?.photo||'',initial:(me?.username||'NV').slice(0,2).toUpperCase()})}<span class="profile-name"><strong>${escape(me?.fullName||'Người dùng')}</strong><small>${escape(me?.role||'')}</small></span><span class="caret">⌄</span></button>${state.profileMenu?`<div class="profile-dropdown" role="menu"><div class="profile-role">Tài khoản kiểm thử · ${escape(me?.username||'')}</div><button type="button" role="menuitem" data-action="settings">${icon('settings',16)} Cài đặt cá nhân</button><button type="button" role="menuitem" data-action="logout">${icon('logout',16)} Đăng xuất</button></div>`:''}</div>${preview?`<label class="role-preview">Hiển thị theo quyền <select id="role-preview" aria-label="Kiểm thử giao diện theo tài khoản"><option value="">Superadmin (đầy đủ)</option>${demoUsers.filter(u=>u.username!==me.username).map(u=>`<option value="${escape(u.username)}" ${state.previewUser===u.username?'selected':''}>${escape(u.username)} · ${escape(u.role)}</option>`).join('')}</select></label>`:''}</div><div class="top-right"><div class="top-search">${icon('search',17)}<input id="global-search" type="search" placeholder="Tìm trong ${escape(PAGES[state.view].title.toLowerCase())}..." value="${escape(state.search)}" aria-label="Tìm nhanh"></div><div class="header-theme" role="group" aria-label="Chế độ sáng tối"><button type="button" data-theme-choice="auto" class="${state.themeMode==='auto'?'active':''}" title="Tự động">${icon('clock',15)}</button><button type="button" data-theme-choice="light" class="${state.themeMode==='light'?'active':''}" title="Sáng">${icon('sun',15)}</button><button type="button" data-theme-choice="dark" class="${state.themeMode==='dark'?'active':''}" title="Tối">${icon('moon',15)}</button></div><button class="icon-button notif" data-action="notifications" title="Thông báo" aria-label="Thông báo">${icon("bell",19)}${notificationItems().length?'<i></i>':''}</button>${clockMarkup()}</div></header>`;
 }
 function pageHead(action='',other=''){return action||other?`<div class="page-header"><div class="header-actions">${other}${action}</div></div>`:''}
 function stat(label,value,small,accent='blue',ic='grid'){return `<div class="metric-card"><div class="metric-top"><span>${label}</span><span class="metric-icon ${accent}">${icon(({'♙':'users','◷':'clock','▯':'device','▤':'file','≡':'list','▦':'grid'})[ic]||ic,20)}</span></div><div class="metric-number">${value}</div><div class="metric-foot">${small}</div></div>`}
@@ -272,7 +272,7 @@ function savePersonalSettings(form){
  const fd=new FormData(form),fullName=String(fd.get('fullName')||'').trim(),oldPassword=String(fd.get('oldPassword')||''),newPassword=String(fd.get('newPassword')||'');
  if(!fullName||fullName.length>100){state.notice='Họ và tên không hợp lệ';return}
  if(newPassword&&oldPassword!==me.password){state.notice='Mật khẩu hiện tại không đúng';return}
- me.fullName=fullName;if(newPassword)me.password=newPassword;
+ me.fullName=fullName;if(newPassword)me.password=newPassword;me.photo=state.profilePhotoDraft??me.photo??'';state.profilePhotoDraft=null;
  persistDemoUsers();state.notice='Đã cập nhật cài đặt cá nhân';state.modal='';render();
 }
 function categoriesPage(){
@@ -625,19 +625,19 @@ function changeCropZoom(value){
  cropSession.zoom=Math.max(1,Math.min(4,Number(value)||1));
  paintCrop();
 }
-async function beginCrop(file,isNew){
+async function beginCrop(file,isNew,targetScope='person'){
  if(!file||!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>5*1024*1024)throw Error('Ảnh không hợp lệ hoặc vượt 5 MB');
  closeCrop();
  const url=URL.createObjectURL(file),img=new Image();
  try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('Không đọc được ảnh'));img.src=url})}
  catch(err){URL.revokeObjectURL(url);throw err}
- if(!['new','edit'].includes(state.modal)||state.view!=='people'){URL.revokeObjectURL(url);return}
+ if(targetScope==='personal'?state.modal!=='settings':(!['new','edit'].includes(state.modal)||state.view!=='people')){URL.revokeObjectURL(url);return}
  const layer=document.createElement('div');
  layer.id='crop-dialog';layer.className='crop-overlay modal-overlay';
  layer.innerHTML=`<section class="modal crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-title"><div class="modal-head"><div><span>CHỈNH ẢNH ĐẠI DIỆN</span><h2 id="crop-title">Căn chỉnh và cắt ảnh</h2></div><button class="icon-button" data-action="crop-cancel" type="button" aria-label="Đóng">×</button></div><div class="crop-content"><div class="crop-stage"><canvas id="crop-canvas" width="320" height="320" tabindex="0" aria-label="Kéo để chỉnh vị trí ảnh"></canvas><div class="crop-circle"></div></div><small>Kéo ảnh trong vòng tròn. Lăn chuột hoặc dùng thanh trượt để thu/phóng.</small><div class="crop-controls"><button type="button" class="btn ghost" data-action="crop-zoom-out" aria-label="Thu nhỏ">−</button><label for="crop-zoom">Phóng to <input id="crop-zoom" type="range" min="100" max="400" step="1" value="125"></label><button type="button" class="btn ghost" data-action="crop-zoom-in" aria-label="Phóng to">+</button><output id="crop-percentage">125%</output></div><div class="crop-modal-actions modal-actions"><button class="btn ghost" data-action="crop-reset" type="button">Căn giữa</button><button class="btn ghost" data-action="crop-cancel" type="button">Hủy</button><button class="btn primary" data-action="crop-apply" type="button">Áp dụng ảnh</button></div></div></section>`;
  root.appendChild(layer);
  const canvas=layer.querySelector('#crop-canvas');
- cropSession={file,isNew,url,img,overlay:layer,canvas,scale:Math.max(320/img.naturalWidth,320/img.naturalHeight),zoom:1.25,offsetX:0,offsetY:0};
+ cropSession={file,isNew,targetScope,url,img,overlay:layer,canvas,scale:Math.max(320/img.naturalWidth,320/img.naturalHeight),zoom:1.25,offsetX:0,offsetY:0};
  let pointer=null;
  canvas.addEventListener('pointerdown',e=>{if(!cropSession)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
  canvas.addEventListener('pointermove',e=>{
@@ -671,7 +671,14 @@ function acceptCrop(){
  const c=cropSession,preview=document.createElement('canvas');preview.width=192;preview.height=192;
  const ctx=preview.getContext('2d');if(!ctx)return;
  ctx.drawImage(c.canvas,0,0,192,192);
- state.photoDraft=preview.toDataURL('image/jpeg',0.82);
+ const cropped=preview.toDataURL('image/jpeg',0.82);
+ if(c.targetScope==='personal'){
+  state.profilePhotoDraft=cropped;closeCrop();
+  const target=root.querySelector('#personal-photo-preview');if(target)target.innerHTML=avatar({photo:cropped},true);
+  const button=root.querySelector('[data-action="adjust-profile-photo"]');if(button)button.disabled=false;
+  return;
+ }
+ state.photoDraft=cropped;
  if(c.isNew)state.photoOriginalFile=c.file;
  state.photoRemoveOriginal=false;closeCrop();
  const target=root.querySelector('#photo-preview');if(target)target.innerHTML=avatar({photo:state.photoDraft,initial:''},true);
@@ -682,6 +689,14 @@ function acceptCrop(){
  }
 }
 async function applyStaffPhoto(file){await beginCrop(file,true)}
+async function applyProfilePhoto(file){await beginCrop(file,true,'personal')}
+async function adjustProfilePhoto(){
+ const data=(state.profilePhotoDraft??actualUser()?.photo)||'';
+ const match=/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(data);
+ if(!match){state.notice='Chưa có ảnh đại diện để căn chỉnh';refreshToasts();return}
+ const binary=atob(match[1]),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+ await beginCrop(new Blob([bytes],{type:'image/jpeg'}),false,'personal');
+}
 function notificationItems(){return [
  {view:'labor',title:'Công nhật chưa kết thúc',count:store.labor.filter(r=>!r.endTime||r.endTime==='—').length,ic:'calendar'},
 {view:'minutes',title:'Biên bản chờ xác nhận',count:store.minutes.filter(r=>r.state==='Chờ xác nhận').length,ic:'file'},
@@ -691,7 +706,7 @@ function notificationItems(){return [
 function prefsModal(){
  const me=actualUser();
  const accentRow=state.theme==='light'?`<div class="setting-row accent-setting"><div><strong>Màu chủ đạo</strong><small>Chọn một trong bảy màu cho giao diện sáng</small></div><div class="accent-swatches" role="group" aria-label="Màu giao diện sáng">${ACCENTS.map(([key,label])=>`<button type="button" data-accent-choice="${key}" class="accent-swatch accent-${key} ${state.accent===key?'active':''}" aria-label="${label}" title="${label}" aria-pressed="${state.accent===key}">${state.accent===key?'✓':''}</button>`).join('')}</div></div>`:'';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÀI KHOẢN VÀ GIAO DIỆN</span><h2 id="modal-title">Cài đặt cá nhân</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><form id="personal-settings-form" class="personal-settings-form"><label>Họ và tên<input type="text" name="fullName" value="${escape(me?.fullName||'')}" maxlength="100" required autocomplete="name"></label><label>Mật khẩu hiện tại<input type="password" name="oldPassword" autocomplete="current-password" placeholder="Chỉ cần nhập khi đổi mật khẩu"></label><label>Mật khẩu mới<input type="password" name="newPassword" autocomplete="new-password" placeholder="Để trống nếu không thay đổi"></label><button type="submit" class="btn primary">Lưu thông tin cá nhân</button></form><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div>${accentRow}<div class="setting-row backup-setting"><div><strong>Dữ liệu kiểm thử</strong><small>Lưu dữ liệu nghiệp vụ và ảnh gốc vào JSON trên máy. Tài khoản, mật khẩu và quyền không nằm trong gói này.</small></div><div class="backup-actions">${me?.role==='superadmin'&&!state.previewUser?`<button type="button" class="btn ghost" data-action="backup-export">${icon('download',15)} Xuất dữ liệu</button>`:''}${me?.role==='superadmin'&&!state.previewUser?`<button type="button" class="btn ghost" data-action="backup-import">${icon('plus',15)} Nhập dữ liệu</button><button type="button" class="btn danger" data-action="backup-reset">${icon('trash',15)} Xóa dữ liệu</button>`:''}<input id="backup-import-file" type="file" accept=".json,application/json" hidden></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÀI KHOẢN VÀ GIAO DIỆN</span><h2 id="modal-title">Cài đặt cá nhân</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><form id="personal-settings-form" class="personal-settings-form"><div class="personal-avatar-row"><div id="personal-photo-preview">${avatar({photo:(state.profilePhotoDraft??me?.photo)||'',initial:(me?.username||'NV').slice(0,2).toUpperCase()},true)}</div><div class="personal-avatar-actions"><strong>Ảnh đại diện của tôi</strong><div><label class="btn ghost photo-picker">Chọn ảnh<input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp"></label><button type="button" class="btn ghost" data-action="adjust-profile-photo" ${(state.profilePhotoDraft??me?.photo)?'':'disabled'}>Căn chỉnh</button><button type="button" class="btn ghost" data-action="remove-profile-photo">Xóa ảnh</button></div><small>JPEG/PNG/WebP ≤ 5 MB. Kéo, thu/phóng để cắt ảnh · Dữ liệu lưu tại máy kiểm thử.</small></div></div><label>Họ và tên<input type="text" name="fullName" value="${escape(me?.fullName||'')}" maxlength="100" required autocomplete="name"></label><label>Mật khẩu hiện tại<input type="password" name="oldPassword" autocomplete="current-password" placeholder="Chỉ cần nhập khi đổi mật khẩu"></label><label>Mật khẩu mới<input type="password" name="newPassword" autocomplete="new-password" placeholder="Để trống nếu không thay đổi"></label><button type="submit" class="btn primary">Lưu thông tin cá nhân</button></form><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div>${accentRow}<div class="setting-row backup-setting"><div><strong>Dữ liệu kiểm thử</strong><small>Lưu dữ liệu nghiệp vụ và ảnh gốc vào JSON trên máy. Tài khoản, mật khẩu và quyền không nằm trong gói này.</small></div><div class="backup-actions">${me?.role==='superadmin'&&!state.previewUser?`<button type="button" class="btn ghost" data-action="backup-export">${icon('download',15)} Xuất dữ liệu</button>`:''}${me?.role==='superadmin'&&!state.previewUser?`<button type="button" class="btn ghost" data-action="backup-import">${icon('plus',15)} Nhập dữ liệu</button><button type="button" class="btn danger" data-action="backup-reset">${icon('trash',15)} Xóa dữ liệu</button>`:''}<input id="backup-import-file" type="file" accept=".json,application/json" hidden></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
 }
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
 
@@ -1133,7 +1148,7 @@ root.addEventListener('click',e=>{
  case'account-add':if(denyOperation('access'))return;state.accountEdit='';state.modal='account';break;case'category-add':if(denyOperation(state.catalogScope,'create'))return;state.categoryEdit='';state.modal='category-new';break;case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
  case'theme':state.themeMode=state.theme==='light'?'dark':'light';state.theme=state.themeMode;storageSet(THEME_KEY,state.themeMode);safeHistory('replaceState',document.body.dataset.screen==='app'?href(state.view,state.drawer):'index.html?theme='+state.theme);break;
  case'add':if(denyOperation(state.view,'create'))return;if(['shifts','dashboard','labor','pda'].includes(state.view))return;state.editId='';state.photoDraft='';state.photoOriginalFile=null;state.minuteDraftFiles=[];state.minuteRemoved=[];state.modal='new';break;case'close-modal':closeCrop();if(state.modal==='minute-zoom'&&state.minuteZoomUrl){URL.revokeObjectURL(state.minuteZoomUrl);state.minuteZoomUrl=''}if(state.modal==='confirm'){pendingConfirmation=null;state.confirmData=null}state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':closeCrop();state.photoDraft='';state.photoOriginalFile=null;state.photoRemoveOriginal=true;{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
- case'zoom-portrait':if(portraitObjectUrl){state.modal='portrait';break}return;case'notifications':state.profileMenu=false;state.modal='notifications';break;case'settings':state.profileMenu=false;state.modal='settings';break;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
+ case'zoom-portrait':if(portraitObjectUrl){state.modal='portrait';break}return;case'notifications':state.profileMenu=false;state.modal='notifications';break;case'settings':state.profileMenu=false;state.profilePhotoDraft=actualUser()?.photo||'';state.modal='settings';break;case'adjust-profile-photo':void adjustProfilePhoto().catch(err=>{state.notice=err.message;refreshToasts()});return;case'remove-profile-photo':state.profilePhotoDraft='';{const box=root.querySelector('#personal-photo-preview');if(box)box.innerHTML=avatar({initial:(actualUser()?.username||'NV').slice(0,2).toUpperCase()},true);const button=root.querySelector('[data-action="adjust-profile-photo"]');if(button)button.disabled=true;}return;case'reset-font':state.fontPct=100;storageSet(FONT_KEY,'100');break;
  case'clear-notice':notices.length=0;state.notice='';refreshToasts();break;
  case'show-password':{const form=root.querySelector('#login-form');const username=form?.querySelector('#demo-user')?.value||'';const password=form?.querySelector('#demo-password')?.value||'';state.loginVisible=!state.loginVisible;render();root.querySelector('#demo-user').value=username;root.querySelector('#demo-password').value=password;return}
  case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
@@ -1191,17 +1206,19 @@ root.addEventListener('input',function(e){
 });
 root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='shift-code'&&state.scanMode==='enter'){const person=store.people.find(p=>p.id===e.target.value.trim());if(person&&workRole(person.position)&&!state.scanUser){e.preventDefault();root.querySelector('#scan-user-choice')?.focus();return}}if(e.target.id==='pda-staff-code'&&e.key==='Enter'){e.preventDefault();root.querySelector('#pda-device-code')?.focus()}});
 root.addEventListener('paste',async function(e){
- if(!['new','edit'].includes(state.modal)||!['people','minutes'].includes(state.view))return;
+ if(state.modal!=='settings'&&(!['new','edit'].includes(state.modal)||!['people','minutes'].includes(state.view)))return;
  const pictures=[...(e.clipboardData?.items||[])].filter(item=>item.kind==='file'&&item.type.startsWith('image/')).map(item=>item.getAsFile()).filter(Boolean);
  if(!pictures.length)return;
  e.preventDefault();
  try{
-  if(state.view==='people')await applyStaffPhoto(pictures[0]);
+  if(state.modal==='settings')await applyProfilePhoto(pictures[0]);
+  else if(state.view==='people')await applyStaffPhoto(pictures[0]);
   else await addMinuteDraftImages(pictures);
  }catch(err){state.notice=err?.message||'Không thể dán ảnh';refreshToasts()}
 });
 root.addEventListener('change',async function(e){
  if(e.target.id==='crop-zoom'){changeCropZoom(Number(e.target.value)/100);return}
+ if(e.target.id==='profile-photo'){const file=e.target.files?.[0];e.target.value='';if(file)try{await applyProfilePhoto(file)}catch(err){state.notice=err.message;refreshToasts()}return}
  if(e.target.id==='staff-excel-import'){const file=e.target.files?.[0];e.target.value='';if(file)await importPersonnelExcel(file);return}
  if(e.target.id==='backup-import-file'){if(denyOperation('access'))return;
   const file=e.target.files?.[0];e.target.value='';if(file)await importOfflineBackup(file);return;
