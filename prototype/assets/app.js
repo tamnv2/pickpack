@@ -259,7 +259,7 @@ function saveAccount(form){
  if(state.accountEdit){
   if(!existing||state.accountEdit!==username)return;
   existing.fullName=fullName;if(password)existing.password=password;
-  if(username!=='superadmin')existing.role=role;
+  if(username!=='superadmin'&&existing.role!==role){existing.role=role;existing.permissions=defaultPermissions(role)}
  }else{
   if(existing||demoUsers.length>=30){state.notice='Tài khoản đã tồn tại hoặc đạt giới hạn kiểm thử';return}
   demoUsers.push({username,fullName,password:password||'1',role,permissions:defaultPermissions(role)});
@@ -279,17 +279,29 @@ function categoriesPage(){
  return `<div class="page-content catalog-page"><div class="catalog-heading"><strong>${escape(heading)}</strong>${state.catalogScope==='resources'?'':`<a class="btn ghost" data-nav="${state.catalogScope}" href="${href(state.catalogScope)}">← ${escape(PAGES[state.catalogScope].title)}</a>`}</div><div class="catalog-tabs" role="group" aria-label="Chọn danh mục">${fields.map(([key,name])=>`<button type="button" class="${field===key?'active':''}" data-category-tab="${key}" aria-pressed="${field===key}">${escape(name)} <small>${catalogs[key].length}</small></button>`).join('')}</div><section class="panel table-panel catalog-panel"><div class="table-controls"><span class="records-label">${escape(label)} <b>${values.length}</b></span><button class="btn primary" data-action="category-add">${icon('plus',16)} Thêm mục</button></div><div class="table-scroll"><table><thead><tr><th>Tên danh mục</th><th>Đang sử dụng</th><th>Thao tác</th></tr></thead><tbody>${rows.map(({value,i})=>`<tr><td><strong>${escape(value)}</strong></td><td>${store[owner.records].filter(p=>p[owner.property]===value).length}</td><td><span class="row-actions"><button class="row-open" data-category-edit="${i}" title="Sửa ${escape(value)}" aria-label="Sửa ${escape(value)}">${icon('edit',16)}</button><button class="row-open danger-text" data-category-delete="${i}" title="Xóa ${escape(value)}" aria-label="Xóa ${escape(value)}">${icon('trash',16)}</button></span></td></tr>`).join('')}</tbody></table></div><div class="table-footer">Dữ liệu dùng cho nghiệp vụ liên quan; không xóa mục đang được sử dụng. User là mã làm việc giả lập, không phải tài khoản đăng nhập.</div></section></div>`;
 }
 function catalogModal(){
- const editing=state.modal==='category-edit',field=state.categoryTab,caption=catalogFields(state.catalogScope).find(([k])=>k===field)?.[1],value=editing?state.categoryEdit:'';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><h2 id="modal-title">${editing?'Sửa':'Thêm'} ${escape(caption)}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="catalog-form"><div class="catalog-editor"><label>Tên danh mục<input name="value" maxlength="80" minlength="2" required autocomplete="off" value="${escape(value)}" placeholder="Nhập tên mới"></label><small>Trùng tên không được phép. Sửa tên sẽ cập nhật hồ sơ đang sử dụng.</small></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">Lưu danh mục</button></div></form></section></div>`;
+ const editing=state.modal==='category-edit',caption=catalogFields(state.catalogScope).find(([k])=>k===state.categoryTab)?.[1],value=editing?state.categoryEdit:'';
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><h2 id="modal-title">${editing?'Sửa':'Thêm'} ${escape(caption)}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="catalog-form"><div class="catalog-editor"><strong>Tên danh mục</strong><div id="catalog-inputs"><div class="catalog-input-line"><input name="value" maxlength="80" minlength="2" required autocomplete="off" value="${escape(value)}" placeholder="Nhập tên danh mục 1"></div></div>${editing?'':`<div class="catalog-input-tools"><button type="button" class="btn ghost tiny" data-action="catalog-input-add" aria-label="Thêm dòng nhập danh mục">${icon('plus',16)} Thêm dòng</button><button type="button" class="btn ghost tiny" data-action="catalog-input-remove" aria-label="Bớt dòng cuối" disabled>${icon('minus',16)} Bớt dòng</button></div>`}<small>Không thêm tên trùng hoặc tên đang tồn tại. Tất cả dòng hợp lệ được lưu cùng lúc.</small></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu thay đổi':'Thêm toàn bộ danh mục'}</button></div></form></section></div>`;
 }
 function saveCatalog(form){
+ if(denyOperation(state.catalogScope,state.modal==='category-edit'?'edit':'create'))return;
  const field=state.categoryTab,list=catalogs[field];if(!list)return;
- const value=String(new FormData(form).get('value')||'').replace(/\s+/g,' ').trim(),editing=state.modal==='category-edit',old=state.categoryEdit;
- if(value.length<2){state.notice='Tên danh mục phải có ít nhất 2 ký tự';render();return}
- if(list.some(v=>v.toLocaleLowerCase('vi')===value.toLocaleLowerCase('vi')&&(!editing||v!==old))){state.notice='Tên danh mục đã tồn tại';render();return}
- if(editing){const i=list.indexOf(old);if(i<0)return;list[i]=value;const owner=catalogOwner(field);for(const row of store[owner.records])if(row[owner.property]===old)row[owner.property]=value;persist()}
- else list.push(value);
- persistCatalogs();state.notice=editing?'Đã cập nhật danh mục và hồ sơ liên quan':'Đã thêm danh mục';state.modal='';state.categoryEdit='';render();
+ const values=new FormData(form).getAll('value').map(v=>String(v).replace(/\s+/g,' ').trim());
+ const editing=state.modal==='category-edit',old=state.categoryEdit,seen=new Set();
+ if(!values.length||values.some(v=>v.length<2||v.length>80)){state.notice='Mỗi tên danh mục phải dài từ 2 đến 80 ký tự';refreshToasts();return}
+ for(const value of values){
+  const folded=value.toLocaleLowerCase('vi');
+  if(seen.has(folded)||list.some(item=>item.toLocaleLowerCase('vi')===folded&&(!editing||item!==old))){state.notice='Tên danh mục trùng trong danh sách hoặc đã tồn tại';refreshToasts();return}
+  seen.add(folded);
+ }
+ if(editing){
+  const i=list.indexOf(old);if(i<0)return;
+  list[i]=values[0];const owner=catalogOwner(field);
+  for(const row of store[owner.records])if(row[owner.property]===old)row[owner.property]=values[0];persist();
+ }else{
+  if(list.length+values.length>200){state.notice='Vượt giới hạn 200 mục trong một danh mục';refreshToasts();return}
+  list.push(...values);
+ }
+ persistCatalogs();state.notice=editing?'Đã cập nhật danh mục và hồ sơ liên quan':`Đã thêm ${values.length} danh mục`;state.modal='';state.categoryEdit='';render();
 }
 function deleteCatalog(index){
  const field=state.categoryTab,value=catalogs[field]?.[index];if(value===undefined)return;
@@ -470,7 +482,7 @@ function fieldInput(key,label,value,editing=false){
  if(key==='startDate'){const parts=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v),iso=parts?`${parts[3]}-${parts[2]}-${parts[1]}`:v;return `<label>${escape(label)}<input type="date" name="startDate" value="${escape(iso)}" autocomplete="off"></label>`}
  if(key==='startTime'||key==='endTime')return `<label>${escape(label)}<input name="${key}" type="time" step="1" value="${v==='—'?'':escape(v)}" ${key==='startTime'?'required':''}></label>`;
  if(key==='qty')return `<label>${escape(label)}<input type="number" min="0" max="99999" name="${key}" value="${escape(v)}" required></label>`;
- if(state.view==='people'&&key==='name')return `<label>${escape(label)}<input name="name" value="${escape(v)}" maxlength="120" minlength="2" pattern="[\\p{L}\\p{M} ]{2,120}" placeholder="${escape(label)}" required autocomplete="off"></label>`;
+ if(state.view==='people'&&key==='name')return `<label>${escape(label)}<input name="name" value="${escape(v)}" maxlength="120" minlength="2" placeholder="${escape(label)}" required autocomplete="off"></label>`;
  if(state.view==='people'&&key==='phone')return `<label>${escape(label)}<input type="tel" name="phone" inputmode="numeric" pattern="[0-9]*" maxlength="120" value="${escape(v)}" placeholder="${escape(label)}" autocomplete="off"></label>`;
  if(key==='note')return `<label class="wide-field">${escape(label)}<textarea name="note" rows="2" maxlength="500">${escape(v)}</textarea></label>`;
  return `<label>${escape(label)}<input name="${key}" maxlength="120" value="${escape(v)}" placeholder="${escape(label)}" ${key==='name'?'minlength="2" required':''} ${key==='phone'?'type="tel"':''} autocomplete="off"></label>`;
@@ -606,8 +618,9 @@ function notificationItems(){return [
 {view:'shifts',title:'Nhân sự chờ vào ca',count:store.shifts.filter(r=>r.state==='Chờ vào ca').length,ic:'clock'}
 ].filter(x=>x.count>0)}
 function prefsModal(){
+ const me=actualUser();
  const accentRow=state.theme==='light'?`<div class="setting-row accent-setting"><div><strong>Màu chủ đạo</strong><small>Chọn một trong bảy màu cho giao diện sáng</small></div><div class="accent-swatches" role="group" aria-label="Màu giao diện sáng">${ACCENTS.map(([key,label])=>`<button type="button" data-accent-choice="${key}" class="accent-swatch accent-${key} ${state.accent===key?'active':''}" aria-label="${label}" title="${label}" aria-pressed="${state.accent===key}">${state.accent===key?'✓':''}</button>`).join('')}</div></div>`:'';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÙY CHỌN HIỂN THỊ</span><h2 id="modal-title">Cài đặt</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div><div class="setting-row"><div><strong>Chế độ hiển thị</strong><small>Chế độ Tự động: sáng 06:00–17:59, tối 18:00–05:59 (giờ Việt Nam)</small></div><div class="theme-steps"><button class="${state.themeMode==='auto'?'active':''}" data-theme-choice="auto" aria-pressed="${state.themeMode==='auto'}">${icon('clock',15)} Tự động</button><button class="${state.themeMode==='light'?'active':''}" data-theme-choice="light" aria-pressed="${state.themeMode==='light'}">${icon('sun',15)} Sáng</button><button class="${state.themeMode==='dark'?'active':''}" data-theme-choice="dark" aria-pressed="${state.themeMode==='dark'}">${icon('moon',15)} Tối</button></div></div>${accentRow}<div class="setting-row backup-setting"><div><strong>Dữ liệu kiểm thử</strong><small>Lưu toàn bộ dữ liệu và ảnh gốc vào một file JSON trên máy. Chỉ nhập trên đúng phiên bản Web v${WEB_VERSION}.</small></div><div class="backup-actions"><button type="button" class="btn ghost" data-action="backup-export">${icon('download',15)} Xuất dữ liệu</button><button type="button" class="btn ghost" data-action="backup-import">${icon('plus',15)} Nhập dữ liệu</button><button type="button" class="btn danger" data-action="backup-reset">${icon('trash',15)} Xóa dữ liệu</button><input id="backup-import-file" type="file" accept=".json,application/json" hidden></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn mới</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TÀI KHOẢN VÀ GIAO DIỆN</span><h2 id="modal-title">Cài đặt cá nhân</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><div class="setting-body"><form id="personal-settings-form" class="personal-settings-form"><label>Họ và tên<input type="text" name="fullName" value="${escape(me?.fullName||'')}" maxlength="100" required autocomplete="name"></label><label>Mật khẩu hiện tại<input type="password" name="oldPassword" autocomplete="current-password" placeholder="Chỉ cần nhập khi đổi mật khẩu"></label><label>Mật khẩu mới<input type="password" name="newPassword" autocomplete="new-password" placeholder="Để trống nếu không thay đổi"></label><button type="submit" class="btn primary">Lưu thông tin cá nhân</button></form><div class="setting-row"><div><strong>Cỡ chữ</strong><small>Tăng giảm kích thước chữ toàn hệ thống</small></div><div class="font-steps"><button data-font="-5" aria-label="Giảm cỡ chữ">A−</button><output>${state.fontPct}%</output><button data-font="5" aria-label="Tăng cỡ chữ">A+</button></div></div>${accentRow}<div class="setting-row backup-setting"><div><strong>Dữ liệu kiểm thử</strong><small>Lưu dữ liệu nghiệp vụ và ảnh gốc vào JSON trên máy. Tài khoản, mật khẩu và quyền không nằm trong gói này.</small></div><div class="backup-actions"><button type="button" class="btn ghost" data-action="backup-export">${icon('download',15)} Xuất dữ liệu</button>${me?.role==='superadmin'&&!state.previewUser?`<button type="button" class="btn ghost" data-action="backup-import">${icon('plus',15)} Nhập dữ liệu</button><button type="button" class="btn danger" data-action="backup-reset">${icon('trash',15)} Xóa dữ liệu</button>`:''}<input id="backup-import-file" type="file" accept=".json,application/json" hidden></div></div><div class="setting-row"><div><strong>Thiết lập mặc định</strong><small>Đưa cỡ chữ về mức tiêu chuẩn</small></div><button class="btn ghost" data-action="reset-font">Đặt lại</button></div></div><div class="modal-actions"><button class="btn primary" data-action="close-modal">Hoàn tất</button></div></section></div>`;
 }
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
 
@@ -677,7 +690,7 @@ function saveForm(form){
   const changes={};for(const [k] of PERSON_EDITOR){if(k==='id')continue;changes[k]=k==='startDate'&&fd.get(k)?String(fd.get(k)).replace(/^(\d{4})-(\d{2})-(\d{2})$/,'$3/$2/$1'):String(fd.get(k)||'').trim()}
   changes.photo=state.photoDraft||'';
   changes.initial=name.split(' ').at(-1).slice(0,2);
-  changes.updatedBy='Quản trị viên';
+  changes.updatedBy=actualUser()?.fullName||'Tài khoản kiểm thử';
   changes.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});
   if(editing){const row=store.people.find(p=>p.id===state.editId);if(!row)return;Object.assign(row,changes);state.notice='Đã cập nhật hồ sơ nhân sự'}
   else{store.people.unshift({id,...changes});state.notice='Đã thêm nhân sự'}
@@ -1036,6 +1049,8 @@ root.addEventListener('click',e=>{
  const accent=e.target.closest('[data-accent-choice]');if(accent){const chosen=accent.dataset.accentChoice;if(!ACCENTS.some(([key])=>key===chosen))return;state.accent=chosen;storageSet(ACCENT_KEY,chosen);render();return}
  const font=e.target.closest('[data-font]');if(font){state.fontPct=Math.max(90,Math.min(120,state.fontPct+Number(font.dataset.font)));storageSet(FONT_KEY,String(state.fontPct));render();return}const choice=e.target.closest('[data-theme-choice]');if(choice){const mode=choice.dataset.themeChoice;if(!['auto','light','dark'].includes(mode))return;state.themeMode=mode;state.theme=resolveTheme(mode);storageSet(THEME_KEY,mode);safeHistory('replaceState',href(state.view,state.drawer));render();return}const btn=e.target.closest('[data-action]');if(!btn)return;const act=btn.dataset.action;if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
  switch(act){case'profile-menu':state.profileMenu=!state.profileMenu;break;
+ case'catalog-input-add':{const parent=root.querySelector('#catalog-inputs');if(!parent||parent.children.length>=50)return;const n=parent.children.length+1;const row=document.createElement('div');row.className='catalog-input-line';row.innerHTML=`<input name="value" maxlength="80" minlength="2" required autocomplete="off" placeholder="Nhập tên danh mục ${n}">`;parent.append(row);root.querySelector('[data-action="catalog-input-remove"]').disabled=false;row.querySelector('input').focus();return}
+ case'catalog-input-remove':{const parent=root.querySelector('#catalog-inputs');if(!parent||parent.children.length<=1)return;parent.lastElementChild.remove();const button=root.querySelector('[data-action="catalog-input-remove"]');if(button)button.disabled=parent.children.length===1;return}
  case'account-add':if(denyOperation('access'))return;state.accountEdit='';state.modal='account';break;case'category-add':state.categoryEdit='';state.modal='category-new';break;case'toggle-nav':state.sidebar=!state.sidebar;break;case'close-nav':state.sidebar=false;break;
  case'theme':state.themeMode=state.theme==='light'?'dark':'light';state.theme=state.themeMode;storageSet(THEME_KEY,state.themeMode);safeHistory('replaceState',document.body.dataset.screen==='app'?href(state.view,state.drawer):'index.html?theme='+state.theme);break;
  case'add':if(['shifts','dashboard','labor','pda'].includes(state.view))return;state.editId='';state.photoDraft='';state.photoOriginalFile=null;state.minuteDraftFiles=[];state.minuteRemoved=[];state.modal='new';break;case'close-modal':if(state.modal==='minute-zoom'&&state.minuteZoomUrl){URL.revokeObjectURL(state.minuteZoomUrl);state.minuteZoomUrl=''}if(state.modal==='confirm'){pendingConfirmation=null;state.confirmData=null}state.modal='';state.editId='';state.photoDraft='';break;case'remove-photo':state.photoDraft='';state.photoOriginalFile=null;state.photoRemoveOriginal=true;{const preview=root.querySelector('#photo-preview');if(preview)preview.innerHTML=avatar({initial:'NV'},true)}return;case'close-drawer':state.drawer='';safeHistory('replaceState',href());break;
@@ -1056,15 +1071,15 @@ root.addEventListener('click',e=>{
  render();
 });
 function filterPersonnelInput(input){
- if(state.view!=='people'||!input?.matches('#record-form input[name="id"],#record-form input[name="phone"],#record-form input[name="name"]')||input.dataset.composing==='1')return;
- const original=input.value,filtered=input.name==='name'?v=>v.replace(/[^\p{L}\p{M} ]/gu,''):v=>v.replace(/[^0-9]/g,'');
+ if(state.view!=='people'||!input?.matches('#record-form input[name="id"],#record-form input[name="phone"]')||input.dataset.composing==='1')return;
+ const original=input.value,filtered=v=>v.replace(/[^0-9]/g,'');
  const next=filtered(original);if(next===original)return;
  const caret=input.selectionStart;
  input.value=next;
  if(caret!==null)input.setSelectionRange(filtered(original.slice(0,caret)).length,filtered(original.slice(0,caret)).length);
 }
-root.addEventListener('compositionstart',e=>{if(e.target.matches('#record-form input[name="name"]'))e.target.dataset.composing='1'});
-root.addEventListener('compositionend',e=>{if(e.target.matches('#record-form input[name="name"]')){delete e.target.dataset.composing;filterPersonnelInput(e.target);markField(e.target)}});
+root.addEventListener('compositionstart',e=>{if(e.target.matches('#record-form input[name="id"],#record-form input[name="phone"]'))e.target.dataset.composing='1'});
+root.addEventListener('compositionend',e=>{if(e.target.matches('#record-form input[name="id"],#record-form input[name="phone"]')){delete e.target.dataset.composing;filterPersonnelInput(e.target);markField(e.target)}});
 root.addEventListener('input',function(e){
  if(!e.isComposing)filterPersonnelInput(e.target);
  markField(e.target);
