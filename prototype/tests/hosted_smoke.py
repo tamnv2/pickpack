@@ -20,7 +20,7 @@ webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
 fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
-assert version=='0.9.6'
+assert version=='0.9.7'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -286,6 +286,17 @@ try:
           const transfer=new DataTransfer();transfer.items.add(file);
           document.querySelector('#record-form [name="name"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
         }""",photo_b64)
+        second.locator('#crop-dialog #crop-canvas').wait_for()
+        before_image=second.locator('#crop-dialog #crop-canvas').evaluate('el=>el.toDataURL()')
+        second.locator('#crop-dialog #crop-zoom').evaluate("el=>{el.value='175';el.dispatchEvent(new Event('input',{bubbles:true}))}")
+        assert second.locator('#crop-dialog #crop-percentage').inner_text()=='175%'
+        assert second.locator('#crop-dialog #crop-canvas').evaluate('el=>el.toDataURL()')!=before_image
+        box=second.locator('#crop-dialog #crop-canvas').bounding_box()
+        second.mouse.move(box['x']+box['width']*0.5,box['y']+box['height']*0.5)
+        second.mouse.down()
+        second.mouse.move(box['x']+box['width']*0.62,box['y']+box['height']*0.52,steps=5)
+        second.mouse.up()
+        second.locator('#crop-dialog [data-action="crop-apply"]').click()
         second.locator('#photo-preview img').wait_for()
         assert second.locator('#photo-preview img').evaluate('el=>el.naturalWidth===192')
         second.locator('#record-form button[type="submit"]').click()
@@ -451,7 +462,7 @@ try:
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.6-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.7-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -599,7 +610,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.6 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.7 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
