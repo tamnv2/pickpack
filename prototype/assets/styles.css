@@ -686,3 +686,31 @@ html{scrollbar-gutter:stable}
  .scan-photo-box{height:205px;width:100%;max-width:100%}
  .detail-overlay .detail-content:has(#portrait-original) .detail-fields{grid-template-columns:1fr}
 }
+
+/* v0.9.9 — period control uses the same compact, centered layout across business modules. */
+.date-toolbar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 15px;margin-bottom:14px}
+.date-toolbar-main{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.date-toolbar-title{display:inline-flex;align-items:center;gap:7px;font-weight:750;color:var(--text);white-space:nowrap;padding-bottom:9px;margin-right:4px}
+.date-toolbar-main label{display:grid;gap:5px;color:var(--muted);font-size:calc(11px * var(--text-scale));font-weight:650}
+.date-toolbar-main :is(select,input[type=date]){min-height:36px;border:1px solid var(--border);border-radius:7px;background:var(--control);color:var(--text);padding:6px 9px;max-width:100%;font-size:calc(12px * var(--text-scale))}
+.date-toolbar-main select{min-width:135px}
+.date-toolbar-main input[type=date]{width:152px}
+.date-toolbar-main .btn{margin-left:auto;min-height:36px}
+.date-toolbar-hint{display:block;margin-top:7px;font-size:calc(10px * var(--text-scale));color:var(--muted)}
+.personal-avatar-row{grid-column:1/-1;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border);padding:0 0 14px}
+.personal-avatar-row .person-avatar{width:82px;height:82px;flex:none;border-radius:50%;object-fit:cover}
+.personal-avatar-actions{display:grid;gap:7px;min-width:0}
+.personal-avatar-actions strong{font-size:calc(12px * var(--text-scale))}
+.personal-avatar-actions>div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.personal-avatar-actions .btn{padding:8px 11px;font-size:calc(11px * var(--text-scale))}
+.personal-avatar-actions small{font-size:calc(10px * var(--text-scale));color:var(--muted);line-height:1.45}
+@media(max-width:680px){
+ .date-toolbar{padding:10px}
+ .date-toolbar-main{gap:8px}
+ .date-toolbar-title{flex:0 0 100%;padding:0}
+ .date-toolbar-main label{flex:1 1 130px}
+ .date-toolbar-main :is(input[type=date],select){width:100%;min-width:0}
+ .date-toolbar-main .btn{width:100%;justify-content:center}
+ .personal-avatar-row{align-items:flex-start;gap:10px}
+ .personal-avatar-row .person-avatar{width:66px;height:66px}
+}
