@@ -2,9 +2,9 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-16",
-  "phase": "OFFICE_UI_V099_DATE_RANGE_ACCOUNT_AVATAR_CODE_REVIEW",
-  "application_code": "WEB_OFFICE_STATIC_V099_WORKING_CI_IN_PROGRESS_DRAFT_PR",
-  "technical_ci": "V099_SOURCE_7076009ebc0c973cc1941d56cf1f36caab2d6ef5_RUN_43893965000_IN_PROGRESS; V098_PREVIOUS_CI_PASS",
+  "phase": "OFFICE_UI_V099_DATE_FILTER_AVATAR_CI_VERIFIED",
+  "application_code": "WEB_OFFICE_STATIC_V099_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_BUILD_CHROMIUM_HOSTED_CDN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
   "owner_business_acceptance": "V099_OWNER_REVIEW_PENDING",
@@ -28,10 +28,10 @@
     "realtime": true
   },
   "pending": [
-    "V0.9.9 CI smoke/hosted/public preview verification and Owner UI review",
-    "CCDC field/model proposal from read-only DC Hung Yen inventory not yet approved or implemented",
-    "Cloudflare static hosting feasible; production authentication/RBAC/shared state/realtime/private portraits BLOCKED without separately approved backend",
-    "No merge/Production/provider authorization; OWNER_PASS, FIELD_PASS and RELEASE_PASS pending"
+    "Owner review of Web v0.9.9 avatar/settings and date-filter/export UI",
+    "CCDC schema proposal read-only sourced from DC Hung Yen inventory awaiting explicit Owner approval; not implemented",
+    "Cloudflare static-host feasible; actual service BLOCKED pending approved backend auth/RBAC/shared state/realtime/private portraits",
+    "No Production/merge/provider approval; OWNER_PASS FIELD_PASS RELEASE_PASS pending"
   ],
   "latest_checkpoint": "PP-20261116-033",
   "ui_prototype": {
@@ -139,14 +139,14 @@
     "personal_avatar": "LOCAL_MOCK_ACCOUNT_PHOTO_UPLOAD_PASTE_DRAG_ZOOM_CROP_SAVE_ONLY_BROWSER_LOCAL",
     "period_filter": "TODAY_DEFAULT_YESTERDAY_7D_30D_CURRENT_PREVIOUS_MONTH_CUSTOM_ALL_APPLIES_DISPLAY_AND_XLSX_DASHBOARD_SUMMARY_LEGACY_UNDATED_MASTERS_ACCESSIBLE",
     "ccdc_proposal": "PROPOSED_NOT_IMPLEMENTED_ASSET_DOSSIER_TAG_IDENTITIES_TYPE_UNITS_DEPT_CUSTODIAN_LEDGER_GOOD_BAD_PHYSICAL_VARIANCES_AUDIT_MOVEMENTS",
-    "verification_v099": "SOURCE_CHECK_BUILD_PASS_BROWSER_SMOKE_PASS_SOURCE_8ac775d42c13; HOSTED_E2E_TEST_FIX_SOURCE_7076009ebc0c_RUN_43893965000_IN_PROGRESS"
+    "verification_v099": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_CHROMIUM_HOSTED_XLSX_CDN_BROWSER"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/325b5555394b0cd81c547853df24955bba1eada1/prototype/index.html",
-    "verified_commit": "325b5555394b0cd81c547853df24955bba1eada1",
-    "verified_run": "43856876485",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8/prototype/index.html",
+    "verified_commit": "dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8",
+    "verified_run": "43894690079",
     "public_access": true,
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
