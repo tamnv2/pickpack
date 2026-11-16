@@ -398,7 +398,9 @@ try:
         second.locator('#shift-code').fill('90009999')
         second.locator('#scan-portrait .scan-photo-original').wait_for(timeout=5000)
         assert second.locator('#scan-portrait img').evaluate("el=>el.naturalWidth===480&&el.naturalHeight===640")
-        assert second.locator('#scan-portrait img').evaluate("el=>{const r=el.getBoundingClientRect();return r.height<=211&&Math.abs(r.width/r.height-.75)<.03}")
+        assert second.locator('#scan-portrait img').evaluate("el=>{const r=el.getBoundingClientRect();return r.height<=251&&Math.abs(r.width/r.height-.75)<.03}")
+        assert second.locator('#scan-portrait').evaluate("el=>{const r=el.getBoundingClientRect(),p=el.closest('.scan-person-layout').getBoundingClientRect();return Math.abs((r.top+r.bottom)/2-(p.top+p.bottom)/2)<2}")
+        assert second.locator('[data-photo-edit]').count()==1
         assert second.locator('#scan-user-choice').count()==0 # Non-Pick/Pack is not issued a work account.
         second.locator('#shift-code').press('Enter')
         assert 'Đã vào ca' in second.locator('.scan-outcome').inner_text()
