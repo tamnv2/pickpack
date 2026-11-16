@@ -261,7 +261,7 @@ try:
         assert second.locator('#record-form input[name="id"]').input_value()=='90009999'
         second.locator('#record-form input[name="id"]').fill('90009999')
         second.locator('#record-form input[name="name"]').fill('Nhân viên kiểm thử liên tab 12!')
-        assert second.locator('#record-form input[name="name"]').input_value().strip()=='Nhân viên kiểm thử liên tab'
+        assert second.locator('#record-form input[name="name"]').input_value().strip()=='Nhân viên kiểm thử liên tab 12!' # IME safe, validate at save
         second.locator('#record-form input[name="name"]').fill('Nhân viên kiểm thử liên tab')
         second.locator('#record-form input[name="phone"]').fill('000-123a456')
         assert second.locator('#record-form input[name="phone"]').input_value()=='000123456'
