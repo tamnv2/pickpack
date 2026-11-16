@@ -313,6 +313,20 @@ try:
         second.locator('[data-action="zoom-portrait"]').click()
         assert second.locator('.portrait-lightbox img').evaluate("el=>el.naturalWidth===480")
         second.locator('.portrait-lightbox [data-action="close-modal"]').click()
+        second.locator('.detail-drawer [data-photo-edit]').click()
+        second.locator('#confirm-password').fill('1')
+        second.locator('#confirm-form button[type="submit"]').click()
+        second.locator('#crop-dialog #crop-canvas').wait_for(timeout=7000)
+        assert second.locator('#crop-dialog #crop-zoom').input_value()=='125'
+        second.locator('#crop-dialog [data-action="crop-zoom-out"]').click()
+        assert second.locator('#crop-dialog #crop-percentage').inner_text()=='115%'
+        second.locator('#crop-dialog [data-action="crop-apply"]').click()
+        assert second.locator('#photo-preview img').evaluate("el=>el.naturalWidth===192")
+        second.locator('#record-form button[type="submit"]').click()
+        assert second.locator('#record-form').count()==0
+        second.locator('.people-table tbody tr').first.locator('[data-record]').click()
+        second.locator('#portrait-original img').wait_for(timeout=5000)
+        assert second.locator('#portrait-original img').evaluate("el=>el.naturalWidth===480")
         second.locator('.detail-head [data-action="close-drawer"]').click()
         # The other open tab receives a native storage event and updates the dashboard.
         page.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim() === '37'", timeout=5000)
