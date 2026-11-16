@@ -20,7 +20,7 @@ webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
 fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
-assert version=='0.9.8'
+assert version=='0.9.9'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -40,6 +40,7 @@ try:
         blank.locator('#demo-password').fill('1')
         blank.locator('#login-form button[type="submit"]').click()
         blank.wait_for_url('**/app.html?view=dashboard*')
+        assert blank.locator('#period-preset').input_value()=='today'
         assert blank.locator('.metrics .metric-number').first.inner_text()=='0'
         blank.locator('a.nav-main[href*="view=people"]').click()
         assert blank.locator('.records-label b').inner_text()=='0'
@@ -139,6 +140,8 @@ try:
         page.locator('#demo-password').fill('1')
         page.locator('#login-form button[type="submit"]').click()
         page.wait_for_url('**/app.html?view=dashboard*')
+        assert page.locator('#period-preset').input_value()=='today'
+        page.locator('#period-preset').select_option('all')
         assert page.locator('a.nav-main').count() == 9
         assert page.locator('.side-bottom .web-version').inner_text()==f'Web v{version}'
         assert page.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
@@ -481,7 +484,7 @@ try:
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.8-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.9-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -629,7 +632,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.8 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.9 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()

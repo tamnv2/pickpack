@@ -19,10 +19,13 @@ with sync_playwright() as p:
   if seed:pg.evaluate("""fixture=>{localStorage.setItem('pickpack1291_office_records_v094',JSON.stringify(fixture.records));localStorage.setItem('pickpack1291_office_catalogs_v094',JSON.stringify(fixture.catalogs))}""",fixture)
   pg.add_style_tag(content=css)
   pg.add_script_tag(content=js)
+  if screen=='app' and seed:
+   assert pg.locator('#period-preset').input_value()=='today'
+   pg.locator('#period-preset').select_option('all')  # Legacy fixture rows predate today.
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.8'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.9'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +36,7 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.9.8 browser must have no test records or catalogs.
+ # A fresh Web v0.9.9 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -50,7 +53,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.8'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.9'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -108,7 +111,7 @@ with sync_playwright() as p:
  assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
  assert app.locator('.shortcut-panel').count()==0
  assert app.locator('.overview-page button[data-action="add"]').count()==0
- assert app.locator('.overview-page button[data-action="export"]').count()==0
+ assert app.locator('.overview-page button[data-action="export"]').count()==1
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==0
  assert app.locator('.location-chip,.group-title').count()==0
@@ -479,7 +482,7 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- # v0.9.8: local permission preview, batch catalogs, Vietnamese IME, personal settings.
+ # v0.9.9: local permission preview, batch catalogs, Vietnamese IME, personal settings.
  rolecheck=new_screen()
  rolecheck.locator('a.nav-main[href*="view=access"]').click()
  assert rolecheck.locator('.access-user').count()==5
@@ -517,12 +520,26 @@ with sync_playwright() as p:
  rolecheck.locator('button[data-action="close-modal"]').last.click()
  rolecheck.locator('.top-profile').click()
  rolecheck.locator('[data-action="settings"]').click()
+ assert rolecheck.locator('#personal-photo-preview').count()==1
+ rolecheck.locator('#profile-photo').set_input_files({'name':'account.png','mimeType':'image/png','buffer':png})
+ assert rolecheck.locator('#crop-dialog').count()==1
+ rolecheck.locator('#crop-dialog [data-action="crop-zoom-in"]').click()
+ rolecheck.locator('#crop-dialog [data-action="crop-apply"]').click()
+ assert rolecheck.locator('#personal-photo-preview img').count()==1
  rolecheck.locator('#personal-settings-form [name="fullName"]').fill('Nguyễn Văn Thử')
  rolecheck.locator('#personal-settings-form [name="oldPassword"]').fill('1')
  rolecheck.locator('#personal-settings-form [name="newPassword"]').fill('moi')
  rolecheck.locator('#personal-settings-form button[type="submit"]').click()
  assert rolecheck.locator('.top-profile .profile-name strong').inner_text()=='Nguyễn Văn Thử'
+ assert rolecheck.locator('.top-profile img.person-avatar').count()==1
+ assert rolecheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_users_v096')).find(x=>x.username==='superadmin').photo.startsWith('data:image/jpeg;base64,')")
  assert rolecheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_users_v096')).find(x=>x.username==='superadmin').password")=='moi'
+ rolecheck.locator('a.nav-main[href*="view=shifts"]').click()
+ assert rolecheck.locator('#period-preset').input_value()=='all'
+ rolecheck.locator('#period-preset').select_option('yesterday')
+ assert rolecheck.locator('#period-preset').input_value()=='yesterday'
+ rolecheck.locator('#period-preset').select_option('today')
+ assert rolecheck.locator('#period-from').input_value()==rolecheck.locator('#period-to').input_value()
  rolecheck.close()
- print('PASS: v0.9.8 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
+ print('PASS: v0.9.9 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
