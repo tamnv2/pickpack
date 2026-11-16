@@ -574,6 +574,22 @@ try:
         mobile.locator('a.nav-main[href*="view=shifts"]').click()
         assert mobile.locator('#shift-scan-form').is_visible()
         assert mobile.evaluate('document.documentElement.scrollWidth <= innerWidth + 3')
+        # Non-superadmin login may only use approved modules; direct link to access UI is rejected.
+        mod_context=browser.new_context(viewport={'width':1280,'height':800})
+        mod=mod_context.new_page()
+        assert mod.goto(base+'/index.html').ok
+        mod.locator('#demo-user').fill('dieuphoile')
+        mod.locator('#demo-password').fill('1')
+        mod.locator('#login-form button[type="submit"]').click()
+        mod.wait_for_url('**/app.html?view=dashboard*')
+        assert mod.locator('.nav-locked').count()==1
+        assert mod.locator('a.nav-main[href*="view=shifts"]').count()==1
+        assert mod.locator('a.nav-main[href*="view=assets"]').count()==0
+        assert mod.locator('#role-preview').count()==0
+        assert mod.goto(base+'/app.html?view=access').ok
+        assert mod.locator('.access-page').count()==0
+        assert mod.locator('.nav-locked').count()==1
+        mod_context.close()
         # Account dropdown logs out the whole mock browser origin, including other tabs.
         second.locator('.preferences-modal [data-action="close-modal"]').last.click()
         second.locator('.top-profile').click()
