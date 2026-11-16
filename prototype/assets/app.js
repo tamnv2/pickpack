@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.9.7';
+ const WEB_VERSION='0.9.8';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'},access:{title:'Quản lý quyền truy cập'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên',access:'Quản lý quyền truy cập'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list'],['access','shield']];
@@ -311,7 +311,7 @@ function deleteCatalog(index){
 }
 function scanPreview(person){
  if(!person)return '<div class="scan-empty">Nhập hoặc quét mã nhân viên để xem hồ sơ.</div>';
- return `<div class="scan-person-layout"><div class="scan-photo-box" id="scan-portrait" data-person="${escape(person.id)}">${avatar(person,true)}</div><div class="scan-person-info"><div class="scan-identity"><div><strong>${escape(person.name)}</strong><small>Mã nhân viên: ${escape(person.id)} · ${escape(person.position||'Chưa có vị trí')}</small></div></div><dl class="scan-fields">${PERSON_DETAILS.filter(([k])=>k!=='name'&&k!=='id').map(([k,l])=>`<div><dt>${escape(l)}</dt><dd>${escape(person[k]||'Chưa cập nhật')}</dd></div>`).join('')}</dl></div></div>`;
+ return `<div class="scan-person-layout"><div class="scan-photo-box" id="scan-portrait" data-person="${escape(person.id)}">${avatar(person,true)}</div><div class="scan-person-info"><div class="scan-identity"><div><strong>${escape(person.name)}</strong><small>Mã nhân viên: ${escape(person.id)} · ${escape(person.position||'Chưa có vị trí')}</small></div>${canAccess('people','edit')?`<button type="button" class="btn ghost tiny" data-photo-edit="${escape(person.id)}">${icon('edit',15)} Căn chỉnh ảnh</button>`:''} </div><dl class="scan-fields">${PERSON_DETAILS.filter(([k])=>k!=='name'&&k!=='id').map(([k,l])=>`<div><dt>${escape(l)}</dt><dd>${escape(person[k]||'Chưa cập nhật')}</dd></div>`).join('')}</dl></div></div>`;
 }
 async function renderScanPortrait(person){
  const id=person?.id,area=root.querySelector('#scan-portrait');
@@ -468,7 +468,7 @@ function drawer(){
  if(!state.drawer)return '';
  const row=store[state.view]?.find(x=>x.id===state.drawer);if(!row)return '';
  const fields=state.view==='people'?PERSON_DETAILS:columns[state.view].slice(1);
- return `<div class="drawer-shade" data-action="close-drawer"></div><aside class="detail-drawer" role="dialog" aria-modal="true" aria-label="Chi tiết ${escape(row.id)}"><div class="detail-head"><div><small>CHI TIẾT HỒ SƠ</small><h2>${escape(row.name)}</h2></div><button class="icon-button" data-action="close-drawer" aria-label="Đóng chi tiết">×</button></div><div class="detail-content"><div class="detail-hero">${state.view==='people'?avatar(row,true):`<span class="detail-icon">${icon(state.view==='pda'?'device':'file',23)}</span>`}<div><strong>${escape(row.name)}</strong><small>${escape(row.id)}</small></div></div>${state.view==='people'?`<div class="portrait-original" id="portrait-original"><div class="portrait-placeholder">${avatar(row,true)}<p>Chưa có ảnh gốc trong trình duyệt này.</p></div></div>`:''}${row.state?badge(row.state):''}${state.view==='minutes'?'<div class="minute-drawer-photos"><strong>Ảnh biên bản</strong><div class="minute-photo-list" id="minute-drawer-gallery"></div></div>':''}<div class="detail-fields">${fields.filter(([k])=>k!=='name').map(([k,label])=>`<div><span>${escape(label)}</span><b>${escape(row[k]||'—')}</b></div>`).join('')}</div><div class="drawer-actions">${state.view==='shifts'?'':`${state.view==='pda'?'':`${canAccess(state.view,'edit')?`<button class="btn primary" data-edit="${escape(row.id)}">${icon('edit',16)} Chỉnh sửa</button>`:''}`}${['people','labor','pda'].includes(state.view)?'':`${canAccess(state.view,'edit')?`<button class="btn ghost" data-quick="${escape(row.id)}">${quickLabel()}</button>`:''}`}${canAccess(state.view,'delete')?`<button class="btn danger" data-delete="${escape(row.id)}">Xóa</button>`:''}`}</div></div></aside>`;
+ return `<div class="modal-overlay detail-overlay" data-action="close-drawer"><section class="modal detail-drawer" role="dialog" aria-modal="true" aria-label="Chi tiết ${escape(row.id)}"><div class="detail-head"><div><small>CHI TIẾT HỒ SƠ</small><h2>${escape(row.name)}</h2></div><button class="icon-button" data-action="close-drawer" aria-label="Đóng chi tiết">×</button></div><div class="detail-content"><div class="detail-hero">${state.view==='people'?avatar(row,true):`<span class="detail-icon">${icon(state.view==='pda'?'device':'file',23)}</span>`}<div><strong>${escape(row.name)}</strong><small>${escape(row.id)}</small></div></div>${state.view==='people'?`<div class="portrait-original" id="portrait-original"><div class="portrait-placeholder">${avatar(row,true)}<p>Chưa có ảnh gốc trong trình duyệt này.</p></div></div>`:''}${row.state?badge(row.state):''}${state.view==='minutes'?'<div class="minute-drawer-photos"><strong>Ảnh biên bản</strong><div class="minute-photo-list" id="minute-drawer-gallery"></div></div>':''}<div class="detail-fields">${fields.filter(([k])=>k!=='name').map(([k,label])=>`<div><span>${escape(label)}</span><b>${escape(row[k]||'—')}</b></div>`).join('')}</div><div class="drawer-actions">${state.view==='people'&&canAccess('people','edit')&&row.photo?`<button class="btn ghost" type="button" data-photo-edit="${escape(row.id)}">${icon('edit',16)} Căn chỉnh ảnh</button>`:''}${state.view==='shifts'?'':`${state.view==='pda'?'':`${canAccess(state.view,'edit')?`<button class="btn primary" data-edit="${escape(row.id)}">${icon('edit',16)} Chỉnh sửa</button>`:''}`}${['people','labor','pda'].includes(state.view)?'':`${canAccess(state.view,'edit')?`<button class="btn ghost" data-quick="${escape(row.id)}">${quickLabel()}</button>`:''}`}${canAccess(state.view,'delete')?`<button class="btn danger" data-delete="${escape(row.id)}">Xóa</button>`:''}`}</div></div></section></div>`;
 }
 const FIELD_OPTIONS={team:['Pick','Pack thường','Pack Auto','Điều phối'],shift:['Ca 1','Ca 2'],state:['Đang làm việc','Chờ vào ca','Nghỉ ca','Trong ca','Đã ra ca','Tạm tính','Đã xác nhận','Chưa chấm','Chờ xác nhận','Đã lưu','Sẵn sàng','Đang sử dụng','Cần kiểm tra','Đang mượn','Đã trả'],type:['Bàn giao ca','Thiết bị','Tác nghiệp','An toàn','Kỷ luật'],work:['Pick','Pack thường','Pack Auto','Điều phối']};
 const STATES_BY_MODULE={people:['Đang làm việc','Chờ vào ca','Nghỉ ca'],shifts:['Chờ vào ca','Trong ca','Đã ra ca'],labor:['Chưa chấm','Tạm tính','Đã xác nhận'],minutes:['Chờ xác nhận','Đã lưu','Đã xác nhận'],assets:['Sẵn sàng','Đang sử dụng','Cần kiểm tra'],pda:['Đang mượn','Đã trả']};
@@ -592,6 +592,17 @@ function photoEditor(person){
  const x={name:person?.name||'',photo:state.photoDraft||'',initial:person?.initial||''};
  return `<section class="photo-editor"><div id="photo-preview">${avatar(x,true)}</div><div class="photo-editor-info"><strong>Ảnh đại diện</strong><div class="photo-editor-actions"><label class="btn ghost photo-picker">Chụp / Chọn ảnh<input id="staff-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="user"></label>${x.photo?'<button class="btn ghost" data-action="adjust-photo" type="button">Căn chỉnh ảnh</button>':''}<button class="btn ghost" data-action="remove-photo" type="button">Xóa ảnh</button></div><small>Chọn ảnh hoặc Ctrl + V, sau đó kéo và thu/phóng để cắt avatar · JPEG/PNG/WebP ≤5 MB · Chỉ sử dụng ảnh giả lập.</small></div></section>`;
 }
+function startPhotoEdit(id){
+ if(denyOperation('people','edit'))return;
+ const person=store.people.find(x=>x.id===id);if(!person)return;
+ confirmDialog('Căn chỉnh ảnh nhân sự','Nhập mật khẩu trước khi chỉnh ảnh của '+person.name,()=>{
+  state.view='people';state.drawer='';state.editId=id;state.photoDraft=person.photo||'';
+  state.photoOriginalFile=null;state.photoRemoveOriginal=false;state.modal='edit';
+  state.minuteDraftFiles=[];state.minuteRemoved=[];
+  safeHistory('replaceState',href('people'));
+  requestAnimationFrame(()=>{void adjustExistingPhoto().catch(err=>{state.notice=err.message||'Không thể mở ảnh';refreshToasts()})});
+ });
+}
 function closeCrop(){
  if(!cropSession)return;
  cropSession.overlay.remove();
@@ -611,7 +622,7 @@ function paintCrop(){
 }
 function changeCropZoom(value){
  if(!cropSession)return;
- cropSession.zoom=Math.max(1,Math.min(3,Number(value)||1));
+ cropSession.zoom=Math.max(1,Math.min(4,Number(value)||1));
  paintCrop();
 }
 async function beginCrop(file,isNew){
@@ -623,10 +634,10 @@ async function beginCrop(file,isNew){
  if(!['new','edit'].includes(state.modal)||state.view!=='people'){URL.revokeObjectURL(url);return}
  const layer=document.createElement('div');
  layer.id='crop-dialog';layer.className='crop-overlay modal-overlay';
- layer.innerHTML=`<section class="modal crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-title"><div class="modal-head"><div><span>CHỈNH ẢNH ĐẠI DIỆN</span><h2 id="crop-title">Căn chỉnh và cắt ảnh</h2></div><button class="icon-button" data-action="crop-cancel" type="button" aria-label="Đóng">×</button></div><div class="crop-content"><div class="crop-stage"><canvas id="crop-canvas" width="320" height="320" tabindex="0" aria-label="Kéo để chỉnh vị trí ảnh"></canvas><div class="crop-circle"></div></div><small>Kéo ảnh trong vòng tròn. Lăn chuột hoặc dùng thanh trượt để thu/phóng.</small><div class="crop-controls"><button type="button" class="btn ghost" data-action="crop-zoom-out" aria-label="Thu nhỏ">−</button><label for="crop-zoom">Phóng to <input id="crop-zoom" type="range" min="100" max="300" step="1" value="100"></label><button type="button" class="btn ghost" data-action="crop-zoom-in" aria-label="Phóng to">+</button><output id="crop-percentage">100%</output></div><div class="crop-modal-actions modal-actions"><button class="btn ghost" data-action="crop-reset" type="button">Căn giữa</button><button class="btn ghost" data-action="crop-cancel" type="button">Hủy</button><button class="btn primary" data-action="crop-apply" type="button">Áp dụng ảnh</button></div></div></section>`;
+ layer.innerHTML=`<section class="modal crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-title"><div class="modal-head"><div><span>CHỈNH ẢNH ĐẠI DIỆN</span><h2 id="crop-title">Căn chỉnh và cắt ảnh</h2></div><button class="icon-button" data-action="crop-cancel" type="button" aria-label="Đóng">×</button></div><div class="crop-content"><div class="crop-stage"><canvas id="crop-canvas" width="320" height="320" tabindex="0" aria-label="Kéo để chỉnh vị trí ảnh"></canvas><div class="crop-circle"></div></div><small>Kéo ảnh trong vòng tròn. Lăn chuột hoặc dùng thanh trượt để thu/phóng.</small><div class="crop-controls"><button type="button" class="btn ghost" data-action="crop-zoom-out" aria-label="Thu nhỏ">−</button><label for="crop-zoom">Phóng to <input id="crop-zoom" type="range" min="100" max="400" step="1" value="125"></label><button type="button" class="btn ghost" data-action="crop-zoom-in" aria-label="Phóng to">+</button><output id="crop-percentage">125%</output></div><div class="crop-modal-actions modal-actions"><button class="btn ghost" data-action="crop-reset" type="button">Căn giữa</button><button class="btn ghost" data-action="crop-cancel" type="button">Hủy</button><button class="btn primary" data-action="crop-apply" type="button">Áp dụng ảnh</button></div></div></section>`;
  root.appendChild(layer);
  const canvas=layer.querySelector('#crop-canvas');
- cropSession={file,isNew,url,img,overlay:layer,canvas,scale:Math.max(320/img.naturalWidth,320/img.naturalHeight),zoom:1,offsetX:0,offsetY:0};
+ cropSession={file,isNew,url,img,overlay:layer,canvas,scale:Math.max(320/img.naturalWidth,320/img.naturalHeight),zoom:1.25,offsetX:0,offsetY:0};
  let pointer=null;
  canvas.addEventListener('pointerdown',e=>{if(!cropSession)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
  canvas.addEventListener('pointermove',e=>{
@@ -849,7 +860,7 @@ function decodeBackupPortrait(item){
 }
 function validateOfflineBackup(snapshot){
  if(!snapshot||snapshot.format!==BACKUP_FORMAT||snapshot.schema!==BACKUP_SCHEMA)throw Error('File không phải bản sao lưu PickPack hợp lệ');
- if(snapshot.webVersion!==WEB_VERSION)throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở đúng Web v'+WEB_VERSION+' để nhập');
+ if(!['0.9.7',WEB_VERSION].includes(snapshot.webVersion))throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở Web v'+WEB_VERSION+' để nhập');
  const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits,minutePictures=data.minuteImages;
  if(!records||!catalogData||!Array.isArray(pictures)||!Array.isArray(minutePictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
  for(const key of Object.keys(store)){
@@ -1099,8 +1110,9 @@ root.addEventListener('click',e=>{
  const pickUser=e.target.closest('[data-account-pick]');if(pickUser){if(denyOperation('access'))return;state.accessUser=pickUser.dataset.accountPick;render();return}
  const editAccount=e.target.closest('[data-account-edit]');if(editAccount){if(denyOperation('access'))return;state.accountEdit=editAccount.dataset.accountEdit;state.modal='account';render();return}
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(nav.dataset.nav==='categories'||nav.dataset.nav==='resources'){state.catalogScope=nav.dataset.nav==='resources'?'resources':nav.dataset.catalogScope||'people';state.categoryTab=catalogFields(state.catalogScope)[0][0]}setView(nav.dataset.nav)}return}
+ const photoEdit=e.target.closest('[data-photo-edit]');if(photoEdit){startPhotoEdit(photoEdit.dataset.photoEdit);return}
  const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
- const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;if(state.view==='shifts')return;const record=edit.dataset.edit;confirmDialog('Xác nhận sửa dữ liệu',`Nhập mật khẩu trước khi sửa bản ghi ${record}`,()=>{state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit'});return}
+ const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;if(state.view==='shifts')return;const record=edit.dataset.edit;confirmDialog('Xác nhận sửa dữ liệu',`Nhập mật khẩu trước khi sửa bản ghi ${record}`,()=>{state.drawer='';safeHistory('replaceState',href(state.view));state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit'});return}
  const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
  const quick=e.target.closest('[data-quick]');if(quick){if(denyOperation(state.view,'edit'))return;const id=quick.dataset.quick;confirmDialog('Xác nhận thay đổi',`Nhập mật khẩu trước khi thay đổi bản ghi ${id}`,()=>quickChange(id));return}
  const scanMode=e.target.closest('[data-scan-mode]');if(scanMode){state.scanMode=scanMode.dataset.scanMode==='exit'?'exit':'enter';state.scanOutcome=null;state.scanCurrentStaff='';state.scanUser='';state.scanDesk='';render();root.querySelector('#shift-code')?.focus();return}
@@ -1112,8 +1124,9 @@ root.addEventListener('click',e=>{
  if(act==='crop-apply'){acceptCrop();return}
  if(act==='crop-zoom-in'){if(cropSession)changeCropZoom(cropSession.zoom+0.1);return}
  if(act==='crop-zoom-out'){if(cropSession)changeCropZoom(cropSession.zoom-0.1);return}
- if(act==='crop-reset'){if(cropSession){cropSession.zoom=1;cropSession.offsetX=0;cropSession.offsetY=0;paintCrop()}return}
+ if(act==='crop-reset'){if(cropSession){cropSession.zoom=1.25;cropSession.offsetX=0;cropSession.offsetY=0;paintCrop()}return}
  if(act==='adjust-photo'){void adjustExistingPhoto().catch(err=>{state.notice=err.message;refreshToasts()});return}if(act==='close-modal'&&btn.classList.contains('modal-overlay')&&e.target.closest('.modal'))return;
+ if(act==='close-drawer'&&btn.classList.contains('modal-overlay')&&e.target.closest('.detail-drawer'))return;
  switch(act){case'profile-menu':state.profileMenu=!state.profileMenu;break;
  case'catalog-input-add':{const parent=root.querySelector('#catalog-inputs');if(!parent||parent.children.length>=50)return;const n=parent.children.length+1;const row=document.createElement('div');row.className='catalog-input-line';row.innerHTML=`<input name="value" maxlength="80" minlength="2" required autocomplete="off" placeholder="Nhập tên danh mục ${n}">`;parent.append(row);root.querySelector('[data-action="catalog-input-remove"]').disabled=false;row.querySelector('input').focus();return}
  case'catalog-input-remove':{const parent=root.querySelector('#catalog-inputs');if(!parent||parent.children.length<=1)return;parent.lastElementChild.remove();const button=root.querySelector('[data-action="catalog-input-remove"]');if(button)button.disabled=parent.children.length===1;return}
