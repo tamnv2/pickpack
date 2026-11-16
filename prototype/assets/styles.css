@@ -638,7 +638,7 @@ html{scrollbar-gutter:stable}
 
 
 /* Web v0.9.8 — all record previews are centered dialogs, never right-side drawers. */
-.detail-overlay{display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:16px;z-index:120}
+.detail-overlay{display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:16px;z-index:100}
 .detail-overlay .detail-drawer{position:relative;inset:auto;right:auto;top:auto;bottom:auto;z-index:auto;width:min(860px,100%);max-height:calc(100dvh - 32px);background:var(--card);border-radius:12px;box-shadow:0 24px 66px #0b172044;display:flex;flex-direction:column;overflow:hidden}
 .detail-overlay .detail-head{padding:17px 22px 13px;flex:none}
 .detail-overlay .detail-head h2{font-size:calc(18px * var(--text-scale));margin-top:6px}
