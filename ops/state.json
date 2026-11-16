@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-16",
-  "phase": "OFFICE_UI_V098_CENTERED_CROP_CDN_VERIFIED",
-  "application_code": "WEB_OFFICE_STATIC_V098_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43856876485_SOURCE_325b5555394b0cd81c547853df24955bba1eada1",
+  "phase": "OFFICE_UI_V099_DATE_RANGE_ACCOUNT_AVATAR_CODE_REVIEW",
+  "application_code": "WEB_OFFICE_STATIC_V099_WORKING_CI_IN_PROGRESS_DRAFT_PR",
+  "technical_ci": "V099_SOURCE_7076009ebc0c973cc1941d56cf1f36caab2d6ef5_RUN_43893965000_IN_PROGRESS; V098_PREVIOUS_CI_PASS",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V098_OWNER_UI_REVIEW_PENDING",
+  "owner_business_acceptance": "V099_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,12 @@
     "realtime": true
   },
   "pending": [
-    "Owner review of centered record modals, manual avatar crop shortcut, vertical scan portrait in Web v0.9.8",
-    "Cloudflare static-host feasible but real service BLOCKED pending server auth/roles, shared API storage/realtime, private photos and multi-device tests",
-    "No Production/merge/provider authorization; OWNER_PASS, FIELD_PASS and RELEASE_PASS pending"
+    "V0.9.9 CI smoke/hosted/public preview verification and Owner UI review",
+    "CCDC field/model proposal from read-only DC Hung Yen inventory not yet approved or implemented",
+    "Cloudflare static hosting feasible; production authentication/RBAC/shared state/realtime/private portraits BLOCKED without separately approved backend",
+    "No merge/Production/provider authorization; OWNER_PASS, FIELD_PASS and RELEASE_PASS pending"
   ],
-  "latest_checkpoint": "PP-20261116-032",
+  "latest_checkpoint": "PP-20261116-033",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -48,7 +49,7 @@
     "provider_usage": "ZERO_FIREBASE_CLOUDFLARE_OPSCORE_BUSINESS_API_CALLS_STATIC_CDN_NETWORK_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.9.8",
+    "version": "0.9.9",
     "login": "FIVE_MOCK_USERS_PASSWORD_1_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -134,7 +135,11 @@
     "verification_v096": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_7e2c1946a371cf02f7ed9c90f1a55ddb4add6e96_RUN_43840043044_7_FILES_277358_BYTES_CHROMIUM_HOSTED_ROLE_PREVIEW_FIVE_MOCK_LOGIN_MOD_DIRECT_URL_DENIAL_UNICODE_INPUT_BATCH_CATALOGS_PERSONAL_SETTINGS_EXISTING_EXCEL_IMAGE_BACKUP_CDN_BROWSER_NO_BUSINESS_API",
     "verification_v097": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_2c2b2d3051206dba0c2fdba89c43c557d86de1a2_RUN_43850811351_7_FILES_284539_BYTES_BROWSER_AND_HOSTED_DRAG_ZOOM_PASTE_CANCEL_ORIGINAL_INDEXEDDB_JSON_BACKUP_CDN_BROWSER_ZERO_BUSINESS_API",
     "verification_v098": "CODE_READY_CI_PASS_PREVIEW_PASS_SOURCE_325b5555394b0cd81c547853df24955bba1eada1_RUN_43856876485_BUILD_7_FILES_290188_BYTES_CENTERED_DETAIL_CROP_FROM_VIEW_SCAN_ZOOM_OUT_ORIGINAL_PRESERVED_HOSTED_AND_CDN_BROWSER_ZERO_API",
-    "cloudflare_readiness": "STATIC_FEASIBLE_SERVICE_BLOCKED_CLIENT_ONLY_NO_SHARED_AUTH_DATA_REALTIME_OR_PROVIDER_STAGING"
+    "cloudflare_readiness": "STATIC_FEASIBLE_SERVICE_BLOCKED_CLIENT_ONLY_NO_SHARED_AUTH_DATA_REALTIME_OR_PROVIDER_STAGING",
+    "personal_avatar": "LOCAL_MOCK_ACCOUNT_PHOTO_UPLOAD_PASTE_DRAG_ZOOM_CROP_SAVE_ONLY_BROWSER_LOCAL",
+    "period_filter": "TODAY_DEFAULT_YESTERDAY_7D_30D_CURRENT_PREVIOUS_MONTH_CUSTOM_ALL_APPLIES_DISPLAY_AND_XLSX_DASHBOARD_SUMMARY_LEGACY_UNDATED_MASTERS_ACCESSIBLE",
+    "ccdc_proposal": "PROPOSED_NOT_IMPLEMENTED_ASSET_DOSSIER_TAG_IDENTITIES_TYPE_UNITS_DEPT_CUSTODIAN_LEDGER_GOOD_BAD_PHYSICAL_VARIANCES_AUDIT_MOVEMENTS",
+    "verification_v099": "SOURCE_CHECK_BUILD_PASS_BROWSER_SMOKE_PASS_SOURCE_8ac775d42c13; HOSTED_E2E_TEST_FIX_SOURCE_7076009ebc0c_RUN_43893965000_IN_PROGRESS"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
