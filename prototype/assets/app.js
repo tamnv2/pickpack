@@ -2,10 +2,10 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.9.5';
-const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'}};
-const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên'};
-const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list']];
+ const WEB_VERSION='0.9.6';
+const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'},access:{title:'Quản lý quyền truy cập'}};
+const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên',access:'Quản lý quyền truy cập'};
+const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list'],['access','shield']];
 const PATHS={
 grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
 users:'<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a6 6 0 0 1 12 0v2M17 3a4 4 0 0 1 0 8M17 15a6 6 0 0 1 5 6"/>',
@@ -25,10 +25,11 @@ trash:'<path d="M4 7h16M10 3h4M6 7l1 14h10l1-14M10 11v6m4-6v6"/>',
 eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7z"/><circle cx="12" cy="12" r="3"/>',
 download:'<path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/>',
 plus:'<path d="M12 5v14M5 12h14"/>',
-logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
+logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+ shield:'<path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5zM9 12l2 2 4-4"/>'
 };
 function icon(name,size=18){return `<svg class="ui-svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name]||PATHS.grid}</svg>`}
-const ICONS=Object.fromEntries(['grid','users','clock','calendar','file','boxes','device','list'].map(k=>[k,icon(k)]));
+const ICONS=Object.fromEntries(['grid','users','clock','calendar','file','boxes','device','list','shield'].map(k=>[k,icon(k)]));
 // Completely synthetic, reproducible operational examples. No real employee or device records.
 const STORAGE_KEY='pickpack1291_office_records_v094';
 const LEGACY_STORAGE_KEY='pickpack1291_office_records_v07';
@@ -76,13 +77,53 @@ function tickClock(){
 const ACCENT_KEY='pickpack1291_office_light_accent_v08';
 const FONT_MIGRATED_KEY='pickpack1291_office_font_boost_v08';
 const ACCENTS=[['red','Đỏ'],['orange','Cam'],['yellow','Vàng'],['green','Lục'],['blue','Lam'],['indigo','Chàm'],['violet','Tím']];
-const SESSION_KEY='pickpack1291_office_session_v06';
+const SESSION_KEY='pickpack1291_office_session_v096';
+const DEMO_USERS_KEY='pickpack1291_office_users_v096';
+const PERMISSION_AREAS=SIDEBAR.map(([key])=>key).filter(key=>key!=='access');
+const PERMISSION_ACTIONS=[['view','Xem'],['create','Thêm'],['edit','Sửa'],['delete','Xóa']];
 const BACKUP_FORMAT='pickpack1291-browser-backup';
 const BACKUP_SCHEMA=2;
 function storageGet(key){try{return localStorage.getItem(key)}catch{return null}}
 function storageSet(key,val){try{localStorage.setItem(key,val);return true}catch{return false}}
 function storageRemove(key){try{localStorage.removeItem(key)}catch{}}
-function demoSession(){return storageGet(SESSION_KEY)==='demo-admin-only'||(location.protocol==='file:'&&new URLSearchParams(location.search).get('demo')==='1')}
+function defaultPermissions(role) {
+ const full=role==='superadmin'||role==='admin';
+ return Object.fromEntries(PERMISSION_AREAS.map(key=>[key,Object.fromEntries(PERMISSION_ACTIONS.map(([act])=>[act,full||(['shifts','pda'].includes(key)&&['view','create'].includes(act))]))]));
+}
+function demoDefaults(){return [['superadmin','superadmin'],['admin1','admin'],['admin2','admin'],['dieuphoile','mod'],['dieuphoichan','mod']].map(([username,role])=>({username,fullName:username,password:'1',role,permissions:defaultPermissions(role)}))}
+function readDemoUsers(){
+ const fallback=demoDefaults();
+ try{
+  const raw=JSON.parse(storageGet(DEMO_USERS_KEY)||'null');
+  if(!Array.isArray(raw)||raw.length<5||raw.length>30)return fallback;
+  const names=new Set();
+  const output=raw.map(u=>{
+   if(!u||!(/^[a-z][a-z0-9_-]{2,29}$/.test(u.username))||names.has(u.username))throw Error('Tài khoản trùng');
+   names.add(u.username);
+   const role=u.username==='superadmin'?'superadmin':(['admin','mod'].includes(u.role)?u.role:'mod');
+   const base=defaultPermissions(role);
+   for(const key of PERMISSION_AREAS)for(const [action] of PERMISSION_ACTIONS)if(role!=='superadmin')base[key][action]=!!u.permissions?.[key]?.[action];
+   return {username:u.username,fullName:String(u.fullName||u.username).slice(0,100),password:String(u.password||'1').slice(0,100),role,permissions:base};
+  });
+  if(!fallback.every(u=>names.has(u.username)))return fallback;
+  return output;
+ }catch{return fallback}
+}
+const demoUsers=readDemoUsers();
+function persistDemoUsers(){storageSet(DEMO_USERS_KEY,JSON.stringify(demoUsers))}
+function actualUser(){return demoUsers.find(u=>u.username===storageGet(SESSION_KEY))||null}
+function previewUser(){const me=actualUser();return me?.role==='superadmin'&&state.previewUser?demoUsers.find(u=>u.username===state.previewUser)||me:me}
+function canAccess(view,action='view'){
+ const me=actualUser(),display=previewUser();
+ if(!me||!display)return false;
+ if(view==='access')return me.role==='superadmin'&&!state.previewUser;
+ if(view==='categories')view=state.catalogScope;
+ if(me.role==='superadmin'&&!state.previewUser)return true;
+ const matrix=display.permissions?.[view];return !!matrix?.[action]&&(action==='view'||!!matrix?.view);
+}
+function firstAllowed(){return PERMISSION_AREAS.find(key=>canAccess(key))||'dashboard'}
+function denyOperation(view=state.view,action='edit'){if(canAccess(view,action))return false;state.notice='Tài khoản không có quyền thực hiện thao tác này';refreshToasts();return true}
+function demoSession(){return !!actualUser()}
 function emptyRecords(){return {people:[],shifts:[],labor:[],minutes:[],assets:[],pda:[],pdaDevices:[]}}
 
 function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(emptyRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500)){for(const person of data.people){delete person.user;delete person.shift}return data}}catch{}return emptyRecords()}
@@ -117,7 +158,7 @@ const columns={
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 
-const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null};
+const state={view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null,previewUser:'',accessUser:'dieuphoile',accountEdit:'',categoryInputs:1};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -542,11 +583,11 @@ function confirmDialog(title,message,onApprove,requiresPassword=true){
 }
 function confirmModal(){
  const data=state.confirmData;if(!data)return '';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message"><div class="modal-head"><div><h2 id="confirm-title">${escape(data.title)}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="confirm-form" autocomplete="off"><p id="confirm-message">${escape(data.message)}</p>${data.requiresPassword?`<label class="confirm-password">Mật khẩu xác nhận<input id="confirm-password" type="password" name="password" required autocomplete="off" placeholder="Nhập mật khẩu kiểm thử"></label><small class="demo-security-note">Bản kiểm thử: xác nhận mô phỏng với mật khẩu admin. Không có bảo mật backend.</small>`:''}<div id="confirm-error" class="confirm-error" role="alert"></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn danger">${data.requiresPassword?'Xác nhận thao tác':'Đồng ý'}</button></div></form></section></div>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message"><div class="modal-head"><div><h2 id="confirm-title">${escape(data.title)}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="confirm-form" autocomplete="off"><p id="confirm-message">${escape(data.message)}</p>${data.requiresPassword?`<label class="confirm-password">Mật khẩu xác nhận<input id="confirm-password" type="password" name="password" required autocomplete="off" placeholder="Nhập mật khẩu kiểm thử"></label><small class="demo-security-note">Bản kiểm thử: xác nhận bằng mật khẩu tài khoản hiện tại; không có bảo mật backend. Không có bảo mật backend.</small>`:''}<div id="confirm-error" class="confirm-error" role="alert"></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn danger">${data.requiresPassword?'Xác nhận thao tác':'Đồng ý'}</button></div></form></section></div>`;
 }
 function finishConfirmation(form){
  if(!state.confirmData)return;
- if(state.confirmData.requiresPassword&&new FormData(form).get('password')!=='admin'){
+ if(state.confirmData.requiresPassword&&new FormData(form).get('password')!==actualUser()?.password){
   const error=root.querySelector('#confirm-error');if(error)error.textContent='Mật khẩu không đúng';return;
  }
  const action=pendingConfirmation;pendingConfirmation=null;state.confirmData=null;state.modal='';
@@ -571,7 +612,7 @@ function modal(){
  return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>QUẢN LÝ DỮ LIỆU</span><h2 id="modal-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng cửa sổ">×</button></div><form id="record-form">${key==='people'?photoEditor(existing):key==='minutes'?minutePhotoEditor():''}<div class="form-grid">${fields.map(([k,l])=>fieldInput(k,l,editing?existing[k]:key==='people'&&k==='startDate'?vnTodayISO():k==='state'?INITIAL_STATE[key]:'',editing)).join('')}</div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button class="btn primary" type="submit">${editing?'Lưu chỉnh sửa':'Tạo bản ghi'}</button></div></form></section></div>`;
 }
 function toast(){return `<div id="toast-stack" class="toast-stack" aria-live="polite">${toastItems()}</div>`}
-function render(){document.documentElement.setAttribute('data-theme',state.theme);document.documentElement.setAttribute('data-accent',state.accent);document.documentElement.style.setProperty('--text-scale',String(state.fontPct/100*1.1));if(document.body.dataset.screen==='login'){renderLogin();return}if(!demoSession()){root.innerHTML=`<main class="auth-required"><img src="assets/supra-mark.png" alt="The Supra"><h2>Vui lòng đăng nhập</h2><p>Đăng nhập Quản trị viên trước khi sử dụng giao diện và các tab nghiệp vụ.</p><a class="btn primary" href="index.html">Đăng nhập</a></main>`;return}root.innerHTML=`${side()}<div class="screen-shade ${state.sidebar?'show':''}" data-action="close-nav"></div><div class="app-main">${top()}${state.view==='dashboard'?dashboard():['categories','resources'].includes(state.view)?categoriesPage():modulePage()}</div>${drawer()}${modal()}${toast()}`;if(state.view==='people'&&state.drawer)requestAnimationFrame(renderFullPortrait);if(state.view==='shifts'&&state.scanOutcome?.code){const p=store.people.find(x=>x.id===state.scanOutcome.code);if(p)requestAnimationFrame(()=>renderScanPortrait(p))}if(state.view==='minutes'&&(state.modal==='new'||state.modal==='edit'||state.drawer))requestAnimationFrame(()=>{void renderMinuteImages()})}
+function render(){document.documentElement.setAttribute('data-theme',state.theme);document.documentElement.setAttribute('data-accent',state.accent);document.documentElement.style.setProperty('--text-scale',String(state.fontPct/100*1.1));if(document.body.dataset.screen==='login'){renderLogin();return}if(!demoSession()){root.innerHTML=`<main class="auth-required"><img src="assets/supra-mark.png" alt="The Supra"><h2>Vui lòng đăng nhập</h2><p>Đăng nhập tài khoản kiểm thử trước khi sử dụng giao diện.</p><a class="btn primary" href="index.html">Đăng nhập</a></main>`;return}root.innerHTML=`${side()}<div class="screen-shade ${state.sidebar?'show':''}" data-action="close-nav"></div><div class="app-main">${top()}${state.view==='dashboard'?dashboard():['categories','resources'].includes(state.view)?categoriesPage():modulePage()}</div>${drawer()}${modal()}${toast()}`;if(state.view==='people'&&state.drawer)requestAnimationFrame(renderFullPortrait);if(state.view==='shifts'&&state.scanOutcome?.code){const p=store.people.find(x=>x.id===state.scanOutcome.code);if(p)requestAnimationFrame(()=>renderScanPortrait(p))}if(state.view==='minutes'&&(state.modal==='new'||state.modal==='edit'||state.drawer))requestAnimationFrame(()=>{void renderMinuteImages()})}
 function renderLogin(){root.innerHTML=`<main class="login-screen"><div class="login-panel"><div class="login-left"><div class="login-brand"><img class="brand-logo" src="assets/supra-mark.png" alt="The Supra"><span class="login-corporate"><span>CÔNG TY CỔ PHẦN THE SUPRA</span><span>DC HƯNG YÊN</span></span></div><div class="login-art"><div class="art-greeting">QUẢN LÝ VẬN HÀNH</div><h1>Quản lý Pick & Pack tập trung.</h1><p>Nhân sự, công ca, hồ sơ và thiết bị trong cùng một hệ thống.</p><div class="art-metrics"><div><strong>08</strong><span>Phân hệ</span></div><div><strong>03</strong><span>Thiết bị PDA</span></div><div><strong>05</strong><span>Phiên Web</span></div></div></div></div><div class="login-right"><span class="login-kicker">PICKPACK OFFICE</span><h2>Đăng nhập hệ thống</h2><p>Nhập thông tin tài khoản để tiếp tục.</p><form id="login-form" autocomplete="off" class="login-form"><label>Tên đăng nhập<input id="demo-user" name="username" value="" placeholder="Nhập tên đăng nhập" autocomplete="off" required></label><label>Mật khẩu<div class="password-wrap"><input id="demo-password" name="password" type="${state.loginVisible?'text':'password'}" placeholder="Nhập mật khẩu" autocomplete="off" required><button type="button" class="password-toggle" data-action="show-password" aria-label="${state.loginVisible?'Ẩn':'Hiện'} mật khẩu">${state.loginVisible?'Ẩn':'Hiện'}</button></div></label>${state.loginError?`<div class="login-error" role="alert">${escape(state.loginError)}</div>`:''}<button class="btn primary login-submit" type="submit">Đăng nhập <span>→</span></button></form><div class="login-links"><button data-action="theme" class="text-button">${state.theme==='dark'?'☼ Sáng':'☾ Tối'}</button><span class="web-version">Web v${WEB_VERSION}</span></div></div></div></main>`}
 function safeHistory(method,url){try{history[method](null,'',url)}catch{ /* Browser file:// history restrictions do not block UI. */ }}
 function closeStuff(){state.sidebar=false;state.modal='';state.drawer='';state.editId='';state.profileMenu=false}
@@ -916,9 +957,9 @@ function exportExcel(){
 root.addEventListener('submit',function(e){
  if(e.target.id==='login-form'){
   e.preventDefault();const fd=new FormData(e.target);
-  const ok=String(fd.get('username')||'').trim()==='admin'&&String(fd.get('password')||'')==='admin';
+  const username=String(fd.get('username')||'').trim();const ok=demoUsers.some(u=>u.username===username&&u.password===String(fd.get('password')||''));
   if(!ok){state.loginError='Tên đăng nhập hoặc mật khẩu không đúng';render();return}
-  storageSet(SESSION_KEY,'demo-admin-only');state.loginError='';location.href=href('dashboard');return;
+  storageSet(SESSION_KEY,username);state.loginError='';location.href=href('dashboard');return;
  }
  if(e.target.id==='shift-scan-form'){
   e.preventDefault();
