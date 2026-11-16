@@ -242,6 +242,8 @@ try:
         second = opened.value
         second.wait_for_url('**/app.html?view=people*', timeout=5000)
         second.wait_for_load_state()
+        assert second.locator('#period-preset').input_value()=='today'
+        second.locator('#period-preset').select_option('all')
         assert second.locator('.records-label b').inner_text() == '36'
         assert second.locator('.people-table thead th').all_inner_texts()[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác']
         assert second.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
