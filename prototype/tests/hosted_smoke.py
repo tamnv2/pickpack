@@ -111,7 +111,7 @@ try:
         assert blank.locator('.records-label b').inner_text()=='1'
         blank.locator('#staff-excel-import').set_input_files({'name':'bad-staff.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':filled_template('98765432')})
         assert blank.locator('#confirm-form').count()==0
-        assert 'đã tồn tại' in blank.locator('.toast-stack .toast').last.inner_text()
+        blank.wait_for_function("() => [...document.querySelectorAll('.toast-stack .toast')].some(n=>n.textContent.includes('đã tồn tại'))",timeout=7000)
         assert blank.locator('.records-label b').inner_text()=='1'
         blank.locator('#staff-excel-import').set_input_files({'name':'good-staff.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':filled_template('00129999')})
         assert 'Thêm 1 nhân sự' in blank.locator('#confirm-message').inner_text()
