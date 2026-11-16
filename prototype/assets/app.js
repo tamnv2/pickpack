@@ -299,7 +299,7 @@ function saveCatalog(form){
   list[i]=values[0];const owner=catalogOwner(field);
   for(const row of store[owner.records])if(row[owner.property]===old)row[owner.property]=values[0];persist();
  }else{
-  if(list.length+values.length>200){state.notice='Vượt giới hạn 200 mục trong một danh mục';refreshToasts();return}
+  if(list.length+values.length>=200){state.notice='Đạt giới hạn 199 mục trong một danh mục';refreshToasts();return}
   list.push(...values);
  }
  persistCatalogs();state.notice=editing?'Đã cập nhật danh mục và hồ sơ liên quan':`Đã thêm ${values.length} danh mục`;state.modal='';state.categoryEdit='';render();
