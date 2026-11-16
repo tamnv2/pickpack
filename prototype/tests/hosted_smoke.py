@@ -307,6 +307,9 @@ try:
         second.locator('.people-table tbody tr').first.locator('[data-record]').click()
         second.locator('#portrait-original img').wait_for(timeout=5000)
         assert second.locator('#portrait-original img').evaluate("el=>el.naturalWidth===480 && el.naturalHeight===640")
+        assert second.locator('.detail-overlay').is_visible()
+        assert second.locator('.detail-drawer').evaluate("el=>getComputedStyle(el).position") != 'fixed'
+        assert second.locator('.detail-drawer').evaluate("el=>{const r=el.getBoundingClientRect();return Math.abs((r.left+r.right)/2-innerWidth/2)<3}")
         second.locator('[data-action="zoom-portrait"]').click()
         assert second.locator('.portrait-lightbox img').evaluate("el=>el.naturalWidth===480")
         second.locator('.portrait-lightbox [data-action="close-modal"]').click()
