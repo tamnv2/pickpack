@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-16",
-  "phase": "OFFICE_UI_V097_AVATAR_CROP_PREVIEW_VERIFIED",
-  "application_code": "WEB_OFFICE_STATIC_V097_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43850811351_SOURCE_2c2b2d3051206dba0c2fdba89c43c557d86de1a2",
+  "phase": "OFFICE_UI_V098_CENTERED_CROP_CDN_VERIFIED",
+  "application_code": "WEB_OFFICE_STATIC_V098_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_43856876485_SOURCE_325b5555394b0cd81c547853df24955bba1eada1",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V097_OWNER_VISUAL_BUSINESS_REVIEW_PENDING",
+  "owner_business_acceptance": "V098_OWNER_UI_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner review of v0.9.7 avatar crop, image quality and 100 synthetic Excel import alongside previous UI requirements",
-    "Public CDN and unencrypted local JSON backups unsuitable for real employee/incident images; secure private/local distribution not approved",
-    "Backend auth/RBAC, APK, Production merge/release and FIELD_PASS/OWNER_PASS/RELEASE_PASS not authorized"
+    "Owner review of centered record modals, manual avatar crop shortcut, vertical scan portrait in Web v0.9.8",
+    "Cloudflare static-host feasible but real service BLOCKED pending server auth/roles, shared API storage/realtime, private photos and multi-device tests",
+    "No Production/merge/provider authorization; OWNER_PASS, FIELD_PASS and RELEASE_PASS pending"
   ],
-  "latest_checkpoint": "PP-20261116-031",
+  "latest_checkpoint": "PP-20261116-032",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -48,7 +48,7 @@
     "provider_usage": "ZERO_FIREBASE_CLOUDFLARE_OPSCORE_BUSINESS_API_CALLS_STATIC_CDN_NETWORK_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.9.7",
+    "version": "0.9.8",
     "login": "FIVE_MOCK_USERS_PASSWORD_1_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -132,14 +132,16 @@
     "modal_actions": "CATALOG_AND_DEVICE_SAVE_CANCEL_BOTTOM_PADDING_FIXED",
     "verification_v095": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_649fc4d8a721bf9adf742741672561de2f42887f_RUN_43733235316_7_FILES_255077_BYTES_CHROMIUM_HOSTED_PERSONNEL_CLIPBOARD_XLSX_TEMPLATE_IMPORT_COMPRESSED_ZIP_ID_LEADING_ZERO_DUPLICATES_MINUTES_IMAGE_PASTE_UPLOAD_ZOOM_JSON_BACKUP_IMPORTED_TWO_BLOBS_PUBLIC_CDN_NO_PROVIDER_REQUESTS",
     "verification_v096": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_7e2c1946a371cf02f7ed9c90f1a55ddb4add6e96_RUN_43840043044_7_FILES_277358_BYTES_CHROMIUM_HOSTED_ROLE_PREVIEW_FIVE_MOCK_LOGIN_MOD_DIRECT_URL_DENIAL_UNICODE_INPUT_BATCH_CATALOGS_PERSONAL_SETTINGS_EXISTING_EXCEL_IMAGE_BACKUP_CDN_BROWSER_NO_BUSINESS_API",
-    "verification_v097": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_2c2b2d3051206dba0c2fdba89c43c557d86de1a2_RUN_43850811351_7_FILES_284539_BYTES_BROWSER_AND_HOSTED_DRAG_ZOOM_PASTE_CANCEL_ORIGINAL_INDEXEDDB_JSON_BACKUP_CDN_BROWSER_ZERO_BUSINESS_API"
+    "verification_v097": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_2c2b2d3051206dba0c2fdba89c43c557d86de1a2_RUN_43850811351_7_FILES_284539_BYTES_BROWSER_AND_HOSTED_DRAG_ZOOM_PASTE_CANCEL_ORIGINAL_INDEXEDDB_JSON_BACKUP_CDN_BROWSER_ZERO_BUSINESS_API",
+    "verification_v098": "CODE_READY_CI_PASS_PREVIEW_PASS_SOURCE_325b5555394b0cd81c547853df24955bba1eada1_RUN_43856876485_BUILD_7_FILES_290188_BYTES_CENTERED_DETAIL_CROP_FROM_VIEW_SCAN_ZOOM_OUT_ORIGINAL_PRESERVED_HOSTED_AND_CDN_BROWSER_ZERO_API",
+    "cloudflare_readiness": "STATIC_FEASIBLE_SERVICE_BLOCKED_CLIENT_ONLY_NO_SHARED_AUTH_DATA_REALTIME_OR_PROVIDER_STAGING"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/2c2b2d3051206dba0c2fdba89c43c557d86de1a2/prototype/index.html",
-    "verified_commit": "2c2b2d3051206dba0c2fdba89c43c557d86de1a2",
-    "verified_run": "43850811351",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/325b5555394b0cd81c547853df24955bba1eada1/prototype/index.html",
+    "verified_commit": "325b5555394b0cd81c547853df24955bba1eada1",
+    "verified_run": "43856876485",
     "public_access": true,
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
