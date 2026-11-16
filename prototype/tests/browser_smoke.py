@@ -469,5 +469,50 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
+ # v0.9.6: local permission preview, batch catalogs, Vietnamese IME, personal settings.
+ rolecheck=new_screen()
+ rolecheck.locator('a.nav-main[href*="view=access"]').click()
+ assert rolecheck.locator('.access-user').count()==5
+ rolecheck.locator('[data-account-pick="dieuphoile"]').click()
+ assert not rolecheck.locator('[data-permission="people:view"]').is_checked()
+ rolecheck.locator('[data-permission="people:view"]').click()
+ assert rolecheck.locator('[data-permission="people:view"]').is_checked()
+ rolecheck.locator('#role-preview').select_option('dieuphoile')
+ assert rolecheck.locator('.nav-locked').count()==1
+ assert rolecheck.locator('a.nav-main[href*="view=assets"]').count()==0
+ rolecheck.locator('a.nav-main[href*="view=people"]').click()
+ assert rolecheck.locator('[data-action="add"]').count()==0
+ assert rolecheck.locator('[data-edit]').count()==0
+ rolecheck.locator('#role-preview').select_option('')
+ rolecheck.locator('a.nav-main[href*="view=people"]').click()
+ rolecheck.locator('[data-catalog-scope="people"]').click()
+ rolecheck.locator('[data-action="category-add"]').click()
+ assert rolecheck.locator('#catalog-form input[name="value"]').count()==1
+ assert rolecheck.locator('[data-action="catalog-input-remove"]').is_disabled()
+ rolecheck.locator('[data-action="catalog-input-add"]').click()
+ assert rolecheck.locator('#catalog-form input[name="value"]').count()==2
+ rolecheck.locator('[data-action="catalog-input-remove"]').click()
+ assert rolecheck.locator('#catalog-form input[name="value"]').count()==1
+ rolecheck.locator('[data-action="catalog-input-add"]').click()
+ rolecheck.locator('#catalog-form input[name="value"]').nth(0).fill('Nhóm thử một')
+ rolecheck.locator('#catalog-form input[name="value"]').nth(1).fill('Nhóm thử hai')
+ rolecheck.locator('#catalog-form button[type="submit"]').click()
+ assert rolecheck.locator('.catalog-panel').get_by_text('Nhóm thử một').count()==1
+ assert rolecheck.locator('.catalog-panel').get_by_text('Nhóm thử hai').count()==1
+ rolecheck.locator('a.nav-main[href*="view=people"]').click()
+ rolecheck.locator('[data-action="add"]').click()
+ rolecheck.locator('#record-form input[name="name"]').fill('Nguyễn Thị Ánh')
+ assert rolecheck.locator('#record-form input[name="name"]').input_value()=='Nguyễn Thị Ánh'
+ assert rolecheck.locator('#record-form input[name="name"]').evaluate("el=>!el.hasAttribute('pattern')")
+ rolecheck.locator('button[data-action="close-modal"]').last.click()
+ rolecheck.locator('.top-profile').click()
+ rolecheck.locator('[data-action="settings"]').click()
+ rolecheck.locator('#personal-settings-form [name="fullName"]').fill('Nguyễn Văn Thử')
+ rolecheck.locator('#personal-settings-form [name="oldPassword"]').fill('1')
+ rolecheck.locator('#personal-settings-form [name="newPassword"]').fill('moi')
+ rolecheck.locator('#personal-settings-form button[type="submit"]').click()
+ assert rolecheck.locator('.top-profile .profile-name strong').inner_text()=='Nguyễn Văn Thử'
+ assert rolecheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_users_v096')).find(x=>x.username==='superadmin').password")=='moi'
+ rolecheck.close()
  print('PASS: v0.9.6 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
