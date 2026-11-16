@@ -63,7 +63,7 @@ jobs:
               assert response and response.ok, ('HTTP',response.status if response else None)
               page.locator('form#login-form').wait_for(timeout=10000)
               assert page.locator('.login-links .web-version').inner_text()=='Web v0.9.6'
-              page.locator('#demo-user').fill('1')
+              page.locator('#demo-user').fill('superadmin')
               page.locator('#demo-password').fill('1')
               page.locator('#login-form button[type="submit"]').click()
               page.wait_for_url('**/app.html?view=dashboard*',timeout=10000)
