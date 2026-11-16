@@ -376,7 +376,7 @@ with sync_playwright() as p:
  app.locator('#record-form input[name="phone"]').fill('000-12 a345')
  assert app.locator('#record-form input[name="phone"]').input_value()=='00012345'
  app.locator('#record-form input[name="name"]').fill('Nguyễn123 Trần!')
- assert app.locator('#record-form input[name="name"]').input_value()=='Nguyễn Trần'
+ assert app.locator('#record-form input[name="name"]').input_value()=='Nguyễn123 Trần!' # Do not mutate active Vietnamese IME input
  app.locator('#record-form input[name="name"]').fill('Đặng Thị Ánh')
  assert app.locator('#record-form input[name="name"]').evaluate("el=>el.checkValidity()")
  # Simulate bypassing live input sanitizer. Save handler must also reject bad values.
