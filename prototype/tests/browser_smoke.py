@@ -84,7 +84,7 @@ with sync_playwright() as p:
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  app.set_viewport_size({'width':1440,'height':900})
  assert app.locator('.corporate-brand span').all_inner_texts()==['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
- assert app.locator('.top-profile').get_by_text('superadmin').count()==1
+ assert app.locator('.top-profile .profile-name strong').inner_text()=='superadmin'
  assert app.locator('.side-bottom').get_by_text('superadmin').count()==0
  assert app.locator('.breadcrumb').count()==0
  assert app.locator('.page-header .eyebrow').count()==0
