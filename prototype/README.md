@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.6
+# PickPack 1291 — Web Office v0.9.7
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -135,3 +135,9 @@ python tests/hosted_smoke.py
 - **Thêm danh mục hàng loạt:** dấu + thêm input, dấu – xóa input cuối (không dưới một), nhấn Lưu để ghi đồng thời toàn bộ tên hợp lệ; tên trùng hay sai thì không ghi dòng nào.
 - **Bảo vệ dữ liệu kiểm thử:** tiếp tục dùng khóa lưu bản ghi/danh mục v0.9.4, không tự xóa nội dung đã tạo trên v0.9.5. Tài khoản và ma trận quyền nằm riêng trong `localStorage`, **không** xuất vào backup JSON vì còn mật khẩu mẫu. Backup nghiệp vụ/ảnh chỉ chấp nhận đúng Web v0.9.6; cần xuất từ v0.9.5 nếu muốn giữ dữ liệu tại phiên bản cũ hoặc chuyển máy trước khi đổi phiên bản.
 - **Giới hạn:** toàn bộ quyền/đăng nhập là mô phỏng JavaScript tại trình duyệt, có thể bị vượt qua bằng DevTools. Mật khẩu mock lưu ở máy dạng đọc được. Chỉ dùng dữ liệu giả; **không dùng để bảo vệ hồ sơ nhân sự thật**. Server RBAC/Firebase/Auth, APK, realtime và Production vẫn chưa được triển khai.
+
+## Web v0.9.7 — Ảnh đại diện có thể căn chỉnh
+- Khi chọn/chụp hoặc dán Ctrl + V ảnh nhân sự, mở khung cắt với **kéo thả vị trí**, phóng to/thu nhỏ qua thanh trượt, nút +/− hoặc con lăn, Căn giữa, Áp dụng/Hủy. Vùng tròn hướng dẫn hiển thị avatar; hỗ trợ chuột, cảm ứng và phím mũi tên. Dữ liệu ảnh thu nhỏ 192×192 JPEG, ảnh gốc vẫn giữ riêng trong IndexedDB và bản sao lưu nghiệp vụ JSON.
+- Khi sửa nhân sự đã có ảnh, nhấn **Căn chỉnh ảnh** để chỉnh lại từ ảnh gốc; khi ảnh gốc không tồn tại có thể dùng ảnh avatar đang lưu làm phương án dự phòng. Hủy khung cắt không đổi dữ liệu; chỉ lưu vào hồ sơ sau khi nhấn Lưu trong form nhân sự.
+- File mẫu 100 người **giả lập** được tạo riêng trong hội thoại (không commit vào GitHub): mã 100–199, đúng 10 cột Excel nhập nhân sự, 1 Trưởng kho/1 Trưởng nhóm/2 Chuyên viên/2 Tổ trưởng/6 Kéo hàng/14 Pack/74 Pick; cố định Pick Pack/1291/HY1. Chỉ dùng để thử importer, không phải dữ liệu nhân sự thật.
+- Backup JSON vẫn kiểm tra **đúng phiên bản**; Web v0.9.7 không tự động nhập JSON của v0.9.6. Dữ liệu trên cùng trình duyệt tiếp tục sử dụng các khóa bản ghi đang có. Không triển khai backend, không nhập dữ liệu nhân sự thật vào bản CDN công khai.
