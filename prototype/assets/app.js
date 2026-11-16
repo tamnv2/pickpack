@@ -647,7 +647,11 @@ async function beginCrop(file,isNew){
 async function adjustExistingPhoto(){
  if(!['new','edit'].includes(state.modal)||state.view!=='people')return;
  let file=state.photoOriginalFile;
- if(!file&&state.editId)file=await portraitTransaction(state.editId,'readonly');
+ if(!file&&state.editId)try{file=await portraitTransaction(state.editId,'readonly')}catch{}
+ if(!(file instanceof Blob)&&state.photoDraft?.startsWith('data:image/')){
+  const [header,payload]=state.photoDraft.split(',');
+  if(/;base64$/.test(header)&&payload){const binary=atob(payload),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));file=new Blob([bytes],{type:header.slice(5).split(';')[0]})}
+ }
  if(!(file instanceof Blob)){state.notice='Không tìm thấy ảnh gốc. Vui lòng chọn lại ảnh';refreshToasts();return}
  await beginCrop(file,!!state.photoOriginalFile);
 }
