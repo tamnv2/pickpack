@@ -15,25 +15,25 @@ with sync_playwright() as p:
   pg=(browser.new_context(viewport={'width':390,'height':844},is_mobile=True) if mobile else ctx).new_page()
   pg.set_default_timeout(2000)
   pg.set_content(f'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body data-screen="{screen}"><div id="root"></div></body></html>')
-  pg.evaluate("""() => {let m = new Map([['pickpack1291_office_session_v06','demo-admin-only']]);Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}})}""")
+  pg.evaluate("""() => {let m = new Map([['pickpack1291_office_session_v096','superadmin']]);Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}})}""")
   if seed:pg.evaluate("""fixture=>{localStorage.setItem('pickpack1291_office_records_v094',JSON.stringify(fixture.records));localStorage.setItem('pickpack1291_office_catalogs_v094',JSON.stringify(fixture.catalogs))}""",fixture)
   pg.add_style_tag(content=css)
   pg.add_script_tag(content=js)
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.5'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.6'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
  assert login.get_by_text('Tên đăng nhập hoặc mật khẩu không đúng').count()==1
- login.locator('input[name="username"]').fill('admin')
- login.locator('input[name="password"]').fill('admin')
+ login.locator('input[name="username"]').fill('superadmin')
+ login.locator('input[name="password"]').fill('1')
  login.locator('button[data-action="show-password"]').click()
- assert login.locator('input[name="password"]').input_value()=='admin'
+ assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.9.5 browser must have no test records or catalogs.
+ # A fresh Web v0.9.6 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -47,10 +47,10 @@ with sync_playwright() as p:
  clean.close()
  app=new_screen()
  errs=[];app.on('pageerror',lambda e:errs.append(str(e)))
- assert app.locator('a.nav-main').count()==8
+ assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.5'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.6'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -59,8 +59,8 @@ with sync_playwright() as p:
  assert float(app.locator('.site-footer').evaluate("el => getComputedStyle(el).opacity"))<=0.75
  assert not app.locator('button.menu-button').is_visible()
  labels=app.locator('.nav-flat .nav-label').all_inner_texts()
- assert len(labels)==8,labels
- assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên']
+ assert len(labels)==9,labels
+ assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên','Quản lý quyền truy cập']
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  assert app.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
  assert app.locator('#clock-time').count()==1 and app.locator('#clock-date').count()==0
@@ -84,8 +84,8 @@ with sync_playwright() as p:
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  app.set_viewport_size({'width':1440,'height':900})
  assert app.locator('.corporate-brand span').all_inner_texts()==['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
- assert app.locator('.top-profile').get_by_text('Quản trị viên').count()==1
- assert app.locator('.side-bottom').get_by_text('Quản trị viên').count()==0
+ assert app.locator('.top-profile').get_by_text('superadmin').count()==1
+ assert app.locator('.side-bottom').get_by_text('superadmin').count()==0
  assert app.locator('.breadcrumb').count()==0
  assert app.locator('.page-header .eyebrow').count()==0
  assert app.locator('.page-header h1').count()==0
@@ -112,11 +112,16 @@ with sync_playwright() as p:
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==0
  assert app.locator('.location-chip,.group-title').count()==0
- assert app.locator('.side-link').count()==8
+ assert app.locator('.side-link').count()==9
  assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--text-scale').trim()")=='1.1'
+ assert app.locator('#role-preview').count()==1
+ assert app.locator('.header-theme [data-theme-choice]').count()==3
+ app.locator('button[data-theme-choice="light"]').click()
  app.locator('.top-profile').click()
  assert app.locator('.profile-dropdown button[data-action="settings"]').count()==1
  app.locator('button[data-action="settings"]').click()
+ assert app.locator('#personal-settings-form [name="fullName"]').input_value()=='superadmin'
+ assert app.locator('#personal-settings-form [name="newPassword"]').count()==1
  assert app.get_by_text('Cỡ chữ',exact=True).count()==1
  assert app.locator('.font-steps output').inner_text()=='100%'
  assert app.locator('[data-action="backup-export"]').is_visible()
@@ -124,23 +129,23 @@ with sync_playwright() as p:
  assert app.locator('#backup-import-file[type="file"]').count()==1
  app.locator('button[data-font="5"]').click()
  assert app.locator('.font-steps output').inner_text()=='105%'
- app.locator('button[data-theme-choice="light"]').click()
- assert app.evaluate("document.documentElement.dataset.theme")=='light'
  assert app.locator('button[data-accent-choice]').count()==7
+ assert app.locator('.accent-swatches').evaluate('el=>getComputedStyle(el).flexWrap')=='nowrap'
  app.locator('button[data-accent-choice="green"]').click()
- assert app.evaluate("document.documentElement.dataset.accent")=='green'
+ assert app.evaluate('document.documentElement.dataset.accent')=='green'
  assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()")=='#198056'
  assert app.evaluate("localStorage.getItem('pickpack1291_office_light_accent_v08')")=='green'
+ app.locator('button[data-action="close-modal"]').last.click()
  assert app.locator('[data-theme-choice="auto"]').count()==1
  app.locator('button[data-theme-choice="auto"]').click()
  assert app.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')")=='auto'
  vn_hour=app.evaluate("Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',hourCycle:'h23'}).format(new Date()))")
- assert app.evaluate("document.documentElement.dataset.theme")==('light' if 6<=vn_hour<18 else 'dark')
+ assert app.evaluate('document.documentElement.dataset.theme')==('light' if 6<=vn_hour<18 else 'dark')
  app.locator('button[data-theme-choice="dark"]').click()
  assert app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
- assert app.locator('button[data-accent-choice]').count()==0
  app.locator('button[data-theme-choice="light"]').click()
- assert app.locator('button[data-accent-choice]').count()==7
+ app.locator('.top-profile').click()
+ app.locator('button[data-action="settings"]').click()
  assert app.locator('button[data-accent-choice="green"]').get_attribute('aria-pressed')=='true'
  app.locator('button[data-action="close-modal"]').last.click()
  assert app.locator('.nav-external').count()==0
@@ -160,7 +165,7 @@ with sync_playwright() as p:
   assert app.locator('[data-action="layout-cards"],[data-action="layout-table"]').count()==0
   assert app.locator('.page-header h1').count()==0
   assert app.locator('.module-summary').count()==0
- def authorize(password='admin'):
+ def authorize(password='1'):
   assert app.locator('#confirm-form').count()==1
   app.locator('#confirm-password').fill(password)
   app.locator('#confirm-form button[type="submit"]').click()
@@ -397,7 +402,7 @@ with sync_playwright() as p:
  app.locator('#record-form button[type="submit"]').click()
  assert app.locator('.records-label b').inner_text()=='37'
  assert '01/12/2026' in app.locator('.people-table tbody tr').first.inner_text()
- assert 'Quản trị viên' in app.locator('.people-table tbody tr').first.inner_text()
+ assert 'superadmin' in app.locator('.people-table tbody tr').first.inner_text()
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
  print('testing edit',flush=True)
  app.locator('table tbody tr').first.locator('[data-edit]').click()
@@ -442,9 +447,9 @@ with sync_playwright() as p:
  assert app.locator('.detail-drawer').count()==1
  assert app.locator('.detail-drawer button[data-quick]').count()==0
  app.locator('button[data-action="close-drawer"]').click()
+ app.locator('button[data-theme-choice="dark"]').click()
  app.locator('.top-profile').click()
  app.locator('button[data-action="settings"]').click()
- app.locator('button[data-theme-choice="dark"]').click()
  assert app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
  app.locator('button[data-action="close-modal"]').last.click()
  assert not errs,errs
@@ -464,5 +469,5 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- print('PASS: v0.9.5 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
+ print('PASS: v0.9.6 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
