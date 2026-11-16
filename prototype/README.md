@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.5
+# PickPack 1291 — Web Office v0.9.6
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -126,3 +126,12 @@ python tests/hosted_smoke.py
 - **Backup JSON:** định dạng `schema=2`, `webVersion=0.9.5` gồm các bản ghi, danh mục, chân dung và ảnh biên bản. Có kiểm tra tính toàn vẹn trước khi thay thế dữ liệu và rollback nếu lỗi ghi. **Cần đúng Web v0.9.5 cho cả hai máy**; file backup v0.9.4 không được chấp nhận tự động.
 - **UI:** thêm khoảng đệm phía dưới form quản lý danh mục và thiết bị, bảo đảm nút Lưu/Hủy không chạm bo góc hộp.
 - **Giới hạn an toàn:** GitHub repo và GitHack CDN đều public; chỉ dùng dữ liệu/ảnh giả lập hoặc ẩn danh. `admin/admin` không phải xác thực bảo mật, dữ liệu trong trình duyệt và file JSON không được bảo vệ như hệ thống nhân sự Production. Không có kết nối CSDL, Firebase/Cloudflare/OpsCore, chưa triển khai Production.
+
+## Web v0.9.6 — Phân quyền giả lập và cải tiến nhập liệu (16/11/2026)
+- **5 tài khoản kiểm thử mặc định:** `superadmin` (superadmin), `admin1`, `admin2` (admin), `dieuphoile`, `dieuphoichan` (mod). Mật khẩu của cả 5 là `1`, tên hiển thị trùng tên đăng nhập. Tài khoản `admin/admin` không còn đăng nhập được trên v0.9.6.
+- **Quản lý quyền truy cập:** chỉ `superadmin` thao tác tài khoản và bảng checkbox Xem/Thêm/Sửa/Xóa từng phân hệ; menu này bị làm mờ/vô hiệu hóa với tài khoản khác. Admin mặc định có quyền nghiệp vụ (không quản lý tài khoản), mod chỉ có quyền xem và quét ca/PDA để thử, có thể chỉnh bằng checkbox. Superadmin có combobox **Hiển thị theo quyền** ở thanh trên để xem đúng giao diện/quyền của từng user.
+- **Cài đặt cá nhân:** đổi họ tên, mật khẩu kiểm thử; cỡ chữ, màu chủ đạo và thao tác backup vẫn ở hộp cài đặt. Tùy chọn Tự động/Sáng/Tối chuyển ra thanh trên. Bảy mẫu màu sáng cùng một hàng.
+- **Sửa nhập liệu:** bỏ bộ lọc gõ tức thời ở Họ và tên để không can thiệp bàn phím tiếng Việt/IME; vẫn kiểm tra ký tự Unicode khi lưu. Số/mã vẫn chỉ nhận chữ số.
+- **Thêm danh mục hàng loạt:** dấu + thêm input, dấu – xóa input cuối (không dưới một), nhấn Lưu để ghi đồng thời toàn bộ tên hợp lệ; tên trùng hay sai thì không ghi dòng nào.
+- **Bảo vệ dữ liệu kiểm thử:** tiếp tục dùng khóa lưu bản ghi/danh mục v0.9.4, không tự xóa nội dung đã tạo trên v0.9.5. Tài khoản và ma trận quyền nằm riêng trong `localStorage`, **không** xuất vào backup JSON vì còn mật khẩu mẫu. Backup nghiệp vụ/ảnh chỉ chấp nhận đúng Web v0.9.6; cần xuất từ v0.9.5 nếu muốn giữ dữ liệu tại phiên bản cũ hoặc chuyển máy trước khi đổi phiên bản.
+- **Giới hạn:** toàn bộ quyền/đăng nhập là mô phỏng JavaScript tại trình duyệt, có thể bị vượt qua bằng DevTools. Mật khẩu mock lưu ở máy dạng đọc được. Chỉ dùng dữ liệu giả; **không dùng để bảo vệ hồ sơ nhân sự thật**. Server RBAC/Firebase/Auth, APK, realtime và Production vẫn chưa được triển khai.
