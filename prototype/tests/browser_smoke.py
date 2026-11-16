@@ -22,7 +22,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.6'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.7'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.9.6 browser must have no test records or catalogs.
+ # A fresh Web v0.9.7 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -50,7 +50,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.6'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.7'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -397,6 +397,12 @@ with sync_playwright() as p:
  # Tiny PNG fixture is fully synthetic; assert local avatar conversion from image.
  png=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aB6YAAAAASUVORK5CYII=')
  app.locator('#staff-photo').set_input_files({'name':'portrait.png','mimeType':'image/png','buffer':png})
+ app.locator('#crop-dialog #crop-canvas').wait_for()
+ assert app.locator('#crop-dialog #crop-zoom').input_value()=='100'
+ app.locator('#crop-dialog #crop-zoom').evaluate("el=>{el.value='180';el.dispatchEvent(new Event('input',{bubbles:true}))}")
+ assert app.locator('#crop-dialog #crop-percentage').inner_text()=='180%'
+ app.locator('#crop-dialog [data-action="crop-apply"]').click()
+ assert app.locator('#crop-dialog').count()==0
  app.locator('#photo-preview img').wait_for()
  assert app.locator('#photo-preview img').get_attribute('src').startswith('data:image/jpeg;base64,')
  app.locator('#record-form button[type="submit"]').click()
@@ -407,6 +413,10 @@ with sync_playwright() as p:
  print('testing edit',flush=True)
  app.locator('table tbody tr').first.locator('[data-edit]').click()
  authorize()
+ app.locator('[data-action="adjust-photo"]').click()
+ app.locator('#crop-dialog #crop-canvas').wait_for()
+ app.locator('#crop-dialog [data-action="crop-cancel"]').first.click()
+ assert app.locator('#crop-dialog').count()==0
  app.locator('#record-form input[name="name"]').fill('Nhân viên giả lập đã chỉnh sửa')
  app.locator('#record-form button[type="submit"]').click()
  assert 'đã chỉnh sửa' in app.locator('table tbody tr').first.inner_text()
@@ -469,7 +479,7 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- # v0.9.6: local permission preview, batch catalogs, Vietnamese IME, personal settings.
+ # v0.9.7: local permission preview, batch catalogs, Vietnamese IME, personal settings.
  rolecheck=new_screen()
  rolecheck.locator('a.nav-main[href*="view=access"]').click()
  assert rolecheck.locator('.access-user').count()==5
@@ -514,5 +524,5 @@ with sync_playwright() as p:
  assert rolecheck.locator('.top-profile .profile-name strong').inner_text()=='Nguyễn Văn Thử'
  assert rolecheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_users_v096')).find(x=>x.username==='superadmin').password")=='moi'
  rolecheck.close()
- print('PASS: v0.9.6 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
+ print('PASS: v0.9.7 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
