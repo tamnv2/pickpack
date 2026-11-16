@@ -197,3 +197,10 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 - **Owner:** Supply an Excel workbook of 100 **synthetic** employees, employee IDs 100–199, 1 Trưởng kho + 1 Trưởng nhóm + 2 Chuyên viên + 2 Tổ trưởng + 6 Kéo hàng + 14 Pack + 74 Pick. Match existing Web personnel-import template (10 fields) and currently visible category names; default Bộ phận=Pick Pack, Site=1291, Kho=HY1. Workbook is a conversation download, **not tracked in public repository**.
 - **Owner:** Portrait selection/edit must support positioning via drag, zoom in/out and confirm crop, not automatic nonadjustable center crop. Implement browser-only canvas crop overlay for upload/clipboard; save a 192×192 avatar preview while retaining the original blob in IndexedDB for repeated adjustment, detail viewing and existing portable JSON backup. Cancel must preserve previous image and form values. No remote calls or real data.
 - **Boundary:** Client-side only, mock login, no Firebase/backend/Production. No actual employee identities, phones, or face images may be committed; synthetic workbook is not uploaded to GitHub.
+
+## V0.9.8 — kiểm thử crop, modal và Cloudflare readiness
+- APPROVED: crop thủ công bằng kéo/zoom, nút căn chỉnh có tại hồ sơ và quét; giữ ảnh gốc. Hộp xem chi tiết giữa màn hình; ảnh quét giữ tỷ lệ và căn giữa dọc.
+- FACT: build sinh 7 static assets và hoạt động trên HTTP/CDN; hình thức phân phối phù hợp Cloudflare Workers Static Assets. Chưa kiểm thử triển khai Worker thật.
+- BLOCKED: trình duyệt hiện lưu bản ghi vào localStorage và ảnh vào IndexedDB; demo login/rights chỉ ở client. Chưa có API, backend xác thực/quyền, dữ liệu dùng chung, realtime hoặc private image store. Chuyển domain không tự chuyển dữ liệu local; cần sao lưu/nhập.
+- GATE trước service: xác minh API tích hợp Firebase UID/vai trò chung, server RBAC, OpsCore riêng, dữ liệu/ảnh private, xung đột và tải 3 PDA + 5 Web, sao lưu, kiểm thử Cloudflare staging/chi phí. Không khẳng định tương thích vận hành 100% trước các kiểm thử này.
+- Không tạo provider resources, sửa Inventory, merge hay phát hành Production khi chưa có phê duyệt.
