@@ -635,3 +635,54 @@ html{scrollbar-gutter:stable}
  .crop-controls output{width:38px}
  .crop-modal-actions .btn{flex:1;min-width:0;padding:8px}
 }
+
+
+/* Web v0.9.8 — all record previews are centered dialogs, never right-side drawers. */
+.detail-overlay{display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:16px;z-index:120}
+.detail-overlay .detail-drawer{position:relative;inset:auto;right:auto;top:auto;bottom:auto;z-index:auto;width:min(860px,100%);max-height:calc(100dvh - 32px);background:var(--card);border-radius:12px;box-shadow:0 24px 66px #0b172044;display:flex;flex-direction:column;overflow:hidden}
+.detail-overlay .detail-head{padding:17px 22px 13px;flex:none}
+.detail-overlay .detail-head h2{font-size:calc(18px * var(--text-scale));margin-top:6px}
+.detail-overlay .detail-content{padding:15px 22px 20px;overflow:auto;flex:1;min-height:0}
+.detail-overlay .detail-hero{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.detail-overlay .detail-hero .status{margin-left:auto}
+.detail-overlay .detail-fields{margin:0 0 14px;border:1px solid var(--border);border-radius:9px;padding:4px 14px}
+.detail-overlay .detail-fields>div{display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:9px 0;white-space:normal;min-width:0}
+.detail-overlay .detail-fields b{text-align:left;overflow-wrap:anywhere}
+.detail-overlay .detail-content:has(#portrait-original){display:grid;grid-template-columns:minmax(160px,230px) minmax(0,1fr);gap:12px 17px}
+.detail-overlay .detail-content:has(#portrait-original) .detail-hero{grid-column:1/-1;margin-bottom:0}
+.detail-overlay .portrait-original{grid-column:1;grid-row:2;align-self:center;min-height:210px;max-height:360px;margin:0;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.detail-overlay .portrait-original .portrait-open img{max-height:315px;max-width:100%;object-fit:contain;object-position:center}
+.detail-overlay .detail-content:has(#portrait-original) .detail-fields{grid-column:2;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 15px}
+.detail-overlay .detail-content:has(#portrait-original) .detail-fields>div{border-bottom:1px solid var(--border)}
+.detail-overlay .detail-content:has(#portrait-original) .detail-fields>div:last-child{border-bottom:0}
+.detail-overlay .drawer-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:14px;margin-top:10px}
+.detail-overlay .detail-content:has(#portrait-original) .drawer-actions{grid-column:1/-1}
+.detail-overlay .minute-drawer-photos{margin:10px 0 14px}
+/* The scan portrait keeps its original aspect ratio but is centered vertically beside the fields. */
+.scan-person-layout{align-items:center}
+.scan-photo-box{height:250px;width:190px;max-width:min(32%,250px);align-self:center;flex:0 0 auto}
+.scan-photo-box img,.scan-photo-box .scan-photo-original{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;object-position:center center}
+.scan-person-layout .scan-identity{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.scan-person-layout .scan-identity .btn{flex-shrink:0}
+@media(max-width:1020px){
+ .scan-photo-box{height:215px;width:165px;max-width:35%}
+}
+@media(max-width:680px){
+ .detail-overlay{padding:9px}
+ .detail-overlay .detail-drawer{max-height:calc(100dvh - 18px);width:100%}
+ .detail-overlay .detail-head{padding:12px 15px}
+ .detail-overlay .detail-content{padding:11px 13px 14px}
+ .detail-overlay .detail-content:has(#portrait-original){grid-template-columns:1fr}
+ .detail-overlay .detail-content:has(#portrait-original) .detail-hero{grid-column:1}
+ .detail-overlay .portrait-original{grid-column:1;grid-row:auto;min-height:160px;max-height:260px}
+ .detail-overlay .portrait-original .portrait-open img{max-height:210px}
+ .detail-overlay .detail-content:has(#portrait-original) .detail-fields{grid-column:1;grid-row:auto}
+ .detail-overlay .detail-content:has(#portrait-original) .drawer-actions{grid-column:1}
+ .scan-photo-box{height:190px;width:145px;max-width:38%}
+ .scan-person-layout .scan-identity{align-items:flex-start;flex-wrap:wrap}
+}
+@media(max-width:420px){
+ .scan-person-layout{align-items:stretch}
+ .scan-photo-box{height:205px;width:100%;max-width:100%}
+ .detail-overlay .detail-content:has(#portrait-original) .detail-fields{grid-template-columns:1fr}
+}
