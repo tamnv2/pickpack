@@ -1,4 +1,4 @@
-# PickPack 1291 — Web Office v0.9.7
+# PickPack 1291 — Web Office v0.9.8
 
 **Phạm vi:** Web prototype tĩnh, bản ghi hoàn toàn giả lập trong localStorage. Không tích hợp Firebase, Google Sheet, Inventory, backend/RBAC, OpsCore, Worker hoặc Production. Không nhập ảnh/chân dung hay thông tin vận hành thật khi xem tại public CDN.
 
@@ -141,3 +141,9 @@ python tests/hosted_smoke.py
 - Khi sửa nhân sự đã có ảnh, nhấn **Căn chỉnh ảnh** để chỉnh lại từ ảnh gốc; khi ảnh gốc không tồn tại có thể dùng ảnh avatar đang lưu làm phương án dự phòng. Hủy khung cắt không đổi dữ liệu; chỉ lưu vào hồ sơ sau khi nhấn Lưu trong form nhân sự.
 - File mẫu 100 người **giả lập** được tạo riêng trong hội thoại (không commit vào GitHub): mã 100–199, đúng 10 cột Excel nhập nhân sự, 1 Trưởng kho/1 Trưởng nhóm/2 Chuyên viên/2 Tổ trưởng/6 Kéo hàng/14 Pack/74 Pick; cố định Pick Pack/1291/HY1. Chỉ dùng để thử importer, không phải dữ liệu nhân sự thật.
 - Backup JSON vẫn kiểm tra **đúng phiên bản**; Web v0.9.7 không tự động nhập JSON của v0.9.6. Dữ liệu trên cùng trình duyệt tiếp tục sử dụng các khóa bản ghi đang có. Không triển khai backend, không nhập dữ liệu nhân sự thật vào bản CDN công khai.
+
+## Web v0.9.8 — Căn chỉnh avatar và hộp chi tiết giữa màn hình
+- Hộp xem hồ sơ/tác nghiệp nay căn giữa, có cuộn, không còn drawer bên phải. Form thêm/sửa và xác nhận giữ modal giữa màn hình; portrait và vùng quét được căn giữa theo chiều dọc, giữ tỷ lệ.
+- Trong hồ sơ hoặc kết quả quét có nút **Căn chỉnh ảnh** (chỉ người có quyền sửa nhân sự). Sau xác nhận mật khẩu mock, Web mở trực tiếp khung crop; zoom mặc định 125%, có thể thu về 100% vừa khung; kéo ảnh và nhấn Áp dụng rồi Lưu. Giữ ảnh gốc riêng, hủy không làm thay đổi dữ liệu.
+- Bản v0.9.8 dùng lại hồ sơ/ảnh local trên cùng origin; JSON backup schema 2 từ v0.9.7 cũng được nhập vào v0.9.8; chuyển từ GitHack sang domain Cloudflare cần export/import do dữ liệu lưu theo origin.
+- **Cloudflare:** 7 static assets có thể host theo Workers Static Assets, nhưng Web này CHƯA có server API, xác thực Firebase UID/role chung, RBAC, dữ liệu shared, realtime và lưu ảnh private. Không thể coi static preview là production-service tương thích 100%; các kiểm thử tích hợp cần hoàn tất trước khi phát hành. Chưa tạo tài nguyên hay deploy.
