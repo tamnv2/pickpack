@@ -20,7 +20,7 @@ webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
 fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
-assert version=='0.9.5'
+assert version=='0.9.6'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -36,8 +36,8 @@ try:
         blank_context=browser.new_context(viewport={'width': 1440, 'height': 900})
         blank=blank_context.new_page()
         assert blank.goto(base+'/index.html').ok
-        blank.locator('#demo-user').fill('admin')
-        blank.locator('#demo-password').fill('admin')
+        blank.locator('#demo-user').fill('superadmin')
+        blank.locator('#demo-password').fill('1')
         blank.locator('#login-form button[type="submit"]').click()
         blank.wait_for_url('**/app.html?view=dashboard*')
         assert blank.locator('.metrics .metric-number').first.inner_text()=='0'
@@ -115,7 +115,7 @@ try:
         assert blank.locator('.records-label b').inner_text()=='1'
         blank.locator('#staff-excel-import').set_input_files({'name':'good-staff.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':filled_template('00129999')})
         assert 'Thêm 1 nhân sự' in blank.locator('#confirm-message').inner_text()
-        blank.locator('#confirm-password').fill('admin')
+        blank.locator('#confirm-password').fill('1')
         blank.locator('#confirm-form button[type="submit"]').click()
         assert blank.locator('.records-label b').inner_text()=='2'
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.some(x=>x.id==='00129999'&&x.phone==='0912345600')") is True
@@ -135,11 +135,11 @@ try:
 
         assert page.goto(base + '/index.html').ok
         assert page.locator('#login-form').is_visible()
-        page.locator('#demo-user').fill('admin')
-        page.locator('#demo-password').fill('admin')
+        page.locator('#demo-user').fill('superadmin')
+        page.locator('#demo-password').fill('1')
         page.locator('#login-form button[type="submit"]').click()
         page.wait_for_url('**/app.html?view=dashboard*')
-        assert page.locator('a.nav-main').count() == 8
+        assert page.locator('a.nav-main').count() == 9
         assert page.locator('.side-bottom .web-version').inner_text()==f'Web v{version}'
         assert page.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
         assert page.locator('.side-bottom .site-footer').count()==1
@@ -147,7 +147,7 @@ try:
         assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='static'
         assert not page.locator('button.menu-button').is_visible()
         labels=page.locator('.nav-flat .nav-label').all_inner_texts()
-        assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên'],labels
+        assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên','Quản lý quyền truy cập'],labels
         assert page.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
         assert page.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
         assert page.locator('#clock-time').is_visible()
@@ -188,12 +188,12 @@ try:
         assert page.locator('.shortcut-panel').count() == 0
         assert page.locator('.overview-page [data-action="add"]').count() == 0
         assert page.locator('.overview-page [data-action="export"]').count() == 0
-        page.locator('.top-profile').click()
-        page.locator('button[data-action="settings"]').click()
-        assert page.locator('.font-steps output').inner_text() == '100%'
         page.locator('[data-theme-choice="auto"]').click()
         assert page.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')") == 'auto'
         page.locator('[data-theme-choice="light"]').click()
+        page.locator('.top-profile').click()
+        page.locator('button[data-action="settings"]').click()
+        assert page.locator('.font-steps output').inner_text() == '100%'
         assert page.evaluate("document.documentElement.dataset.theme") == 'light'
         assert page.locator('[data-accent-choice]').count() == 7
         page.locator('[data-accent-choice="violet"]').click()
@@ -223,10 +223,7 @@ try:
         assert midnight.locator('#record-form input[name="startDate"]').input_value()=='2026-11-12'
         midnight.close()
         # Check the exact 18:00 Vietnam transition with Playwright's deterministic browser clock.
-        page.locator('.top-profile').click()
-        page.locator('button[data-action="settings"]').click()
         page.locator('button[data-theme-choice="auto"]').click()
-        page.locator('[data-action="close-modal"]').last.click()
         probe=context.new_page()
         probe.clock.install(time=datetime(2026,11,14,10,59,58,tzinfo=timezone.utc))
         assert probe.goto(base + '/app.html?view=dashboard').ok
@@ -294,7 +291,7 @@ try:
         second.locator('#record-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text() == '37'
         assert '01/12/2026' in second.locator('.people-table tbody tr').first.inner_text()
-        assert 'Quản trị viên' in second.locator('.people-table tbody tr').first.inner_text()
+        assert 'superadmin' in second.locator('.people-table tbody tr').first.inner_text()
         assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(x=>x.id==='90009999').position")=='Điều phối thử'
         second.locator('.people-table tbody tr').first.locator('[data-record]').click()
         second.locator('#portrait-original img').wait_for(timeout=5000)
@@ -323,7 +320,7 @@ try:
         assert sheet['I1'].value == 'Ngày nhận việc'
         assert sheet['J1'].value == 'Cập nhật bởi'
         assert sheet['I2'].value == '01/12/2026'
-        assert sheet['J2'].value == 'Quản trị viên'
+        assert sheet['J2'].value == 'superadmin'
         assert sheet.max_row == 38
         workbook.close()
 
@@ -354,7 +351,7 @@ try:
         second.locator('.minute-zoom-modal [data-action="close-modal"]').click()
         second.locator('.detail-head [data-action="close-drawer"]').click()
         second.locator('.table-panel tbody tr').first.locator('[data-edit]').click()
-        second.locator('#confirm-password').fill('admin')
+        second.locator('#confirm-password').fill('1')
         second.locator('#confirm-form button[type="submit"]').click()
         second.locator('#minute-editor-gallery img').wait_for()
         second.locator('#minute-photo').set_input_files({'name':'second-minute.png','mimeType':'image/png','buffer':base64.b64decode(photo_b64)})
@@ -421,7 +418,7 @@ try:
         assert second.locator('.records-label b').inner_text()=='43'
         second.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
         assert second.locator('#confirm-form').is_visible()
-        second.locator('#confirm-password').fill('admin')
+        second.locator('#confirm-password').fill('1')
         second.locator('#confirm-form button[type="submit"]').click()
         second.locator('#record-form select[name="work"]').select_option('Pick')
         second.locator('#record-form input[name="startTime"]').fill('05:35:00')
@@ -454,7 +451,7 @@ try:
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.5-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.9.6-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -476,8 +473,8 @@ try:
         target_errors=[]
         target.on('pageerror',lambda e:target_errors.append(str(e)))
         assert target.goto(base+'/index.html').ok
-        target.locator('#demo-user').fill('admin')
-        target.locator('#demo-password').fill('admin')
+        target.locator('#demo-user').fill('superadmin')
+        target.locator('#demo-password').fill('1')
         target.locator('#login-form button[type="submit"]').click()
         target.wait_for_url('**/app.html?view=dashboard*')
         assert target.locator('.metrics .metric-number').first.inner_text()=='0'
@@ -501,7 +498,7 @@ try:
         target.locator('#confirm-form button[type="submit"]').click()
         assert 'Mật khẩu không đúng' in target.locator('#confirm-error').inner_text()
         assert target.locator('#confirm-form').count()==1
-        target.locator('#confirm-password').fill('admin')
+        target.locator('#confirm-password').fill('1')
         target.locator('#confirm-form button[type="submit"]').click()
         target.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim()==='37'",timeout=10000)
         assert 'Đã nhập dữ liệu thành công' in target.locator('.toast-stack .toast').last.inner_text()
@@ -521,7 +518,7 @@ try:
         assert target.locator('#portrait-original img').evaluate("el=>el.naturalWidth===480&&el.naturalHeight===640")
         target.locator('.detail-head [data-action="close-drawer"]').click()
         target.locator('.people-table tbody tr').first.locator('[data-edit]').click()
-        target.locator('#confirm-password').fill('admin')
+        target.locator('#confirm-password').fill('1')
         target.locator('#confirm-form button[type="submit"]').click()
         target.locator('#record-form input[name="name"]').fill('Nhân viên sau khi nhập')
         target.locator('#record-form button[type="submit"]').click()
@@ -541,7 +538,7 @@ try:
         target.locator('#confirm-form button[type="submit"]').click()
         assert 'Mật khẩu không đúng' in target.locator('#confirm-error').inner_text()
         assert target.locator('.people-table tbody tr').count()==37
-        target.locator('#confirm-password').fill('admin')
+        target.locator('#confirm-password').fill('1')
         target.locator('#confirm-form button[type="submit"]').click()
         target.wait_for_function("() => document.querySelector('.metrics .metric-number')?.textContent?.trim()==='0'",timeout=10000)
         assert target.evaluate("localStorage.getItem('pickpack1291_office_records_v07')") is None
@@ -558,8 +555,8 @@ try:
         mobile_context = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True)
         mobile = mobile_context.new_page()
         assert mobile.goto(base + '/index.html').ok
-        mobile.locator('#demo-user').fill('admin')
-        mobile.locator('#demo-password').fill('admin')
+        mobile.locator('#demo-user').fill('superadmin')
+        mobile.locator('#demo-password').fill('1')
         mobile.locator('#login-form button[type="submit"]').click()
         mobile.wait_for_url('**/app.html?view=dashboard*')
         assert mobile.locator('#clock-date').count()==0
@@ -586,7 +583,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.9.5 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.9.6 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
