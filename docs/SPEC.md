@@ -257,3 +257,11 @@ Verify identity-source interoperability and read-only API, identify exact allowe
 - **Tổng quan:** Bỏ nút tải/xuất tổng hợp trên thanh ngày của Tổng quan; giữ lọc kỳ xem dữ liệu và xuất Excel tại bảng các phân hệ khi cần.
 - **Quét vào/ra:** Bỏ phần “Phân bổ nhân sự ra / vào ca” (không thay bằng dashboard khác); giữ danh sách lịch sử và bộ lọc nghiệp vụ. Trên desktop đặt Loại thao tác → Ca làm việc (khi vào ca) → Mã nhân viên + nút Ghi nhận **trên cùng một hàng**, ô quét hướng sang phải; xuống hàng hợp lý trên tablet/mobile, không đổi thao tác quét/ghi nhận, tự focus, lưu trạng thái ca.
 - **GATE:** Static Web demo localStorage/IndexedDB, dùng dữ liệu giả. Chỉ sửa code và CI, không merge PR #2, không triển khai Production/provider.
+
+## Web Office v0.12.2 — ngôn ngữ sản phẩm, sửa ca, tệp và theme (Owner APPROVED 17/11/2026)
+- **Copy:** Bỏ tất cả câu mô tả cho Owner/AI, giải thích môi trường demo, hướng dẫn dài và dòng trùng lặp trong UI nghiệp vụ; giữ nhãn, trạng thái, thông báo lỗi và cảnh báo hành động cần thiết. Nội dung kỹ thuật/bảo mật giữ trong tài liệu thay vì màn hình người dùng.
+- **Scan layout:** “Quét mã nhân viên” cách input đồng đều với “Loại thao tác” và “Ca làm việc”, không chồng sát khi thay đổi chiều rộng/cỡ chữ.
+- **Sửa ca:** Người có quyền sửa ca có thể sửa giờ vào, giờ ra trong dialog; chỉ lưu sau mật khẩu tài khoản. Giờ ra sớm hơn giờ vào được hiểu sang ngày kế tiếp, chặn thời gian không hợp lệ/trùng ca mở. Người có quyền xóa ca có thể **hủy riêng giờ ra do quét nhầm**, không xóa lượt vào; yêu cầu xác nhận kèm mật khẩu. Mọi thay đổi lưu lịch sử trước/sau, tài khoản, thời điểm. Quyền ở UI chỉ để thử; khi backend triển khai phải thực thi RBAC server.
+- **Tệp:** Mọi chức năng chọn file/ảnh (kể cả ảnh dán clipboard) có hộp xác nhận **sau khi chọn nhưng trước khi đọc/lưu**; mọi nút tải xuống Excel/JSON/mẫu đều xác nhận trước khi browser tải file. Hủy không đọc, ghi hoặc tải. Excel import và JSON restore tiếp tục có xác nhận nghiệp vụ/mật khẩu riêng trước commit.
+- **Theme:** Bảy màu chủ đạo dùng được cho cả sáng/tối/auto; một lựa chọn được lưu và áp dụng theo màu nền tương ứng; token dark được thiết kế có độ tương phản.
+- **GATE:** Static HTML JS browser-local CODE ONLY, không merge/release/provider, không đảm bảo bảo mật thực khi chưa tích hợp Auth/RBAC backend.
