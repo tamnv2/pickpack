@@ -56,6 +56,9 @@ try:
         assert blank.locator('.device-registry tbody tr').count()==0
         assert blank.locator('[data-action="device-add"],#device-form').count()==0
         blank.locator('a.nav-main[href*="view=assets"]').click()
+        assert blank.locator('.asset-dashboard .asset-kpi').count()==8
+        assert blank.locator('.asset-dashboard-group').count()==3
+        assert blank.locator('.asset-kpi').first.locator('strong').inner_text()=='0'
         blank.locator('[data-action="add"]').click()
         assert [el.get_attribute('name') for el in blank.locator('#record-form [name]').all()]==['type','serial','condition','state','note']
         blank.locator('#record-form [name="type"]').select_option('PDA')
@@ -173,13 +176,14 @@ try:
         blank.locator(f'[data-record="{first_pda}"]').click()
         assert blank.locator('.detail-drawer [data-asset-transfer="lend"]').is_visible()
         blank.locator('[data-asset-transfer="lend"]').click()
-        blank.locator('#asset-transfer-form [name="target"]').fill('Kho nhận A')
+        assert blank.locator('#asset-transfer-form #transfer-department option').count()>=2
+        blank.locator('#asset-transfer-form [name="target"]').select_option('Pick Pack')
         blank.locator('#asset-transfer-form [name="contact"]').fill('Người nhận kiểm thử')
         blank.locator('#asset-transfer-form [name="note"]').fill('Phiếu mẫu 01')
         blank.locator('#asset-transfer-form button[type="submit"]').click()
         blank.locator('#draft-password').fill('1')
         blank.locator('#draft-confirm-form button[type="submit"]').click()
-        assert blank.evaluate("(id)=>JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer.kind",first_pda)=='lend'
+        assert blank.evaluate("(id)=>{const a=JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id);return a.activeTransfer.kind==='lend'&&a.activeTransfer.target==='Pick Pack'}",first_pda) is True
         blank.locator(f'[data-asset-loan="{first_pda}"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
         blank.locator('#pda-device-code').press('Enter')
@@ -196,6 +200,7 @@ try:
         blank.locator('[data-asset-transfer="repair"]').click()
         blank.locator('#asset-transfer-form [name="target"]').fill('Đơn vị sửa thử')
         blank.locator('#asset-transfer-form [name="contact"]').fill('Kỹ thuật viên A')
+        blank.locator('#asset-transfer-form [name="note"]').fill('Sửa cổng sạc, kiểm tra ngoại quan')
         blank.locator('#asset-transfer-form button[type="submit"]').click()
         blank.locator('#draft-password').fill('1')
         blank.locator('#draft-confirm-form button[type="submit"]').click()
@@ -204,6 +209,7 @@ try:
         blank.locator('[data-asset-transfer="receive"]').click()
         blank.locator('#asset-transfer-form [name="contact"]').fill('Kỹ thuật viên B')
         blank.locator('#asset-transfer-form [name="condition"]').select_option('Hư hỏng')
+        blank.locator('#asset-transfer-form [name="state"]').select_option('Không sử dụng')
         blank.locator('#asset-transfer-form button[type="submit"]').click()
         blank.locator('#draft-password').fill('1')
         blank.locator('#draft-confirm-form button[type="submit"]').click()
@@ -215,6 +221,7 @@ try:
         blank.locator('a.nav-main[href*="view=assets"]').click()
         blank.locator(f'[data-edit="{first_pda}"]').click()
         blank.locator('#record-form [name="condition"]').select_option('Tốt')
+        blank.locator('#record-form [name="state"]').select_option('Có sử dụng')
         blank.locator('#record-form button[type="submit"]').click()
         blank.locator('#draft-password').fill('1')
         blank.locator('#draft-confirm-form button[type="submit"]').click()
@@ -474,7 +481,7 @@ try:
         second.evaluate("""b64=>{
           const data=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)),file=new File([data],'portrait.png',{type:'image/png'});
           const transfer=new DataTransfer();transfer.items.add(file);
-          document.querySelector('#record-form [name="name"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
+          document.querySelector('#record-form [name="note"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
         }""",photo_b64)
         second.locator('#crop-dialog #crop-canvas').wait_for()
         before_image=second.locator('#crop-dialog #crop-canvas').evaluate('el=>el.toDataURL()')
@@ -546,11 +553,11 @@ try:
         second.locator('a.nav-main[href*="view=minutes"]').click()
         second.locator('[data-action="add"]').click()
         assert second.locator('#minute-photo').count()==1
-        second.locator('#record-form [name="name"]').fill('Biên bản kiểm thử ảnh')
+        assert [x.get_attribute('name') for x in second.locator('#record-form [name]').all()]==['type','date','note']
+        assert second.locator('#record-form [name="date"]').input_value()==second.evaluate("""() => {const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day}""")
         second.locator('#record-form [name="type"]').select_option('Thiết bị')
-        second.locator('#record-form [name="date"]').fill('15/11/2026')
-        second.locator('#record-form [name="owner"]').fill('Nhân sự giả lập')
-        second.locator('#record-form [name="state"]').select_option('Đã lưu')
+        second.locator('#record-form [name="date"]').fill('2026-11-15')
+        second.locator('#record-form [name="note"]').fill('Ảnh biên bản thiết bị, lưu theo ngày và phân loại')
         second.evaluate("""b64=>{
           const data=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)),file=new File([data],'minutes.png',{type:'image/png'});
           const transfer=new DataTransfer();transfer.items.add(file);
@@ -560,6 +567,9 @@ try:
         assert second.locator('#minute-image-count').inner_text()=='1'
         second.locator('#record-form button[type="submit"]').click()
         second.wait_for_function("() => JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).minutes[0]?.imageIds?.length===1")
+        assert second.evaluate("() => {const r=JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).minutes[0];return r.type==='Thiết bị'&&r.date==='15/11/2026'&&r.note.includes('Ảnh biên bản')&&r.name===undefined&&r.owner===undefined&&r.state===undefined}")
+        assert second.locator('.table-panel thead').inner_text().find('Người lập')==-1
+        assert 'Ghi chú' in second.locator('.table-panel thead').inner_text()
         second.locator('.table-panel tbody tr').first.locator('[data-record]').click()
         second.locator('#minute-drawer-gallery img').wait_for()
         assert second.locator('#minute-drawer-gallery img').evaluate('el=>el.naturalWidth===480')
