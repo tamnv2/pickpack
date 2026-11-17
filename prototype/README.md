@@ -166,3 +166,9 @@ python tests/hosted_smoke.py
 - **Quản lý biên bản:** Bấm Lưu biên bản, chọn Phân loại, Ngày biên bản mặc định hôm nay, nhập Ghi chú và chọn/dán ảnh (có thể nhiều ảnh). Tìm kiếm bằng phân loại, ngày và ghi chú. Không còn Tên, Người lập hoặc Trạng thái duyệt. Bản ghi trước đây không mất dữ liệu/ảnh; thông tin không còn dùng được ẩn khỏi UI.
 - **Bảng:** Độ rộng theo nội dung với khoảng đệm đều; có cuộn ngang khi nhiều cột. Xem chi tiết khi nội dung dài.
 - **Môi trường:** Chỉ dữ liệu giả lập tại trình duyệt, không có server RBAC, Firebase/Cloudflare Business API hay Production. Nên xuất backup đúng phiên bản trước khi chuyển máy.
+
+## Web v0.12.1 — Đơn giản hóa PDA, xem CCDC theo từng loại, gọn màn hình quét ca
+- Mượn/trả PDA chỉ có thao tác quét và bảng lịch sử; bỏ bảng **Tài nguyên PDA từ CCDC**. PDA vẫn được nhận diện từ hồ sơ CCDC loại PDA; quét 5 ký tự cuối trùng vẫn phải chọn đúng serial đầy đủ trước khi ghi nhận.
+- Dashboard CCDC ưu tiên các thẻ **theo từng Loại CCDC** trong danh mục và dữ liệu thực tế; hiển thị cả danh mục chưa có thiết bị (0), thống kê Có/Không sử dụng, đang mượn, đang sửa. Không tự sinh thiết bị mẫu trên Web trắng.
+- Tổng quan vận hành không còn nút tải/xuất; bộ lọc ngày vẫn dùng được. Mục Quét vào/ra ca không còn khối Phân bổ nhân sự, ô Quét mã nhân viên nằm cùng hàng với các nút thao tác và ca trên desktop, dồn sang phải; màn hình nhỏ tự xếp lại.
+- Web vẫn chỉ kiểm thử cục bộ, không kết nối Auth/Realtime/Production. Dùng dữ liệu giả khi mở CDN công khai.
