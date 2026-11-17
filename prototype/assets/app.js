@@ -278,7 +278,7 @@ function enrichOperationalRow(view,row){
  if(view==='people')return {...row,pdaInUse:activePdaLabel(row)};
  if(view==='shifts'){
   const person=store.people.find(p=>p.id===row.staff);
-  return {...row,position:person?.position||'—',supplier:person?.supplier||'—',pdaInUse:activePdaLabel(person)};
+  return {...row,position:row.position||person?.position||'—',supplier:row.supplier||person?.supplier||'—',pdaInUse:activePdaLabel(person)};
  }
  return row;
 }
@@ -446,7 +446,7 @@ function scanShift(code,operation,selectedShift,workUser,workDesk){if(denyOperat
   if(role==='Pack'&&workDesk&&!catalogs.packDesks.includes(workDesk))return outcome(false,'Bàn Pack không hợp lệ.');
   if(role==='Pack'&&workDesk&&store.shifts.some(x=>x.state==='Trong ca'&&x.desk===workDesk))return outcome(false,`Bàn ${workDesk} đang được sử dụng.`);
   const assigned=role?workUser:'—',desk=role==='Pack'&&workDesk?workDesk:'—';
-  store.shifts.unshift({id:`CA-${Date.now().toString(36).toUpperCase()}`,staff:p.id,name:p.name,date,shift:selectedShift,checkin:time,checkout:'—',user:assigned,userType:role||'—',desk,state:'Trong ca',checkinAt:now.toISOString(),checkoutAt:''});
+  store.shifts.unshift({id:`CA-${Date.now().toString(36).toUpperCase()}`,staff:p.id,name:p.name,date,shift:selectedShift,position:p.position||'—',supplier:p.supplier||'—',checkin:time,checkout:'—',user:assigned,userType:role||'—',desk,state:'Trong ca',checkinAt:now.toISOString(),checkoutAt:''});
   persist();return outcome(true,`Đã vào ca · ${p.name} · ${selectedShift} · ${assigned} · ${date} ${time}`);
  }
  if(operation==='exit'){
