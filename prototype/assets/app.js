@@ -469,18 +469,21 @@ function scanPda(employeeCode,deviceCode){if(denyOperation('pda','create'))retur
  const staff=String(employeeCode||'').trim(),deviceInput=String(deviceCode||'').trim();
  const p=store.people.find(x=>x.id===staff),device=resolvePda(deviceInput),now=new Date(),date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
  const time=now.toLocaleTimeString('vi-VN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
- const out=(ok,message)=>{state.pdaScan={ok,staff,device:deviceInput,message};render();root.querySelector('#pda-staff-code')?.focus();return ok};
+ const out=(ok,message)=>{state.pdaPrefill='';state.pdaScan={ok,staff,device:deviceInput,message};render();root.querySelector('#pda-staff-code')?.focus();return ok};
  if(!p)return out(false,'Không tìm thấy mã nhân viên.');
  if(!device)return out(false,'Mã PDA không tồn tại hoặc không xác định được duy nhất một thiết bị.');
- const open=store.pda.find(row=>row.name===device.id&&row.state==='Đang mượn');
+ const open=store.pda.find(row=>row.name===device.id&&row.state==='Đang mượn'),asset=pdaAsset(device);
  if(state.pdaMode==='borrow'){
   if(open)return out(false,`${device.id} đang được mượn bởi ${open.holder}. Không được mượn trùng.`);
-  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:device.id,staff:p.id,holder:p.name,user:store.shifts.find(x=>x.staff===p.id&&x.state==='Trong ca')?.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',returner:'—',state:'Đang mượn'});
+  if(asset&&(asset.condition!=='Tốt'||asset.state!=='Sẵn sàng'))return out(false,`CCDC ${asset.id} không sẵn sàng cấp phát: ${asset.condition||asset.state}.`);
+  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:device.id,staff:p.id,holder:p.name,user:store.shifts.find(x=>x.staff===p.id&&x.state==='Trong ca')?.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',returner:'—',assetId:asset?.id||'',state:'Đang mượn'});
+  if(asset){asset.state='Đang sử dụng';appendAssetHistory(asset,'Mượn PDA',`${device.id} · ${p.id} · ${p.name}`)}
   persist();return out(true,`Đã mượn ${device.id} · ${p.name} · ${date} ${time}`);
  }
  if(state.pdaMode==='return'){
   if(!open)return out(false,`${device.id} chưa có lượt mượn đang mở.`);
   updateRecord('pda',open.id,{return:time,returnAt:now.toISOString(),returner:p.name,returnStaff:p.id,state:'Đã trả'});
+  if(asset){if(asset.state==='Đang sử dụng')asset.state=asset.condition==='Tốt'?'Sẵn sàng':'Ngừng sử dụng';appendAssetHistory(asset,'Trả PDA',`${device.id} · ${p.id} · ${p.name}`);persist()}
   return out(true,`Đã trả ${device.id} · ${p.name} · ${date} ${time}`);
  }
  return out(false,'Thao tác không hợp lệ.');
@@ -498,6 +501,8 @@ function saveDeviceForm(form){if(denyOperation('pda',state.deviceEdit?'edit':'cr
  if(!/^[A-Z0-9_-]{2,30}$/.test(id)||!serial||serial.length>120){state.notice='Mã PDA hoặc seri không hợp lệ';render();return}
  const last5=serial.slice(-5);
  if(store.pdaDevices.some(d=>d.id!==current?.id&&(d.id===id||d.serial.toUpperCase()===serial.toUpperCase()||d.last5===last5))){state.notice='Mã PDA, seri hoặc 5 ký tự cuối đã tồn tại';render();return}
+ if(current?.assetId&&current.serial.toUpperCase()!==serial.toUpperCase()){state.notice='PDA đã liên kết: sửa serial tại hồ sơ CCDC';render();return}
+ if(!current&&store.assets.some(a=>a.serial&&String(a.serial).toUpperCase()===serial.toUpperCase())){state.notice='Serial đã nằm trong CCDC; hãy liên kết từ hồ sơ đó';render();return}
  if(current)Object.assign(current,{serial,last5,source,note});
  else store.pdaDevices.push({id,serial,last5,source,note,state:'Sẵn sàng'});
  persist();state.modal='';state.deviceEdit='';state.notice=current?'Đã sửa PDA':'Đã thêm PDA';render();
@@ -1207,7 +1212,7 @@ root.addEventListener('click',e=>{
  const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())saveForm(form);else form.querySelectorAll('input,select').forEach(el=>{el.dataset.touched='1';markField(el)});return}
  const submitCategory=e.target.closest('#catalog-form button[type="submit"]');if(submitCategory){e.preventDefault();const form=submitCategory.form;if(form?.reportValidity())saveCatalog(form);else form.querySelectorAll('input').forEach(el=>{el.dataset.touched='1';markField(el)});return}
  const deviceEdit=e.target.closest('[data-device-edit]');if(deviceEdit){if(denyOperation('pda','edit'))return;const id=deviceEdit.dataset.deviceEdit;confirmDialog('Xác nhận sửa PDA','Nhập mật khẩu trước khi sửa '+id,()=>{state.deviceEdit=id;state.modal='device'});return}
- const deviceDelete=e.target.closest('[data-device-delete]');if(deviceDelete){if(denyOperation('pda','delete'))return;const id=deviceDelete.dataset.deviceDelete;if(store.pda.some(r=>r.name===id)){state.notice='PDA đã có lịch sử mượn/trả, không thể xóa';render();return}confirmDialog('Xác nhận xóa PDA','Xóa thiết bị '+id+' khỏi danh sách?',()=>{store.pdaDevices=store.pdaDevices.filter(d=>d.id!==id);persist();state.notice='Đã xóa PDA'});return}
+ const deviceDelete=e.target.closest('[data-device-delete]');if(deviceDelete){if(denyOperation('pda','delete'))return;const id=deviceDelete.dataset.deviceDelete;if(store.pda.some(r=>r.name===id)||store.pdaDevices.some(d=>d.id===id&&d.assetId)){state.notice='PDA có lịch sử hoặc đang liên kết CCDC, không thể xóa';render();return}confirmDialog('Xác nhận xóa PDA','Xóa thiết bị '+id+' khỏi danh sách?',()=>{store.pdaDevices=store.pdaDevices.filter(d=>d.id!==id);persist();state.notice='Đã xóa PDA'});return}
  const removeMinute=e.target.closest('[data-minute-remove]');if(removeMinute){const id=removeMinute.dataset.minuteRemove;const draft=state.minuteDraftFiles.findIndex(([key])=>key===id);if(draft>=0)state.minuteDraftFiles.splice(draft,1);else if(!state.minuteRemoved.includes(id))state.minuteRemoved.push(id);void renderMinuteImages();return}
  const openMinute=e.target.closest('[data-minute-open]');if(openMinute){const id=openMinute.dataset.minuteOpen;const pending=state.minuteDraftFiles.find(([key])=>key===id)?.[1];void (async()=>{try{const blob=pending||await minuteGet(id);if(!(blob instanceof Blob))return;if(state.minuteZoomUrl)URL.revokeObjectURL(state.minuteZoomUrl);state.minuteZoomUrl=URL.createObjectURL(blob);state.modal='minute-zoom';render()}catch{state.notice='Không đọc được ảnh biên bản';refreshToasts()}})();return}
  const categoryTab=e.target.closest('[data-category-tab]');if(categoryTab){state.categoryTab=categoryTab.dataset.categoryTab;state.notice='';render();return}
