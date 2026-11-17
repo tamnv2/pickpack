@@ -1515,6 +1515,9 @@ root.addEventListener('paste',async function(e){
  }catch(err){state.notice=err?.message||'Không thể dán ảnh';refreshToasts()}
 });
 root.addEventListener('change',async function(e){
+ if(e.target.id==='transfer-department'){
+  const note=root.querySelector('#asset-transfer-note');if(note){note.required=e.target.value==='Khác';note.placeholder=note.required?'Bắt buộc: ghi rõ bộ phận/nơi nhận ngoài danh mục':'Tình trạng, thông tin chứng từ (nếu có)'}return;
+ }
  if(e.target.id==='crop-zoom'){changeCropZoom(Number(e.target.value)/100);return}
  if(e.target.id==='period-preset'){const value=e.target.value;state.periodPreset=value;const [from,to]=periodBounds(value);if(value!=='custom'){state.periodFrom=from;state.periodTo=to;}state.periodOpen=value==='custom';state.selected.clear();render();return}
  if(e.target.id==='period-from'||e.target.id==='period-to'){
