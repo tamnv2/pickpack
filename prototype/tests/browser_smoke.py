@@ -365,7 +365,7 @@ with sync_playwright() as p:
  app.locator('a.nav-main[href*="view=people"]').click()
  print('testing staff columns',flush=True)
  head=app.locator('.people-table thead th').all_inner_texts()
- assert head[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác'],head
+ assert head[-4:]==['Ngày nhận việc','Cập nhật bởi','PDA đang dùng','Thao tác'],head
  assert app.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
  assert app.locator('.people-table tbody tr .cell-name small').count()==0
  assert app.locator('#record-form input[name="user"]').count()==0
