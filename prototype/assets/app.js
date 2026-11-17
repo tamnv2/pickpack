@@ -995,7 +995,7 @@ function zipStored(files){
 }
 function excelColumn(n){let label='';for(n+=1;n;n=Math.floor((n-1)/26))label=String.fromCharCode(65+(n-1)%26)+label;return label}
 function makeExcel(rows,fields,title,template=false){
- const columnsXml=fields.map(([,name],i)=>`<col min="${i+1}" max="${i+1}" width="${Math.min(42,Math.max(15,String(name).length*1.4))}" customWidth="1"${template&&['id','phone'].includes(fields[i][0])?' style="2"':''}/>`).join('');
+ const columnsXml=fields.map(([,name],i)=>`<col min="${i+1}" max="${i+1}" width="${Math.min(42,Math.max(15,String(name).length*1.4))}" customWidth="1"${template&&['id','phone','serial'].includes(fields[i][0])?' style="2"':''}/>`).join('');
  const xmlRow=(values,index)=>`<row r="${index+1}">${values.map((val,j)=>{
   const ref=`${excelColumn(j)}${index+1}`;
   if(index>0&&fields[j][0]==='qty'&&typeof val==='number'&&Number.isFinite(val))return `<c r="${ref}"><v>${val}</v></c>`;
