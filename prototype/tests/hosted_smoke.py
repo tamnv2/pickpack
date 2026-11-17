@@ -121,6 +121,81 @@ try:
         assert blank.locator('.records-label b').inner_text()=='2'
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.some(x=>x.id==='00129999'&&x.phone==='0912345600')") is True
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position.includes('Pack thường')") is True
+
+        # V0.10: contextual period lives in the shared header and is hidden in catalog views.
+        blank.locator('a.nav-main[href*="view=resources"]').click()
+        assert blank.locator('#period-preset').count()==0
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        assert blank.locator('.topbar-context #period-preset').input_value()=='today'
+        assert blank.locator('.page-content .date-toolbar').count()==0
+        blank.locator('[data-action="add"]').click()
+        assert blank.locator('#record-form [name="qty"]').count()==0
+        blank.locator('#record-form [name="id"]').fill('CCDC-001')
+        blank.locator('#record-form [name="name"]').fill('PDA kiểm thử số một')
+        blank.locator('#record-form [name="type"]').select_option('PDA')
+        blank.locator('#record-form [name="serial"]').fill('SYNTHETIC-54321')
+        blank.locator('#record-form [name="tag"]').fill('QR-CCDC-001')
+        blank.locator('#record-form [name="department"]').fill('Pick Pack')
+        blank.locator('#record-form [name="location"]').fill('HY1 / 1291')
+        blank.locator('#asset-pda-link').select_option('PDA-11')
+        blank.locator('#record-form button[type="submit"]').click()
+        assert blank.locator('.module-table tbody tr').count()==1
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.find(d=>d.id==='PDA-11').assetId")=='CCDC-001'
+        with blank.expect_download() as exported_asset:
+            blank.locator('.table-controls [data-action="export"]').click()
+        wb=load_workbook(BytesIO(Path(exported_asset.value.path()).read_bytes()), read_only=True)
+        headers=[cell.value for cell in next(wb.active.rows)]
+        assert 'Mã CCDC' in headers and 'Tình trạng vật lý' in headers and 'Mã PDA liên kết' in headers
+        assert 'Số lượng' not in headers
+        blank.locator('[data-asset-loan]').first.click()
+        assert blank.locator('#pda-device-code').input_value()=='PDA-11'
+        assert blank.locator('#pda-device-preview').count()==1
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'Đã mượn PDA-11' in blank.locator('.scan-outcome').inner_text()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].state")=='Đang sử dụng'
+        blank.locator('[data-pda-mode="return"]').click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').fill('QR-CCDC-001')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'Đã trả PDA-11' in blank.locator('.scan-outcome').inner_text()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].state")=='Sẵn sàng'
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        blank.locator('.module-table [data-edit="CCDC-001"]').click()
+        blank.locator('#confirm-password').fill('1')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        blank.locator('#record-form [name="condition"]').select_option('Hư hỏng')
+        blank.locator('#record-form button[type="submit"]').click()
+        assert 'Hư hỏng' in blank.locator('.module-table tbody').inner_text()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].history.length")>=4
+        blank.locator('[data-asset-loan]').first.click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'không sẵn sàng cấp phát' in blank.locator('.scan-outcome').inner_text()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.filter(p=>p.name==='PDA-11'&&p.state==='Đang mượn').length")==0
+        # A new PDA is registered once from its unique CCDC record, not a manual total.
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        blank.locator('[data-action="add"]').click()
+        blank.locator('#record-form [name="id"]').fill('CCDC-002')
+        blank.locator('#record-form [name="name"]').fill('PDA kiểm thử số hai')
+        blank.locator('#record-form [name="type"]').select_option('PDA')
+        blank.locator('#record-form [name="serial"]').fill('SYNTHETIC-11111')
+        blank.locator('#record-form [name="tag"]').fill('QR-CCDC-002')
+        blank.locator('#asset-pda-link').select_option('__new__')
+        blank.locator('#record-form button[type="submit"]').click()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.find(d=>d.id==='CCDC-002').assetId")=='CCDC-002'
+        assert blank.locator('.module-table tbody tr').count()==2
+        blank.locator('a.nav-main[href*="view=pda"]').click()
+        assert 'CCDC-002' in blank.locator('.device-registry tbody').inner_text()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').fill('QR-CCDC-002')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'Đã mượn CCDC-002' in blank.locator('.scan-outcome').inner_text()
+        blank.locator('[data-pda-mode="return"]').click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').fill('CCDC-002')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'Đã trả CCDC-002' in blank.locator('.scan-outcome').inner_text()
         blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
         # Regression fixtures live in tests/, never in the public app's initialization.
