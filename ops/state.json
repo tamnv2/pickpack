@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-17",
-  "phase": "OFFICE_WEB_V0111_CODE_READY_CI_PASS_DRAFT_PR",
-  "application_code": "WEB_OFFICE_STATIC_V0111_CODE_READY_CI_PASS",
-  "technical_ci": "CI_PASS_ACTIONS_44061685653_SOURCE_c723d0c3779295c1aee8f1325ae0164ad61eaee9_JS_BUILD_CHROMIUM_HOSTED_CDN",
+  "phase": "OFFICE_WEB_V0112_CODE_READY_CI_PASS_DRAFT_PR",
+  "application_code": "WEB_OFFICE_STATIC_V0112_CODE_READY_CI_PASS",
+  "technical_ci": "CI_PASS_ACTIONS_44070812282_SOURCE_af3777ac2a98cc0606de82ad26edd6ceac31e147_JS_BUILD_CHROMIUM_HOSTED_CDN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V0111_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V0112_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,10 @@
     "realtime": true
   },
   "pending": [
-    "Owner UX review v0.11.1: deferred password, CCDC Excel, calendar icon, shift breakdown, PDA per Picker",
-    "CI_PASS applies to tested source SHA f2524c2, later documentation-only checkpoint does not change source",
-    "Production still BLOCKED until Owner explicitly approves deployment and backend auth/RBAC/realtime implementation/gates; no merge/provider changes"
+    "Owner review Web v0.11.2 PDA serial shared-5-suffix selection and confirm UI",
+    "Production/RBAC/realtime/provider deployment remains BLOCKED pending separate explicit Owner approval and verified backend integration; PR #2 remains unmerged"
   ],
-  "latest_checkpoint": "PP-20261117-038",
+  "latest_checkpoint": "PP-20261117-039",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -48,7 +47,7 @@
     "provider_usage": "ZERO_FIREBASE_CLOUDFLARE_OPSCORE_BUSINESS_API_CALLS_STATIC_CDN_NETWORK_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.11.1",
+    "version": "0.11.2",
     "login": "FIVE_MOCK_USERS_PASSWORD_1_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -92,7 +91,7 @@
     "verification_v081": "CODE_READY_CI_PASS_PREVIEW_PASS_ACTIONS_43587655812_BUILD_7_FILES_161451_BYTES_LOCAL_CHROMIUM_HTTP_HOSTED_AND_REMOTE_CDN_BROWSER_PASS",
     "layout": "TABLE_ONLY_NO_CARD_TOGGLE",
     "labor_scan": "EMPLOYEE_CODE_QR_KEYBOARD_EXACT_PROFILE_SHIFT_USER_DATE_TIME_TEMP_NO_GUESSED_HOURS_WORK_ONE_PER_DAY",
-    "pda_scan": "EMPLOYEE_AND_PDA_QR_KEYBOARD_MATCH_ID_SERIAL_LAST5_BORROW_RETURN_AUDIT_RETURNER_NO_DUPLICATE_OPEN_LOAN",
+    "pda_scan": "EXACT_CCDC_OR_FULL_SERIAL_OR_TAG_FIRST;LAST5_MATCH_ONE_AUTO_MATCH_MULTIPLE_REQUIRE_FULL_SERIAL_MANUAL_CHOICE_THEN_SEPARATE_CONFIRM_NO_AUTO_LOAN_RETURN",
     "verification_v082": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_99ed047b963dbaee81d54711acae3485d5313e98_RUN_43590709932_BUILD_7_FILES_171953_BYTES_CHROMIUM_HOSTED_REMOTE",
     "personnel_catalogs": "FIVE_LOCALSTORAGE_LISTS_SELECT_CRUD_CASE_INSENSITIVE_DUPLICATE_GUARD_RENAME_REFERENCES_DELETE_IN_USE_BLOCK",
     "interactions": "ANIMATED_MENU_TOAST_FORM_VALIDATION_SCANNER_LOGIN_LOGOUT_REDUCED_MOTION",
@@ -143,19 +142,20 @@
     "verification_v0100": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_44010747068_SOURCE_09c507a74393d73b3aa77d515d69e91c18fb46e9_CHROMIUM_HOSTED_CCDC_LINK_SCAN_GUARDS_XLSX_CDN_BROWSER",
     "assets_movements": "SINGLE_OPEN_TRANSFER_LOAN_OTHER_DEPARTMENT_OR_SEND_REPAIR_THEN_RECEIVE_WITH_CONDITION_PERSON_TARGET_TIME_NOTE_HISTORY_PASSWORD_EDIT_GUARD_BLOCK_PDA_SCAN_WHEN_TRANSFERRED",
     "verification_v011": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_44061685653_SOURCE_c723d0c3779295c1aee8f1325ae0164ad61eaee9_BUILD_CHROMIUM_HOSTED_CCDC_AUTO_PDA_LOAN_REPAIR_RECEIVE_XLSX_CDN",
-    "asset_excel": "FIVE_COLUMN_TEMPLATE_IMPORT_VALIDATED_ATOMIC_ON_CONFIRM_AUTO_ID_PDA_POOL_FROM_CCDC",
+    "asset_excel": "FIVE_COLUMN_TEMPLATE_APPEND_ONLY_VALIDATE_FULL_SERIAL_ONLY_IGNORE_SUFFIX_DUPLICATES_ATOMIC_CONFIRM",
     "shift_breakdown": "PERIOD_SCOPED_CA_POSITION_SUPPLIER_GROUPS_WITH_TABLE_FILTERS",
     "picker_pda": "DERIVED_OPEN_LOAN_BY_STAFF_ID_FROM_CCDC_PDA_NO_DUPLICATED_STATE",
-    "ci": "PASS source_sha=f2524c2c585a0e1f39ac5a4e79fc0d2d41f7ff95 run=44067340151; build+chromium+hosted+public-preview",
+    "ci": "PASS source_sha=af3777ac2a98cc0606de82ad26edd6ceac31e147 run=44070812282; build+chromium+hosted+real_public_cdn_browser",
     "code_status": "CODE_READY",
-    "release_status": "NOT_APPROVED_NO_PRODUCTION"
+    "release_status": "NOT_APPROVED_NO_PRODUCTION",
+    "pda_serial_identity": "FULL_SERIAL_UNIQUE_CASE_INSENSITIVE_TRIM_ALL_CCDC;LAST_5_SUFFIX_MAY_DUPLICATE"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/c723d0c3779295c1aee8f1325ae0164ad61eaee9/prototype/index.html",
-    "verified_commit": "c723d0c3779295c1aee8f1325ae0164ad61eaee9",
-    "verified_run": "44061685653",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/af3777ac2a98cc0606de82ad26edd6ceac31e147/prototype/index.html",
+    "verified_commit": "af3777ac2a98cc0606de82ad26edd6ceac31e147",
+    "verified_run": "44070812282",
     "public_access": true,
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
