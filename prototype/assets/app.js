@@ -490,7 +490,7 @@ function scanPda(employeeCode,deviceCode){if(denyOperation('pda','create'))retur
 }
 function deviceRegistry(){
  const devices=store.pdaDevices||[];
- return `<section class="panel table-panel device-registry"><div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('device',17)}</span><span class="records-label">Danh sách PDA <b>${devices.length}</b></span></div><div class="table-control-right">${canAccess('pda','create')?`<button type="button" class="btn primary tiny" data-action="device-add">${icon('plus',15)} Thêm PDA</button>`:''}</div></div><div class="table-scroll"><table><thead><tr><th>Mã PDA</th><th>Seri PDA</th><th>5 số cuối Seri</th><th>Nguồn</th><th>Tình trạng</th><th>Ghi chú</th><th>Thao tác</th></tr></thead><tbody>${devices.map(d=>{const active=store.pda.some(x=>x.name===d.id&&x.state==='Đang mượn');return `<tr><td><strong>${escape(d.id)}</strong></td><td><span class="mono">${escape(d.serial)}</span></td><td>${escape(d.last5)}</td><td>${escape(d.source)}</td><td>${badge(active?'Đang sử dụng':'Sẵn sàng')}</td><td>${escape(d.note||'—')}</td><td><span class="row-actions">${canAccess('pda','edit')?`<button type="button" class="row-open" data-device-edit="${escape(d.id)}" title="Sửa PDA">${icon('edit',16)}</button>`:''}${canAccess('pda','delete')?`<button type="button" class="row-open danger-text" data-device-delete="${escape(d.id)}" title="Xóa PDA">${icon('trash',16)}</button>`:''}</span></td></tr>`}).join('')}</tbody></table></div>${devices.length?'':'<div class="empty"><strong>Chưa có PDA</strong><span>Chọn Thêm PDA để nhập thiết bị trước khi ghi nhận mượn/trả.</span></div>'}</section>`;
+ return `<section class="panel table-panel device-registry"><div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('device',17)}</span><span class="records-label">Danh sách PDA <b>${devices.length}</b></span><small class="registry-current-note">Danh sách thiết bị hiện tại · bộ lọc ngày áp dụng lịch sử mượn/trả</small></div><div class="table-control-right">${canAccess('pda','create')?`<button type="button" class="btn primary tiny" data-action="device-add">${icon('plus',15)} Thêm PDA</button>`:''}</div></div><div class="table-scroll"><table><thead><tr><th>Mã PDA</th><th>Seri PDA</th><th>5 số cuối</th><th>CCDC liên kết</th><th>Bộ phận</th><th>Mượn / trả</th><th>Tình trạng vật lý</th><th>Ghi chú</th><th>Thao tác</th></tr></thead><tbody>${devices.map(d=>{const active=store.pda.some(x=>x.name===d.id&&x.state==='Đang mượn'),a=pdaAsset(d);return `<tr><td><strong>${escape(d.id)}</strong></td><td><span class="mono">${escape(d.serial)}</span></td><td>${escape(d.last5)}</td><td>${a?`<a class="inline-link" href="${href('assets',a.id)}" title="Xem hồ sơ CCDC">${escape(a.id)}</a>`:'Chưa liên kết'}</td><td>${escape(a?.department||'—')}</td><td>${badge(active?'Đang mượn':'Đã trả / sẵn sàng')}</td><td>${a?badge(a.condition||'Chưa rõ'):'Chưa quản lý'}</td><td>${escape(d.note||'—')}</td><td><span class="row-actions">${canAccess('pda','edit')?`<button type="button" class="row-open" data-device-edit="${escape(d.id)}" title="Sửa PDA">${icon('edit',16)}</button>`:''}${canAccess('pda','delete')?`<button type="button" class="row-open danger-text" data-device-delete="${escape(d.id)}" title="Xóa PDA">${icon('trash',16)}</button>`:''}</span></td></tr>`}).join('')}</tbody></table></div>${devices.length?'':'<div class="empty"><strong>Chưa có PDA</strong><span>Thêm PDA riêng hoặc tạo từ hồ sơ CCDC để ghi nhận mượn/trả.</span></div>'}</section>`;
 }
 function deviceModal(){
  const device=store.pdaDevices.find(d=>d.id===state.deviceEdit),edit=!!device;
@@ -536,7 +536,12 @@ function saveAssetForm(fd,editing){
  if(link&&(!/PDA/i.test(changes.type)||changes.serial.length<5)){state.notice='Liên kết PDA cần chọn loại PDA và serial ít nhất 5 ký tự';render();return}
  if(link&&link!=='__new__'&&!target){state.notice='Mã PDA liên kết không tồn tại';render();return}
  if(target&&target.assetId&&target.assetId!==id){state.notice='PDA đã liên kết với CCDC khác';render();return}
- if(target&&target.serial.toUpperCase()!==changes.serial.toUpperCase()){state.notice='Serial CCDC phải khớp serial của PDA đã chọn';render();return}
+ const serialChange=target&&target.serial.toUpperCase()!==changes.serial.toUpperCase();
+ if(serialChange){
+  const last5=changes.serial.slice(-5);
+  if(store.pda.some(p=>p.name===target.id&&p.state==='Đang mượn')){state.notice='PDA đang được mượn, không thể đổi serial';render();return}
+  if(store.pdaDevices.some(d=>d.id!==target.id&&(d.serial.toUpperCase()===changes.serial.toUpperCase()||d.last5===last5))){state.notice='Serial hoặc 5 ký tự cuối PDA đã tồn tại';render();return}
+ }
  if(oldDevice&&oldDevice.id!==target?.id&&store.pda.some(p=>p.name===oldDevice.id&&p.state==='Đang mượn')){state.notice='PDA đang được mượn, không thể đổi liên kết';render();return}
  if(link==='__new__'){
   const last5=changes.serial.slice(-5);
@@ -548,7 +553,7 @@ function saveAssetForm(fd,editing){
  Object.assign(row,changes,{updatedAt:new Date().toLocaleString('vi-VN',{hour12:false}),updatedBy:actualUser()?.fullName||'Tài khoản thử'});
  appendAssetHistory(row,editing?'Chỉnh sửa CCDC':'Thêm CCDC');
  if(oldDevice&&oldDevice!==target){oldDevice.assetId='';appendAssetHistory(row,'Ngắt liên kết PDA',oldDevice.id)}
- if(target){target.assetId=id;if(target!==oldDevice)appendAssetHistory(row,'Liên kết PDA',target.id)}
+ if(target){target.assetId=id;if(serialChange){target.serial=changes.serial;target.last5=changes.serial.slice(-5);appendAssetHistory(row,'Sửa serial PDA',target.id)}if(target!==oldDevice)appendAssetHistory(row,'Liên kết PDA',target.id)}
  if(link==='__new__'){store.pdaDevices.push({id,serial:changes.serial,last5:changes.serial.slice(-5),source:'Từ CCDC',note:'',assetId:id});appendAssetHistory(row,'Tạo và liên kết PDA',id)}
  if(!editing)store.assets.unshift(row);
  persist();state.modal='';state.editId='';state.search='';state.filter='all';
