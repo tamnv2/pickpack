@@ -793,5 +793,7 @@ html{scrollbar-gutter:stable}
 @media(max-width:440px){
  .topbar .date-popover{right:-49px;min-width:min(310px,calc(100vw - 20px))}
  .topbar .date-inline select{width:89px}
- .topbar .period-export{display:none}
+ .topbar .period-export{display:inline-flex}
 }
+
+@media(max-width:440px){.topbar .date-popover{position:fixed;left:10px;right:10px;top:57px;width:auto;min-width:0}}
