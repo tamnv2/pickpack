@@ -883,3 +883,17 @@ html{scrollbar-gutter:stable}
 .asset-dashboard-group .shift-summary-line span{min-width:0}
 @media(max-width:1150px){.asset-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.asset-kpi:nth-child(2n){border-right:0}.asset-kpi:nth-child(4n){border-right:0}.asset-kpi:nth-child(-n+6){border-bottom:1px solid var(--border)}.asset-dashboard-breakdowns{grid-template-columns:1fr}.asset-dashboard-group+.asset-dashboard-group{border-left:0;border-top:1px solid var(--border)}}
 @media(max-width:550px){.asset-kpi{padding:11px}.asset-kpi strong{font-size:calc(20px * var(--text-scale))}}
+
+
+/* Same modal geometry, inputs and labels for every CCDC transfer kind. */
+.asset-transfer-modal .form-grid{padding:15px 20px 4px;align-items:start;gap:12px 16px}
+.asset-transfer-modal .form-grid label{display:grid;gap:7px;min-width:0;font-size:calc(11px * var(--text-scale));font-weight:700}
+.asset-transfer-modal .form-grid input,.asset-transfer-modal .form-grid select,.asset-transfer-modal .form-grid textarea{width:100%;min-width:0;background:var(--control);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:calc(12px * var(--text-scale))}
+.asset-transfer-modal .form-grid input,.asset-transfer-modal .form-grid select{height:40px}
+.asset-transfer-modal .form-grid textarea{resize:vertical;min-height:78px}
+.asset-transfer-modal .form-grid .wide-field{grid-column:1 / -1}
+.asset-transfer-context{display:grid;gap:5px;padding:11px 20px 12px;background:var(--chip);border-bottom:1px solid var(--border);font-size:calc(11px * var(--text-scale))}
+.asset-transfer-context span,.asset-transfer-context small{color:var(--muted);overflow-wrap:anywhere}
+.asset-transfer-context strong{font-size:calc(12px * var(--text-scale));overflow-wrap:anywhere}
+.asset-transfer-help{font-size:calc(10.5px * var(--text-scale));color:var(--muted);line-height:1.5;margin:2px 20px 8px}
+@media(max-width:780px){.asset-transfer-modal .form-grid{grid-template-columns:1fr}}
