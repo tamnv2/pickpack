@@ -578,7 +578,7 @@ function saveAssetForm(fd,editing){
  if(serial.length>120||note.length>500||isPdaAsset({type})&&!serial){
   state.notice='Serial/IMEI PDA là bắt buộc; ghi chú không vượt 500 ký tự';render();return;
  }
- if(serial&&store.assets.some(a=>a.id!==current?.id&&String(a.serial||'').toUpperCase()===serial.toUpperCase())){
+ if(serial&&store.assets.some(a=>a.id!==current?.id&&String(a.serial||'').trim().toUpperCase()===serial.toUpperCase())){
   state.notice='Serial / IMEI đã tồn tại';render();return;
  }
  if(type.toUpperCase()==='PDA'&&serial.length<5){
@@ -1279,7 +1279,7 @@ async function parsePersonnelExcel(file){
 async function parseAssetExcel(file){
  const rows=await readExcelRows(file);
  if(!rows.length||ASSET_IMPORT_FIELDS.some(([,label],i)=>rows[0].cells[i]!==label)||rows[0].cells.length!==ASSET_IMPORT_FIELDS.length)throw Error('Tiêu đề CCDC không đúng mẫu 5 cột');
- rows.shift();const output=[],serials=new Set(store.assets.map(a=>String(a.serial||'').toUpperCase()).filter(Boolean));
+ rows.shift();const output=[],serials=new Set(store.assets.map(a=>String(a.serial||'').trim().toUpperCase()).filter(Boolean));
  for(const {line,cells} of rows){
   if(cells.every(x=>!x))continue;
   if(cells.some((x,i)=>i>=ASSET_IMPORT_FIELDS.length&&x))throw Error('Dòng '+line+': Có dữ liệu ngoài 5 cột mẫu');
