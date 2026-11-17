@@ -845,3 +845,41 @@ html{scrollbar-gutter:stable}
 .pda-collision-option small{display:block;color:var(--muted);overflow-wrap:anywhere;margin-top:5px;font-size:calc(10px * var(--text-scale))}
 .pda-ambiguity{margin-top:10px;padding:12px 15px;border-radius:8px;font-size:calc(12px * var(--text-scale));font-weight:650}
 #pda-scan-ambiguity[hidden]{display:none}
+
+
+/* Web v0.12.0 — measured table density without changing the shared table layout on other pages. */
+.table-panel .records-table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse}
+.table-panel .records-table th,.table-panel .records-table td{box-sizing:border-box;width:auto;min-width:0;max-width:260px;padding:10px 13px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.45}
+.table-panel .records-table th{white-space:nowrap;font-size:calc(10.5px * var(--text-scale));font-weight:700}
+.table-panel .records-table .selection-col{width:40px;min-width:40px;max-width:40px;padding-inline:11px}
+.table-panel .records-table .actions-col{width:125px;min-width:95px;max-width:135px;padding-inline:9px}
+.table-panel .records-table .row-actions{justify-content:center;gap:2px}
+.table-panel .records-table .cell-name{min-width:160px;max-width:215px}
+.table-panel .records-table [data-col="name"]{min-width:175px;max-width:225px}
+.table-panel .records-table [data-col="id"],.table-panel .records-table [data-col="staff"],.table-panel .records-table [data-col="serial"]{min-width:115px;max-width:195px}
+.table-panel .records-table [data-col="shift"],.table-panel .records-table [data-col="site"],.table-panel .records-table [data-col="warehouse"],.table-panel .records-table [data-col="images"]{min-width:62px;max-width:115px}
+.table-panel .records-table [data-col="date"],.table-panel .records-table [data-col="startDate"]{min-width:107px;max-width:135px}
+.table-panel .records-table [data-col="type"],.table-panel .records-table [data-col="condition"],.table-panel .records-table [data-col="state"]{min-width:105px;max-width:180px}
+.table-panel .records-table [data-col="note"],.table-panel .records-table [data-col="custodyLabel"]{min-width:135px;max-width:220px}
+.table-panel .records-table .table-note{display:block;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.table-panel .records-table [data-col="pdaInUse"]{min-width:125px;max-width:225px}
+/* Compact CCDC dashboard uses raw physical-unit records, not source inventory rollups. */
+.asset-dashboard{border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:var(--shadow);margin:0 0 12px;overflow:hidden}
+.asset-dashboard-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:7px 12px;padding:12px 15px;border-bottom:1px solid var(--border)}
+.asset-dashboard-head strong{font-size:calc(13px * var(--text-scale))}
+.asset-dashboard-head small{font-size:calc(10.5px * var(--text-scale));color:var(--muted)}
+.asset-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--border)}
+.asset-kpi{position:relative;display:grid;gap:4px;min-width:0;padding:13px 16px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.asset-kpi:nth-child(4n){border-right:0}.asset-kpi:nth-child(n+5){border-bottom:0}
+.asset-kpi-icon{position:absolute;right:15px;top:13px;color:var(--primary);opacity:.7}
+.asset-kpi-title{font-size:calc(11px * var(--text-scale));color:var(--muted);padding-right:22px}
+.asset-kpi strong{font-size:calc(23px * var(--text-scale));font-variant-numeric:tabular-nums;line-height:1.3}
+.asset-kpi small{color:var(--muted);font-size:calc(10px * var(--text-scale))}
+.asset-dashboard-breakdowns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.asset-dashboard-group{min-width:0;padding:12px 16px}
+.asset-dashboard-group+.asset-dashboard-group{border-left:1px solid var(--border)}
+.asset-dashboard-group h3{font-size:calc(11.5px * var(--text-scale));margin:0 0 11px}
+.asset-dashboard-group .shift-summary-line{grid-template-columns:minmax(70px,1fr) minmax(25px,1.15fr) 30px}
+.asset-dashboard-group .shift-summary-line span{min-width:0}
+@media(max-width:1150px){.asset-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.asset-kpi:nth-child(2n){border-right:0}.asset-kpi:nth-child(4n){border-right:0}.asset-kpi:nth-child(-n+6){border-bottom:1px solid var(--border)}.asset-dashboard-breakdowns{grid-template-columns:1fr}.asset-dashboard-group+.asset-dashboard-group{border-left:0;border-top:1px solid var(--border)}}
+@media(max-width:550px){.asset-kpi{padding:11px}.asset-kpi strong{font-size:calc(20px * var(--text-scale))}}
