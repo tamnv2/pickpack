@@ -7,6 +7,10 @@ root=Path(__file__).resolve().parents[1]
 js=(root/'assets/app.js').read_text(encoding='utf-8')
 css=(root/'assets/styles.css').read_text(encoding='utf-8')
 fixture=json.loads((root/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
+# Synthetic fixtures: each PDA is a single CCDC asset. No production data is seeded.
+for i,device in enumerate(fixture['records']['pdaDevices']):
+ fixture['records']['assets'][-(i+1)]={'id':device['id'],'name':'PDA','type':'PDA','serial':device['serial'],'condition':'Tốt','state':'Có sử dụng','note':'Mẫu thử nghiệm','createdAt':'2026-11-16','history':[]}
+
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,executable_path=os.environ['CHROMIUM_PATH'] if os.environ.get('CHROMIUM_PATH') else None,args=['--no-sandbox'])
  ctx=browser.new_context(viewport={'width':1440,'height':900},accept_downloads=True)
@@ -25,7 +29,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.10.0'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.11.0'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -36,7 +40,7 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.10.0 browser must have no test records or catalogs.
+ # A fresh Web v0.11.0 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -53,7 +57,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.10.0'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.11.0'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -111,7 +115,7 @@ with sync_playwright() as p:
  assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
  assert app.locator('.shortcut-panel').count()==0
  assert app.locator('.overview-page button[data-action="add"]').count()==0
- assert app.locator('.topbar-context button[data-action="export"]').count()==1
+ assert app.locator('.topbar .period-export').count()==1
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==0
  assert app.locator('.location-chip,.group-title').count()==0
@@ -455,7 +459,7 @@ with sync_playwright() as p:
  print('testing PDA',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
  assert app.locator('.device-registry table tbody tr').count()==3
- assert 'Seri PDA' in app.locator('.device-registry thead').inner_text()
+ assert 'Serial / IMEI' in app.locator('.device-registry thead').inner_text()
  app.locator('.table-panel').last.locator('table tbody tr').first.locator('[data-record]').click()
  assert app.locator('.detail-drawer').count()==1
  assert app.locator('.detail-drawer button[data-quick]').count()==0
@@ -482,7 +486,7 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- # v0.10.0: local permission preview, batch catalogs, Vietnamese IME, personal settings.
+ # v0.11.0: local permission preview, batch catalogs, Vietnamese IME, personal settings.
  rolecheck=new_screen()
  rolecheck.locator('a.nav-main[href*="view=access"]').click()
  assert rolecheck.locator('.access-user').count()==5
@@ -539,7 +543,8 @@ with sync_playwright() as p:
  rolecheck.locator('#period-preset').select_option('yesterday')
  assert rolecheck.locator('#period-preset').input_value()=='yesterday'
  rolecheck.locator('#period-preset').select_option('today')
- assert rolecheck.locator('#period-from').input_value()==rolecheck.locator('#period-to').input_value()
+ rolecheck.locator('[data-action="period-custom"]').click()
+  assert rolecheck.locator('#period-from').input_value()==rolecheck.locator('#period-to').input_value()
  rolecheck.close()
- print('PASS: v0.10.0 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
+ print('PASS: v0.11.0 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
