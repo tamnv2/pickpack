@@ -20,7 +20,7 @@ webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
 fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
-assert version=='0.9.9'
+assert version=='0.10.0'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
