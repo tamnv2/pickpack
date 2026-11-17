@@ -897,3 +897,57 @@ html{scrollbar-gutter:stable}
 .asset-transfer-context strong{font-size:calc(12px * var(--text-scale));overflow-wrap:anywhere}
 .asset-transfer-help{font-size:calc(10.5px * var(--text-scale));color:var(--muted);line-height:1.5;margin:2px 20px 8px}
 @media(max-width:780px){.asset-transfer-modal .form-grid{grid-template-columns:1fr}}
+
+
+/* v0.12.1 — catalog-first CCDC dashboard; no special PDA dashboard. */
+.asset-dashboard .asset-kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.asset-dashboard .asset-kpi:nth-child(n){border-bottom:1px solid var(--border)}
+.asset-dashboard .asset-kpi:last-child{border-right:0}
+.asset-type-board{padding:13px 15px;border-bottom:1px solid var(--border)}
+.asset-type-board-heading{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:5px 14px;margin-bottom:11px}
+.asset-type-board-heading strong{font-size:calc(12px * var(--text-scale))}
+.asset-type-board-heading small{color:var(--muted);font-size:calc(10.5px * var(--text-scale))}
+.asset-type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,232px),1fr));gap:10px}
+.asset-type-card{min-width:0;border:1px solid var(--border);border-radius:9px;padding:13px;background:var(--control)}
+.asset-type-heading{display:flex;justify-content:space-between;align-items:baseline;gap:9px}
+.asset-type-heading strong{overflow-wrap:anywhere;font-size:calc(12px * var(--text-scale))}
+.asset-type-heading span{white-space:nowrap;color:var(--primary);font-size:calc(11px * var(--text-scale));font-weight:750;font-variant-numeric:tabular-nums}
+.asset-type-track{height:8px;background:var(--chip);border-radius:10px;overflow:hidden;margin:12px 0 10px}
+.asset-type-track i{display:block;background:var(--primary);border-radius:inherit;height:100%}
+.asset-type-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.asset-type-stats span{display:flex;justify-content:space-between;gap:6px;font-size:calc(10.5px * var(--text-scale));color:var(--muted)}
+.asset-type-stats b{color:var(--text);font-variant-numeric:tabular-nums}
+.asset-type-empty{grid-column:1/-1;color:var(--muted);font-size:calc(11px * var(--text-scale))}
+.asset-dashboard .asset-dashboard-breakdowns{grid-template-columns:repeat(2,minmax(0,1fr))}
+.asset-dashboard .asset-dashboard-group+.asset-dashboard-group{border-left:1px solid var(--border);border-top:0}
+/* v0.12.1 — align scan type, shift, and employee input on one desktop line. */
+.shift-scan-station .shift-scan-toolbar{display:grid;grid-template-columns:max-content max-content minmax(300px,1fr);align-items:end;gap:12px 18px}
+.shift-scan-station .shift-scan-choice{display:grid;align-content:end;gap:6px;min-width:0}
+.shift-scan-station .shift-scan-toolbar .scan-code-label{margin:0;white-space:nowrap;font-size:calc(11px * var(--text-scale))}
+.shift-scan-station .shift-scan-toolbar .scan-mode{display:flex;flex-wrap:nowrap;width:max-content;max-width:100%}
+.shift-scan-station .shift-scan-toolbar .scan-mode button{min-width:70px;min-height:35px;padding:6px 10px;white-space:nowrap}
+.shift-scan-station .shift-scan-entry{min-width:0;width:min(100%,540px);justify-self:end}
+.shift-scan-station .shift-scan-input-row{display:flex;gap:8px;align-items:stretch;min-width:0}
+.shift-scan-station .shift-scan-input-row input{flex:1;min-width:0;height:43px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--control);color:var(--text)}
+.shift-scan-station .shift-scan-input-row .btn{flex:none;white-space:nowrap;min-height:43px;padding:8px 13px}
+.shift-scan-station #scan-allocation:not(:empty){margin-top:10px}
+@media(max-width:1120px){
+ .shift-scan-station .shift-scan-toolbar{grid-template-columns:max-content max-content;justify-content:start;gap:12px 16px}
+ .shift-scan-station .shift-scan-entry{grid-column:1/-1;width:min(100%,560px);justify-self:end}
+}
+@media(max-width:700px){
+ .asset-dashboard .asset-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .asset-dashboard .asset-kpi:nth-child(2n){border-right:0}
+ .asset-dashboard .asset-dashboard-breakdowns{grid-template-columns:1fr}
+ .asset-dashboard .asset-dashboard-group+.asset-dashboard-group{border-top:1px solid var(--border);border-left:0}
+ .shift-scan-station .shift-scan-toolbar{grid-template-columns:minmax(0,1fr);gap:10px}
+ .shift-scan-station .shift-scan-choice{width:100%}
+ .shift-scan-station .shift-scan-toolbar .scan-mode{width:100%}
+ .shift-scan-station .shift-scan-toolbar .scan-mode button{flex:1;min-width:0}
+ .shift-scan-station .shift-scan-entry{grid-column:auto;justify-self:stretch;width:100%}
+}
+@media(max-width:440px){
+ .shift-scan-station .shift-scan-input-row{flex-wrap:wrap}
+ .shift-scan-station .shift-scan-input-row input{flex:1 0 100%}
+ .shift-scan-station .shift-scan-input-row .btn{width:100%;justify-content:center}
+}
