@@ -843,4 +843,5 @@ html{scrollbar-gutter:stable}
 .pda-collision-option:hover,.pda-collision-option:focus-visible{border-color:var(--primary);background:var(--primary-soft)}
 .pda-collision-option strong{display:block;overflow-wrap:anywhere;font-size:calc(12px * var(--text-scale))}
 .pda-collision-option small{display:block;color:var(--muted);overflow-wrap:anywhere;margin-top:5px;font-size:calc(10px * var(--text-scale))}
+.pda-ambiguity{margin-top:10px;padding:12px 15px;border-radius:8px;font-size:calc(12px * var(--text-scale));font-weight:650}
 #pda-scan-ambiguity[hidden]{display:none}
