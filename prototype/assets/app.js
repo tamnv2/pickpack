@@ -160,6 +160,7 @@ const columns={
  pda:[['name','Thiết bị'],['holder','Người mượn'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['returner','Người trả'],['state','Trạng thái']]
 };
 const ASSET_EDITOR=[['type','Loại CCDC'],['serial','Serial / IMEI'],['condition','Tình trạng vật lý'],['state','Trạng thái sử dụng'],['note','Ghi chú']];
+const ASSET_IMPORT_FIELDS=ASSET_EDITOR;
 const ASSET_DETAILS=[['id','Mã CCDC (tự động)'],...ASSET_EDITOR,['custodyLabel','Bàn giao / sửa chữa'],['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['note','Ghi chú']];
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
@@ -304,7 +305,7 @@ function tableCell(row,key,view){if(view==='assets'&&key==='custodyLabel')return
 function filtered(){const set=datedRows(state.view);let rows=set.map(x=>enrichOperationalRow(state.view,x)).filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);if(state.view==='shifts')rows=rows.filter(x=>Object.entries(state.shiftFilter).every(([field,value])=>value==='all'||x[field]===value));return rows}
 function controls(){
  const statuses=['people','labor'].includes(state.view)?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
- return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}${state.view==='shifts'?shiftFilterControls():''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${state.view==='people'&&canAccess(state.view,'create')?`<button type="button" class="btn ghost tiny" data-action="excel-template">${icon('download',15)} Tải mẫu Excel</button><button type="button" class="btn ghost tiny" data-action="excel-import">${icon('plus',15)} Nhập Excel</button><input id="staff-excel-import" hidden type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">`:''}${['people','labor','minutes','assets'].includes(state.view)?`<a class="btn ghost tiny" data-nav="categories" data-catalog-scope="${state.view}" href="${href('categories').replace(/&scope=[^&]*/, '&scope='+state.view)}">${icon('list',15)} Quản lý danh mục</a>`:''}${['people','minutes','assets'].includes(state.view)&&canAccess(state.view,'create')?`<button class="btn primary tiny" data-action="add">${icon('plus',15)} ${state.view==='people'?'Thêm nhân sự':state.view==='minutes'?'Tạo biên bản':'Thêm CCDC'}</button>`:''}${state.view==='shifts'||!canAccess(state.view,'delete')?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}</div></div>`;
+ return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}${state.view==='shifts'?shiftFilterControls():''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${state.view==='assets'&&canAccess(state.view,'create')?`<button type="button" class="btn ghost tiny" data-action="assets-excel-template">${icon('download',15)} Tải mẫu Excel</button><button type="button" class="btn ghost tiny" data-action="assets-excel-import">${icon('plus',15)} Nhập Excel</button><input id="assets-excel-file" hidden type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">`:''}${state.view==='people'&&canAccess(state.view,'create')?`<button type="button" class="btn ghost tiny" data-action="excel-template">${icon('download',15)} Tải mẫu Excel</button><button type="button" class="btn ghost tiny" data-action="excel-import">${icon('plus',15)} Nhập Excel</button><input id="staff-excel-import" hidden type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">`:''}${['people','labor','minutes','assets'].includes(state.view)?`<a class="btn ghost tiny" data-nav="categories" data-catalog-scope="${state.view}" href="${href('categories').replace(/&scope=[^&]*/, '&scope='+state.view)}">${icon('list',15)} Quản lý danh mục</a>`:''}${['people','minutes','assets'].includes(state.view)&&canAccess(state.view,'create')?`<button class="btn primary tiny" data-action="add">${icon('plus',15)} ${state.view==='people'?'Thêm nhân sự':state.view==='minutes'?'Tạo biên bản':'Thêm CCDC'}</button>`:''}${state.view==='shifts'||!canAccess(state.view,'delete')?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}</div></div>`;
 }
 function recordActions(r){
  if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button></span>`;
@@ -1160,6 +1161,13 @@ function downloadPersonnelTemplate(){
  document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  state.notice='Mẫu Excel đã tải: điền từ dòng 2; giữ tiêu đề và định dạng Text của mã nhân viên, điện thoại';refreshToasts();
 }
+
+function downloadAssetTemplate(){
+ const blob=makeExcel([],ASSET_IMPORT_FIELDS,'Mau CCDC',true),url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='pickpack-mau-ccdc-v'+WEB_VERSION+'.xlsx';
+ document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ state.notice='Mỗi dòng là một thiết bị vật lý; mã CCDC tự sinh; loại và tình trạng phải tồn tại trong danh mục';refreshToasts();
+}
 async function readXlsxParts(file){
  if(file.size>8*1024*1024)throw Error('File Excel vượt 8 MB');
  const data=new Uint8Array(await file.arrayBuffer()),view=new DataView(data.buffer),xml={};
@@ -1206,7 +1214,7 @@ function parseExcelDate(raw){
  if(date.getUTCFullYear()!==y||date.getUTCMonth()+1!==m||date.getUTCDate()!==d)throw Error('Ngày nhận việc không hợp lệ: '+text);
  return String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
 }
-async function parsePersonnelExcel(file){
+async function readExcelRows(file){
  const files=await readXlsxParts(file),doc=parseExcelXml(files['xl/worksheets/sheet1.xml']);
  const strings=files['xl/sharedStrings.xml']?Array.from(parseExcelXml(files['xl/sharedStrings.xml']).getElementsByTagNameNS('*','si')).map(si=>Array.from(si.getElementsByTagNameNS('*','t')).map(t=>t.textContent).join('')):[];
  const rows=[];
@@ -1216,13 +1224,17 @@ async function parsePersonnelExcel(file){
    const match=/^[A-Z]+/.exec(cell.getAttribute('r')||'');if(!match)continue;
    let pos=0;for(const c of match[0])pos=pos*26+c.charCodeAt(0)-64;pos--;
    if(pos<0||pos>60)continue;
-   if(cell.getElementsByTagNameNS('*','f').length)throw Error('Không nhập công thức trong cột nhân sự');
+   if(cell.getElementsByTagNameNS('*','f').length)throw Error('Không nhập công thức trong file Excel');
    const type=cell.getAttribute('t'),raw=cell.getElementsByTagNameNS('*','v')[0]?.textContent||'';
    const val=type==='inlineStr'?Array.from(cell.getElementsByTagNameNS('*','t')).map(t=>t.textContent).join(''):type==='s'?strings[Number(raw)]??'':raw;
    cells[pos]=String(val??'').trim();
   }
   if(cells.length)rows.push({line:Number(row.getAttribute('r')||rows.length+1),cells});
  }
+ return rows;
+}
+async function parsePersonnelExcel(file){
+ const rows=await readExcelRows(file);
  if(!rows.length||IMPORT_FIELDS.some(([,label],i)=>rows[0].cells[i]!==label))throw Error('Tiêu đề Excel không đúng mẫu đã tải từ Web');
  rows.shift();const output=[],seen=new Set();
  for(const {line,cells} of rows){
@@ -1240,6 +1252,47 @@ async function parsePersonnelExcel(file){
  }
  if(!output.length)throw Error('File chưa có dữ liệu. Hãy điền từ dòng 2');
  return output;
+}
+
+async function parseAssetExcel(file){
+ const rows=await readExcelRows(file);
+ if(!rows.length||ASSET_IMPORT_FIELDS.some(([,label],i)=>rows[0].cells[i]!==label)||rows[0].cells.length!==ASSET_IMPORT_FIELDS.length)throw Error('Tiêu đề CCDC không đúng mẫu 5 cột');
+ rows.shift();const output=[],serials=new Set(store.assets.map(a=>String(a.serial||'').toUpperCase()).filter(Boolean));
+ const lastFive=new Set(pdaAssets().map(a=>String(a.serial||'').slice(-5).toUpperCase()));
+ for(const {line,cells} of rows){
+  if(cells.every(x=>!x))continue;
+  if(cells.some((x,i)=>i>=ASSET_IMPORT_FIELDS.length&&x))throw Error('Dòng '+line+': Có dữ liệu ngoài 5 cột mẫu');
+  const item=Object.fromEntries(ASSET_IMPORT_FIELDS.map(([key],i)=>[key,String(cells[i]||'').trim()]));
+  if(!catalogs.assetsType.includes(item.type))throw Error('Dòng '+line+': Loại CCDC chưa có trong danh mục: '+item.type);
+  if(!catalogs.assetsCondition.includes(item.condition))throw Error('Dòng '+line+': Tình trạng vật lý chưa có trong danh mục');
+  if(!['Có sử dụng','Không sử dụng'].includes(item.state))throw Error('Dòng '+line+': Trạng thái phải là Có sử dụng hoặc Không sử dụng');
+  if(item.serial.length>120||item.note.length>500)throw Error('Dòng '+line+': Serial/IMEI hoặc ghi chú vượt giới hạn');
+  if(item.type.toUpperCase()==='PDA'&&item.serial.length<5)throw Error('Dòng '+line+': Serial PDA phải có ít nhất 5 ký tự');
+  if(item.serial){
+   const serial=item.serial.toUpperCase();if(serials.has(serial))throw Error('Dòng '+line+': Serial/IMEI trùng với dữ liệu đã có hoặc trong file');serials.add(serial);
+   if(item.type.toUpperCase()==='PDA'){const suffix=serial.slice(-5);if(lastFive.has(suffix))throw Error('Dòng '+line+': Năm ký tự cuối serial PDA trùng');lastFive.add(suffix)}
+  }
+  output.push(item);if(output.length+store.assets.length>=500)throw Error('Tối đa 499 CCDC trong bản kiểm thử');
+ }
+ if(!output.length)throw Error('File CCDC chưa có bản ghi từ dòng 2');
+ return output;
+}
+async function importAssetsExcel(file){
+ if(denyOperation('assets','create'))return;
+ try{
+  const rows=await parseAssetExcel(file);
+  confirmDialog('Nhập CCDC từ Excel','Thêm '+rows.length+' CCDC vật lý, mỗi dòng tự tạo một mã riêng; không ghi đè dữ liệu có sẵn. Tiếp tục?',()=>{
+   const previous=store.assets.slice();
+   try{
+    for(const item of rows){
+     const id='CCDC-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+     const asset={id,...item,name:item.type,createdAt:vnTodayISO(),updatedAt:new Date().toLocaleString('vi-VN',{hour12:false}),updatedBy:actualUser()?.fullName||'Tài khoản kiểm thử',history:[]};
+     appendAssetHistory(asset,'Nhập CCDC từ Excel',asset.serial);store.assets.unshift(asset);
+    }
+    persist();state.notice='Đã nhập '+rows.length+' CCDC từ Excel';render();
+   }catch(err){store.assets=previous;state.notice='Lỗi nhập CCDC: '+err.message;render()}
+  });
+ }catch(err){state.notice='Không thể nhập Excel CCDC: '+(err?.message||'File không hợp lệ');refreshToasts()}
 }
 async function importPersonnelExcel(file){if(denyOperation('people','create'))return;
  try{
@@ -1334,7 +1387,7 @@ root.addEventListener('click',e=>{
  case'bulk-delete':deleteIds([...state.selected]);return;
  
  case'backup-reset':if(denyOperation('access'))return;confirmDialog('Xóa toàn bộ dữ liệu kiểm thử','Thao tác này sẽ XÓA TẤT CẢ dữ liệu nghiệp vụ, danh mục, user, PDA và ảnh đã lưu trên trình duyệt này (gồm dữ liệu Web v0.9.3). Không thể hoàn tác. Hãy xuất file sao lưu trước khi tiếp tục.',()=>{void resetOfflineTestData()});return;
- case'excel-template':downloadPersonnelTemplate();return;
+ case'assets-excel-template':downloadAssetTemplate();return;case'assets-excel-import':if(denyOperation('assets','create'))return;root.querySelector('#assets-excel-file')?.click();return;case'excel-template':downloadPersonnelTemplate();return;
  case'excel-import':if(denyOperation('people','create'))return;root.querySelector('#staff-excel-import')?.click();return;
  case'backup-export':if(denyOperation('access'))return;void exportOfflineBackup();return;
  case'backup-import':if(denyOperation('access'))return;root.querySelector('#backup-import-file')?.click();return;
@@ -1405,6 +1458,7 @@ root.addEventListener('change',async function(e){
  }
  if(e.target.id==='profile-photo'){const file=e.target.files?.[0];e.target.value='';if(file)try{await applyProfilePhoto(file)}catch(err){state.notice=err.message;refreshToasts()}return}
  if(e.target.id==='staff-excel-import'){const file=e.target.files?.[0];e.target.value='';if(file)await importPersonnelExcel(file);return}
+  if(e.target.id==='assets-excel-file'){const file=e.target.files?.[0];e.target.value='';if(file)await importAssetsExcel(file);return}
  if(e.target.id==='backup-import-file'){if(denyOperation('access'))return;
   const file=e.target.files?.[0];e.target.value='';if(file)await importOfflineBackup(file);return;
  }
