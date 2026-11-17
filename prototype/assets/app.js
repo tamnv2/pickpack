@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.11.2';
+ const WEB_VERSION='0.12.0';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'},access:{title:'Quản lý quyền truy cập'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào/ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên',access:'Quản lý quyền truy cập'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list'],['access','shield']];
@@ -301,7 +301,32 @@ function shiftOverview(){
  };
  return `<section class="panel shift-summary" aria-label="Tổng hợp ra vào ca"><div class="shift-summary-head"><strong>Phân bổ nhân sự ra / vào ca</strong><small>${records.length} lượt vào ca theo khoảng thời gian đã chọn · Trong ca: ${records.filter(r=>r.state==='Trong ca').length} · Đã ra: ${records.filter(r=>r.state==='Đã ra ca').length}</small></div><div class="shift-summary-grid">${group('shift','Theo ca')}${group('position','Theo vị trí chính')}${group('supplier','Theo nhà thầu')}</div></section>`;
 }
-function tableCell(row,key,view){if(view==='assets'&&key==='custodyLabel')return escape(assetCustody(row));if(view==='assets'&&key==='state')return badge(assetUse(row));if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong></div></div>`;if(key==='state'||(view==='assets'&&key==='condition'))return badge(row[key]||'Chưa rõ');if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key]??'—')}
+
+function assetDashboard(){
+ const assets=store.assets.filter(a=>!(Number(a.qty)>1));
+ const loaned=new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.assetId||r.name));
+ const movements=a=>a.activeTransfer?.kind||'';
+ const count=(fn)=>assets.filter(fn).length;
+ const values=[
+  ['Tổng CCDC',assets.length,'Thiết bị vật lý','boxes'],
+  ['Có sử dụng',count(a=>assetUse(a)==='Có sử dụng'),'Theo trạng thái','grid'],
+  ['Không sử dụng',count(a=>assetUse(a)!=='Có sử dụng'),'Theo trạng thái','list'],
+  ['PDA',count(isPdaAsset),'Trong CCDC','device'],
+  ['Bộ phận đang mượn',count(a=>movements(a)==='lend'),'Chưa nhận lại','users'],
+  ['Đang sửa chữa',count(a=>movements(a)==='repair'),'Chưa nhận lại','settings'],
+  ['Picker đang mượn',count(a=>loaned.has(a.id)),'Lượt mượn mở','device'],
+  ['Tại kho',count(a=>!movements(a)&&!loaned.has(a.id)),'Chưa bàn giao','boxes']
+ ];
+ const group=(title,items)=>{
+  const total=items.reduce((n,[,amount])=>n+amount,0),sorted=items.filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'vi'));
+  return `<section class="asset-dashboard-group"><h3>${escape(title)}</h3>${sorted.length?sorted.map(([name,amount])=>`<div class="shift-summary-line"><span title="${escape(name)}">${escape(name)}</span><div class="shift-summary-track"><i style="width:${Math.round(amount/Math.max(total,1)*100)}%"></i></div><b>${amount}</b></div>`).join(''):'<p class="shift-summary-empty">Chưa có dữ liệu</p>'}</section>`;
+ };
+ const breakdown=(key)=>[...new Set(assets.map(a=>a[key]||'Chưa xác định'))].map(value=>[value,count(a=>(a[key]||'Chưa xác định')===value)]);
+ const locations=[['Tại kho',count(a=>!movements(a)&&!loaned.has(a.id))],['Picker đang mượn',count(a=>loaned.has(a.id))],['Bộ phận khác',count(a=>movements(a)==='lend')],['Đang sửa chữa',count(a=>movements(a)==='repair')]];
+ const metrics=values.map(([title,n,subtitle,ic])=>`<div class="asset-kpi"><span class="asset-kpi-icon">${icon(ic,17)}</span><span class="asset-kpi-title">${title}</span><strong>${n}</strong><small>${subtitle}</small></div>`).join('');
+ return `<section class="asset-dashboard" aria-label="Dashboard theo dõi CCDC"><div class="asset-dashboard-head"><strong>Tổng quan CCDC</strong><small>Hiện trạng toàn bộ tài sản · mỗi CCDC vật lý tính 1 · không phụ thuộc bộ lọc ngày của bảng</small></div><div class="asset-kpi-grid">${metrics}</div><div class="asset-dashboard-breakdowns">${group('Theo loại CCDC',breakdown('type'))}${group('Tình trạng vật lý',breakdown('condition'))}${group('Vị trí / bàn giao',locations)}</div></section>`;
+}
+function tableCell(row,key,view){if(view==='minutes'&&key==='images')return `<span class="mono">${(row.imageIds||[]).length}</span>`;if(key==='note')return `<span class="table-note" title="${escape(row.note||'')}">${escape(row.note||'—')}</span>`;if(view==='assets'&&key==='custodyLabel')return escape(assetCustody(row));if(view==='assets'&&key==='state')return badge(assetUse(row));if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong></div></div>`;if(key==='state'||(view==='assets'&&key==='condition'))return badge(row[key]||'Chưa rõ');if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key]??'—')}
 function filtered(){const set=datedRows(state.view);let rows=set.map(x=>enrichOperationalRow(state.view,x)).filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);if(state.view==='shifts')rows=rows.filter(x=>Object.entries(state.shiftFilter).every(([field,value])=>value==='all'||x[field]===value));return rows}
 function controls(){
  const statuses=['people','labor'].includes(state.view)?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
@@ -313,11 +338,11 @@ function recordActions(r){
 }
 function table(){
  const cols=columns[state.view],rows=filtered(),locked=state.view==='shifts'||!canAccess(state.view,'delete');
- return `<section class="panel table-panel">${controls()}${rows.length?`<div class="table-scroll"><table class="${state.view==='people'?'people-table':'module-table'}"><thead><tr>${locked?'':'<th><input type="checkbox" id="select-all" aria-label="Chọn tất cả bản ghi đang hiển thị" '+(rows.every(x=>state.selected.has(x.id))?'checked':'')+'></th>'}${cols.map(([,lab])=>`<th>${lab}</th>`).join('')}<th>Thao tác</th></tr></thead><tbody>${rows.map(r=>`<tr>${locked?'':`<td><input type="checkbox" data-select="${escape(r.id)}" aria-label="Chọn ${escape(r.id)}" ${state.selected.has(r.id)?'checked':''}></td>`}${cols.map(([k])=>`<td>${k==='name'||(state.view==='assets'&&k==='id')?`<a class="inline-link cell-record-link" href="${href(state.view,r.id)}">${tableCell(r,k,state.view)}</a>`:tableCell(r,k,state.view)}</td>`).join('')}<td>${recordActions(r)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty"><strong>${store[state.view].length?"Không tìm thấy bản ghi phù hợp":"Chưa có dữ liệu"}</strong><span>${store[state.view].length?"Thử điều chỉnh bộ lọc hoặc từ khóa":"Hãy thêm bản ghi hoặc sử dụng chức năng quét để bắt đầu."}</span></div>`}<div class="table-footer"><span>Hiển thị ${rows.length} / ${store[state.view].length} bản ghi</span></div></section>`;
+ return `<section class="panel table-panel">${controls()}${rows.length?`<div class="table-scroll"><table class="records-table ${state.view==='people'?'people-table':'module-table'}"><thead><tr>${locked?'':'<th class="selection-col"><input type="checkbox" id="select-all" aria-label="Chọn tất cả bản ghi đang hiển thị" '+(rows.every(x=>state.selected.has(x.id))?'checked':'')+'></th>'}${cols.map(([key,lab])=>`<th data-col="${key}">${lab}</th>`).join('')}<th class="actions-col">Thao tác</th></tr></thead><tbody>${rows.map(r=>`<tr>${locked?'':`<td class="selection-col"><input type="checkbox" data-select="${escape(r.id)}" aria-label="Chọn ${escape(r.id)}" ${state.selected.has(r.id)?'checked':''}></td>`}${cols.map(([k])=>`<td data-col="${k}">${k==='name'||(state.view==='assets'&&k==='id')?`<a class="inline-link cell-record-link" href="${href(state.view,r.id)}">${tableCell(r,k,state.view)}</a>`:tableCell(r,k,state.view)}</td>`).join('')}<td class="actions-col">${recordActions(r)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty"><strong>${store[state.view].length?"Không tìm thấy bản ghi phù hợp":"Chưa có dữ liệu"}</strong><span>${store[state.view].length?"Thử điều chỉnh bộ lọc hoặc từ khóa":"Hãy thêm bản ghi hoặc sử dụng chức năng quét để bắt đầu."}</span></div>`}<div class="table-footer"><span>Hiển thị ${rows.length} / ${store[state.view].length} bản ghi</span></div></section>`;
 }
 function modulePage(){
  const scanner=!canAccess(state.view,'create')?'':state.view==='shifts'?shiftScanPanel():state.view==='labor'?laborScanPanel():state.view==='pda'?pdaScanPanel():'';
- return `<div class="page-content">${scanner}${state.view==='shifts'?shiftOverview():''}${state.view==='pda'?deviceRegistry():''}${state.view==='assets'&&store.assets.some(a=>Number(a.qty)>1)?`<p class="asset-legacy-warning">${store.assets.filter(a=>Number(a.qty)>1).length} hồ sơ số lượng cũ cần tách thành từng CCDC có mã riêng; không tự tạo mã giả.</p>`:''}${table()}</div>`;
+ return `<div class="page-content">${scanner}${state.view==='shifts'?shiftOverview():''}${state.view==='assets'?assetDashboard():''}${state.view==='pda'?deviceRegistry():''}${state.view==='assets'&&store.assets.some(a=>Number(a.qty)>1)?`<p class="asset-legacy-warning">${store.assets.filter(a=>Number(a.qty)>1).length} hồ sơ số lượng cũ cần tách thành từng CCDC có mã riêng; không tự tạo mã giả.</p>`:''}${table()}</div>`;
 }
 function accessPage(){
  const selected=demoUsers.find(u=>u.username===state.accessUser)||demoUsers[0];
