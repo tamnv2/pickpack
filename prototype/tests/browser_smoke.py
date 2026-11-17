@@ -29,7 +29,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.12.0'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.12.1'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -40,13 +40,13 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.12.0 browser must have no test records or catalogs.
+ # A fresh Web v0.12.1 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
   clean.locator(f'a.nav-main[href*="view={module}"]').click()
   assert not clean.locator('.module-table tbody tr,.people-table tbody tr').count(),module
-  if module=='pda':assert clean.locator('.device-registry tbody tr').count()==0
+  if module=='pda':assert clean.locator('.device-registry').count()==0 and clean.locator('#pda-scan-form').count()==1
   if module=='resources':assert clean.locator('.catalog-panel tbody tr').count()==0
  clean.locator('a.nav-main[href*="view=people"]').click()
  clean.locator('[data-catalog-scope="people"]').click()
@@ -57,7 +57,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.12.0'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.12.1'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -115,7 +115,7 @@ with sync_playwright() as p:
  assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
  assert app.locator('.shortcut-panel').count()==0
  assert app.locator('.overview-page button[data-action="add"]').count()==0
- assert app.locator('.topbar .period-export').count()==1
+ assert app.locator('.topbar .period-export,.topbar [data-action="export"]').count()==0
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==0
  assert app.locator('.location-chip,.group-title').count()==0
@@ -169,8 +169,9 @@ with sync_playwright() as p:
   assert app.locator('.table-panel .records-table').count()==1
   assert app.locator('.table-panel .records-table').evaluate("el=>{const th=el.querySelector('th[data-col]'),td=el.querySelector('td[data-col]');return getComputedStyle(el).tableLayout==='auto'&&parseFloat(getComputedStyle(th).paddingLeft)>=10&&parseFloat(getComputedStyle(td).paddingRight)>=10}"),module
   if module=='assets':
-   assert app.locator('.asset-dashboard .asset-kpi').count()==8
-   assert app.locator('.asset-dashboard-group').count()==3
+   assert app.locator('.asset-dashboard .asset-kpi').count()==4
+   assert app.locator('.asset-dashboard-group').count()==2
+    assert app.locator('.asset-type-card').count()>=1
    assert int(app.locator('.asset-dashboard .asset-kpi').first.locator('strong').inner_text())==app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.filter(a=>!(Number(a.qty)>1)).length")
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}'),(module,app.locator('a.cell-record-link').first.get_attribute('href'))
   assert app.locator('.table-panel').last.locator('button[data-action="export"]').inner_text().strip().endswith('Xuất Excel')
@@ -178,6 +179,9 @@ with sync_playwright() as p:
   assert app.locator('[data-action="layout-cards"],[data-action="layout-table"]').count()==0
   assert app.locator('.page-header h1').count()==0
   assert app.locator('.module-summary').count()==0
+  if module=='shifts':
+   assert app.locator('.shift-summary,.shift-summary-group').count()==0
+   assert app.locator('.shift-scan-toolbar').evaluate("el=>{const a=el.querySelector('.shift-scan-choice'),b=el.querySelectorAll('.shift-scan-choice')[1],c=el.querySelector('.shift-scan-entry');const x=a.getBoundingClientRect(),y=b.getBoundingClientRect(),z=c.getBoundingClientRect();return Math.abs(x.bottom-y.bottom)<3&&Math.abs(x.bottom-z.bottom)<3&&z.left>y.right}")
  def authorize(password='1'):
   if app.locator('#draft-confirm-form').count():
    app.locator('#draft-password').fill(password)
@@ -468,8 +472,10 @@ with sync_playwright() as p:
  assert app.locator('.records-label b').inner_text()=='35'
  print('testing PDA',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
- assert app.locator('.device-registry table tbody tr').count()==3
- assert 'Serial / IMEI' in app.locator('.device-registry thead').inner_text()
+ assert app.locator('.device-registry').count()==0
+ assert app.locator('#pda-scan-form').count()==1
+ assert app.locator('.table-panel table tbody tr').count()==30
+ assert 'Người mượn' in app.locator('.table-panel thead').inner_text()
  app.locator('.table-panel').last.locator('table tbody tr').first.locator('[data-record]').click()
  assert app.locator('.detail-drawer').count()==1
  assert app.locator('.detail-drawer button[data-quick]').count()==0
