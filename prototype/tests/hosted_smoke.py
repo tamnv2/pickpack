@@ -58,6 +58,7 @@ try:
         blank.locator('a.nav-main[href*="view=assets"]').click()
         assert blank.locator('.asset-dashboard .asset-kpi').count()==8
         assert blank.locator('.asset-dashboard-group').count()==3
+        assert blank.locator('.asset-dashboard-head').get_by_text('không phụ thuộc bộ lọc ngày',exact=False).count()==1
         assert blank.locator('.asset-kpi').first.locator('strong').inner_text()=='0'
         blank.locator('[data-action="add"]').click()
         assert [el.get_attribute('name') for el in blank.locator('#record-form [name]').all()]==['type','serial','condition','state','note']
@@ -196,10 +197,31 @@ try:
         blank.locator('#draft-password').fill('1')
         blank.locator('#draft-confirm-form button[type="submit"]').click()
         assert blank.evaluate("(id)=>!JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer",first_pda)
+        # A loan outside known departments must explicitly select Khác and describe the destination.
+        blank.locator(f'[data-record="{first_pda}"]').click()
+        blank.locator('[data-asset-transfer="lend"]').click()
+        blank.locator('#asset-transfer-form [name="target"]').select_option('Khác')
+        assert blank.locator('#asset-transfer-note').get_attribute('required') is not None
+        blank.locator('#asset-transfer-form [name="contact"]').fill('Người ngoài kho')
+        assert not blank.locator('#asset-transfer-form button[type="submit"]').evaluate("el=>el.form.checkValidity()")
+        blank.locator('#asset-transfer-note').fill('Bộ phận vận tải ngoài kho')
+        blank.locator('#asset-transfer-form button[type="submit"]').click()
+        blank.locator('#draft-password').fill('1')
+        blank.locator('#draft-confirm-form button[type="submit"]').click()
+        assert blank.evaluate("(id)=>{const t=JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer;return t.kind==='lend'&&t.target==='Khác'&&t.note==='Bộ phận vận tải ngoài kho'}",first_pda) is True
+        blank.locator(f'[data-record="{first_pda}"]').click()
+        blank.locator('[data-asset-transfer="receive"]').click()
+        assert 'Bộ phận vận tải ngoài kho' in blank.locator('.asset-transfer-context').inner_text()
+        blank.locator('#asset-transfer-form [name="contact"]').fill('Người trả ngoài kho')
+        blank.locator('#asset-transfer-form button[type="submit"]').click()
+        blank.locator('#draft-password').fill('1')
+        blank.locator('#draft-confirm-form button[type="submit"]').click()
+        assert blank.evaluate("(id)=>!JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer",first_pda)
         blank.locator(f'[data-record="{first_pda}"]').click()
         blank.locator('[data-asset-transfer="repair"]').click()
         blank.locator('#asset-transfer-form [name="target"]').fill('Đơn vị sửa thử')
         blank.locator('#asset-transfer-form [name="contact"]').fill('Kỹ thuật viên A')
+        assert blank.locator('#asset-transfer-note').get_attribute('required') is not None
         blank.locator('#asset-transfer-form [name="note"]').fill('Sửa cổng sạc, kiểm tra ngoại quan')
         blank.locator('#asset-transfer-form button[type="submit"]').click()
         blank.locator('#draft-password').fill('1')
