@@ -903,6 +903,19 @@ function prefsModal(){
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
 
 
+
+let fileGate=null;
+function confirmFileAction(direction,description,callback){
+ if(fileGate)return;
+ const layer=document.createElement('div');layer.className='modal-overlay file-confirm-overlay';
+ layer.innerHTML='<section class="modal confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="file-confirm-title"><div class="modal-head"><h2 id="file-confirm-title">'+(direction==='upload'?'Xác nhận tải lên':'Xác nhận tải xuống')+'</h2><button type="button" class="icon-button" data-file-cancel aria-label="Đóng">×</button></div><form id="file-confirm-form"><p>'+escape(description)+'</p><div class="modal-actions"><button type="button" class="btn ghost" data-file-cancel>Hủy</button><button type="submit" class="btn primary">'+(direction==='upload'?'Tiếp tục tải lên':'Tải xuống')+'</button></div></form></section>';
+ fileGate=layer;
+ const close=()=>{layer.remove();if(fileGate===layer)fileGate=null};
+ layer.addEventListener('click',event=>{if(event.target===layer||event.target.closest('[data-file-cancel]'))close()});
+ layer.querySelector('form').addEventListener('submit',event=>{event.preventDefault();if(fileGate!==layer)return;close();callback()});
+ root.append(layer);layer.querySelector('[data-file-cancel]')?.focus();
+}
+
 let draftConfirmation=null;
 function askDraftPassword(title,perform){
  if(draftConfirmation)return;
@@ -1487,11 +1500,11 @@ root.addEventListener('click',e=>{
  case'bulk-delete':deleteIds([...state.selected]);return;
  
  case'backup-reset':if(denyOperation('access'))return;confirmDialog('Xóa toàn bộ dữ liệu kiểm thử','Thao tác này sẽ XÓA TẤT CẢ dữ liệu nghiệp vụ, danh mục, user, PDA và ảnh đã lưu trên trình duyệt này (gồm dữ liệu Web v0.9.3). Không thể hoàn tác. Hãy xuất file sao lưu trước khi tiếp tục.',()=>{void resetOfflineTestData()});return;
- case'assets-excel-template':downloadAssetTemplate();return;case'assets-excel-import':if(denyOperation('assets','create'))return;root.querySelector('#assets-excel-file')?.click();return;case'excel-template':downloadPersonnelTemplate();return;
+ case'assets-excel-template':confirmFileAction('download','Tải file mẫu CCDC (Excel) về thiết bị?',downloadAssetTemplate);return;case'assets-excel-import':if(denyOperation('assets','create'))return;root.querySelector('#assets-excel-file')?.click();return;case'excel-template':confirmFileAction('download','Tải file mẫu nhân sự (Excel) về thiết bị?',downloadPersonnelTemplate);return;
  case'excel-import':if(denyOperation('people','create'))return;root.querySelector('#staff-excel-import')?.click();return;
- case'backup-export':if(denyOperation('access'))return;void exportOfflineBackup();return;
+ case'backup-export':if(denyOperation('access'))return;confirmFileAction('download','Xuất bản sao lưu JSON chứa dữ liệu nghiệp vụ và ảnh?',()=>{void exportOfflineBackup()});return;
  case'backup-import':if(denyOperation('access'))return;root.querySelector('#backup-import-file')?.click();return;
- case'export':exportExcel();return;
+ case'export':if(state.view==='dashboard')return;confirmFileAction('download','Xuất Excel danh sách '+PAGES[state.view].title+' theo kỳ đã chọn?',exportExcel);return;
  }
  render();
 });
@@ -1559,18 +1572,16 @@ root.addEventListener('change',async function(e){
   if(from>to){state.notice='Ngày bắt đầu không được sau ngày kết thúc';refreshToasts();return}
   state.periodPreset='custom';state.periodFrom=from;state.periodTo=to;state.periodOpen=true;state.selected.clear();render();return;
  }
- if(e.target.id==='profile-photo'){const file=e.target.files?.[0];e.target.value='';if(file)try{await applyProfilePhoto(file)}catch(err){state.notice=err.message;refreshToasts()}return}
- if(e.target.id==='staff-excel-import'){const file=e.target.files?.[0];e.target.value='';if(file)await importPersonnelExcel(file);return}
-  if(e.target.id==='assets-excel-file'){const file=e.target.files?.[0];e.target.value='';if(file)await importAssetsExcel(file);return}
+ if(e.target.id==='profile-photo'){const file=e.target.files?.[0];e.target.value='';if(file)confirmFileAction('upload','Sử dụng ảnh '+file.name+' làm ảnh đại diện?',()=>{void applyProfilePhoto(file).catch(err=>{state.notice=err.message;refreshToasts()})});return}
+ if(e.target.id==='staff-excel-import'){const file=e.target.files?.[0];e.target.value='';if(file)confirmFileAction('upload','Đọc file nhân sự '+file.name+' để kiểm tra và nhập Excel?',()=>{void importPersonnelExcel(file)});return}
+  if(e.target.id==='assets-excel-file'){const file=e.target.files?.[0];e.target.value='';if(file)confirmFileAction('upload','Đọc file CCDC '+file.name+' để kiểm tra và nhập Excel?',()=>{void importAssetsExcel(file)});return}
  if(e.target.id==='backup-import-file'){if(denyOperation('access'))return;
-  const file=e.target.files?.[0];e.target.value='';if(file)await importOfflineBackup(file);return;
+  const file=e.target.files?.[0];e.target.value='';if(file)confirmFileAction('upload','Đọc bản sao lưu '+file.name+'? Bước thay thế dữ liệu sẽ xác nhận sau khi kiểm tra file.',()=>{void importOfflineBackup(file)});return;
  }
- if(e.target.id==='minute-photo'){const files=Array.from(e.target.files||[]);e.target.value='';if(files.length)try{await addMinuteDraftImages(files)}catch(err){state.notice=err.message;refreshToasts()}return}
+ if(e.target.id==='minute-photo'){const files=Array.from(e.target.files||[]);e.target.value='';if(files.length)confirmFileAction('upload','Thêm '+files.length+' ảnh vào biên bản?',()=>{void addMinuteDraftImages(files).catch(err=>{state.notice=err.message;refreshToasts()})});return}
  if(e.target.id==='staff-photo'){
   const file=e.target.files?.[0];e.target.value='';if(!file)return;
-  try{
-   await applyStaffPhoto(file);
-  }catch(err){state.notice=err?.message||'Không đọc được ảnh';const box=root.querySelector('.photo-editor-info small');if(box)box.textContent=state.notice}
+  confirmFileAction('upload','Sử dụng ảnh '+file.name+' cho hồ sơ nhân sự?',()=>{void applyStaffPhoto(file).catch(err=>{state.notice=err?.message||'Không đọc được ảnh';refreshToasts()})})
   return;
  }
  markField(e.target);
