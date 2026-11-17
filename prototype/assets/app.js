@@ -486,10 +486,26 @@ function scanLabor(code,work){if(denyOperation('labor','create'))return false;
  persist();return result(true,`Đã bắt đầu công nhật · ${person.name} · ${work} · ${time}`);
 }
 
+function pdaMatches(code){
+ const key=String(code||'').trim().toUpperCase();if(!key)return [];
+ const devices=pdaAssets();
+ // Full serial / CCDC ID / QR tag always take priority over the short lookup key.
+ const exact=devices.filter(a=>[a.id,a.serial,a.tag].some(v=>v&&String(v).trim().toUpperCase()===key));
+ if(exact.length)return exact;
+ return key.length===5?devices.filter(a=>String(a.serial||'').trim().toUpperCase().endsWith(key)):[];
+}
 function resolvePda(code){
- const key=String(code||'').trim().toUpperCase();if(!key)return null;
- const exact=pdaAssets().filter(a=>[a.id,a.serial,String(a.serial||'').slice(-5),a.tag].some(v=>v&&String(v).toUpperCase()===key));
- return exact.length===1?exact[0]:null;
+ const matches=pdaMatches(code);
+ return matches.length===1?matches[0]:null;
+}
+function pdaDeviceLookupPreview(code){
+ const matches=pdaMatches(code);
+ if(matches.length<2)return pdaDevicePreview(matches[0]||null);
+ return `<div class="pda-collision" role="group" aria-label="PDA trùng năm ký tự cuối"><strong>Tìm thấy ${matches.length} PDA trùng mã quét ${escape(String(code).trim())}</strong><p>Đối chiếu serial đầy đủ trên máy rồi chọn đúng thiết bị. Chỉ chọn không tự ghi nhận mượn/trả.</p><div class="pda-collision-list">${matches.map(a=>{
+  const open=store.pda.find(r=>r.state==='Đang mượn'&&(r.assetId===a.id||r.name===a.id));
+  const availability=open?'Đang mượn: '+open.holder:a.activeTransfer?assetCustody(a):assetUse(a)!=='Có sử dụng'||a.condition!=='Tốt'?'Không đủ điều kiện sử dụng':'Sẵn sàng';
+  return `<button type="button" class="pda-collision-option" data-pda-choose="${escape(a.id)}" aria-label="Chọn PDA ${escape(a.serial)}"><strong>${escape(a.serial||a.id)}</strong><small>${escape(a.id)} · ${escape(availability)}</small></button>`;
+ }).join('')}</div></div>`;
 }
 function pdaDevicePreview(asset){
  if(!asset)return '<div class="scan-empty">Nhập hoặc quét mã CCDC PDA / serial / 5 ký tự cuối.</div>';
@@ -498,8 +514,8 @@ function pdaDevicePreview(asset){
  return `<div class="scan-device"><strong>${escape(asset.id)} · ${escape(asset.serial||'Chưa có serial')}</strong><span>${escape(asset.condition||'Chưa rõ')} · ${escape(assetCustody(asset))}</span><span>${active?`Đang mượn: ${escape(active.holder)}`:ready?'Sẵn sàng cho Picker':'Không được cấp phát'}</span></div>`;
 }
 function pdaScanPanel(){
- const result=state.pdaScan,person=result?.staff?store.people.find(p=>p.id===result.staff):null,asset=result?.device?resolvePda(result.device):null,mode=state.pdaMode;
- return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('device',20)}</span><div><h2>Quét mã mượn / trả PDA</h2><p>PDA được lấy trực tiếp từ CCDC loại PDA, không tạo hoặc liên kết lần hai. Mỗi thiết bị chỉ có một lượt mượn đang mở.</p></div></div><div class="scan-mode-wrapper"><span class="scan-code-label">Thao tác</span><div class="scan-mode" role="group" aria-label="Chế độ mượn trả PDA"><button type="button" class="${mode==='borrow'?'active':''}" data-pda-mode="borrow" aria-pressed="${mode==='borrow'}">Mượn PDA</button><button type="button" class="${mode==='return'?'active':''}" data-pda-mode="return" aria-pressed="${mode==='return'}">Trả PDA</button></div></div><form id="pda-scan-form" autocomplete="off"><div class="scan-code-grid"><label class="scan-code-label" for="pda-staff-code">Mã nhân viên / QR nhân viên<input id="pda-staff-code" name="employeeCode" maxlength="30" placeholder="Quét mã nhân viên" required autocomplete="off"></label><label class="scan-code-label" for="pda-device-code">Mã CCDC PDA / Serial / 5 số cuối<input id="pda-device-code" name="deviceCode" maxlength="120" placeholder="Quét PDA từ CCDC" value="${escape(state.pdaPrefill)}" required autocomplete="off"></label><button class="btn primary" type="submit">Ghi nhận ${mode==='borrow'?'mượn':'trả'} PDA</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-pair-preview"><div id="pda-person-preview">${compactPersonPreview(person)}</div><div id="pda-device-preview">${pdaDevicePreview(asset)}</div></div></section>`;
+ const result=state.pdaScan,person=result?.staff?store.people.find(p=>p.id===result.staff):null,mode=state.pdaMode;
+ return `<section class="panel scan-station compact-scanner"><div class="scan-station-head"><span class="scan-mark">${icon('device',20)}</span><div><h2>Quét mã mượn / trả PDA</h2><p>PDA lấy trực tiếp từ CCDC. Serial đầy đủ phải duy nhất; nếu 5 ký tự cuối trùng, cần chọn đúng PDA trước khi ghi nhận.</p></div></div><div class="scan-mode-wrapper"><span class="scan-code-label">Thao tác</span><div class="scan-mode" role="group" aria-label="Chế độ mượn trả PDA"><button type="button" class="${mode==='borrow'?'active':''}" data-pda-mode="borrow" aria-pressed="${mode==='borrow'}">Mượn PDA</button><button type="button" class="${mode==='return'?'active':''}" data-pda-mode="return" aria-pressed="${mode==='return'}">Trả PDA</button></div></div><form id="pda-scan-form" autocomplete="off"><div class="scan-code-grid"><label class="scan-code-label" for="pda-staff-code">Mã nhân viên / QR nhân viên<input id="pda-staff-code" name="employeeCode" maxlength="30" placeholder="Quét mã nhân viên" required autocomplete="off"></label><label class="scan-code-label" for="pda-device-code">Mã CCDC PDA / Serial / 5 ký tự cuối<input id="pda-device-code" name="deviceCode" maxlength="120" placeholder="Quét PDA từ CCDC" value="${escape(state.pdaPrefill)}" required autocomplete="off"></label><button class="btn primary" type="submit">Ghi nhận ${mode==='borrow'?'mượn':'trả'} PDA</button></div></form><div id="pda-scan-ambiguity" class="scan-outcome scan-error" role="alert" hidden></div>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-pair-preview"><div id="pda-person-preview">${compactPersonPreview(person)}</div><div id="pda-device-preview">${pdaDeviceLookupPreview(state.pdaPrefill||result?.device||'')}</div></div></section>`;
 }
 function scanPda(employeeCode,deviceCode){if(denyOperation('pda','create'))return false;
  const staff=String(employeeCode||'').trim(),deviceInput=String(deviceCode||'').trim();
@@ -507,7 +523,16 @@ function scanPda(employeeCode,deviceCode){if(denyOperation('pda','create'))retur
  const time=now.toLocaleTimeString('vi-VN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
  const out=(ok,message)=>{state.pdaPrefill='';state.pdaScan={ok,staff,device:deviceInput,message};render();root.querySelector('#pda-staff-code')?.focus();return ok};
  if(!person)return out(false,'Không tìm thấy mã nhân viên.');
- if(!asset)return out(false,'Không tìm thấy PDA trong danh sách CCDC loại PDA hoặc mã không duy nhất.');
+ const candidates=pdaMatches(deviceInput);
+ if(candidates.length>1){
+  const box=root.querySelector('#pda-scan-ambiguity');
+  if(box){box.hidden=false;box.textContent='Có '+candidates.length+' PDA khớp mã '+deviceInput+'. Đối chiếu serial đầy đủ rồi chọn đúng PDA bên dưới trước khi ghi nhận.'}
+  const preview=root.querySelector('#pda-device-preview');
+  if(preview)preview.innerHTML=pdaDeviceLookupPreview(deviceInput);
+  root.querySelector('[data-pda-choose]')?.focus();
+  return false;
+ }
+ if(!asset)return out(false,'Không tìm thấy PDA trong danh sách CCDC loại PDA. Hãy kiểm tra serial đầy đủ hoặc mã CCDC.');
  const open=store.pda.find(r=>r.name===asset.id&&r.state==='Đang mượn');
  if(state.pdaMode==='borrow'){
   if(open)return out(false,`${asset.id} đang được mượn bởi ${open.holder}. Không được mượn trùng.`);
@@ -558,9 +583,6 @@ function saveAssetForm(fd,editing){
  }
  if(type.toUpperCase()==='PDA'&&serial.length<5){
   state.notice='Serial PDA cần ít nhất 5 ký tự để nhận diện khi quét';render();return;
- }
- if(type.toUpperCase()==='PDA'&&store.assets.some(a=>a.id!==current?.id&&isPdaAsset(a)&&serial&&String(a.serial||'').toUpperCase().endsWith(serial.slice(-5).toUpperCase()))){
-  state.notice='Năm ký tự cuối serial PDA đã tồn tại';render();return;
  }
  if(current&&(assetLoanOpen(current)||current.activeTransfer)&&
    (type!==current.type||stateValue==='Không sử dụng'&&assetUse(current)==='Có sử dụng'||serial!==String(current.serial||'')||current.activeTransfer&&condition!==current.condition)){
@@ -1258,7 +1280,6 @@ async function parseAssetExcel(file){
  const rows=await readExcelRows(file);
  if(!rows.length||ASSET_IMPORT_FIELDS.some(([,label],i)=>rows[0].cells[i]!==label)||rows[0].cells.length!==ASSET_IMPORT_FIELDS.length)throw Error('Tiêu đề CCDC không đúng mẫu 5 cột');
  rows.shift();const output=[],serials=new Set(store.assets.map(a=>String(a.serial||'').toUpperCase()).filter(Boolean));
- const lastFive=new Set(pdaAssets().map(a=>String(a.serial||'').slice(-5).toUpperCase()));
  for(const {line,cells} of rows){
   if(cells.every(x=>!x))continue;
   if(cells.some((x,i)=>i>=ASSET_IMPORT_FIELDS.length&&x))throw Error('Dòng '+line+': Có dữ liệu ngoài 5 cột mẫu');
@@ -1270,7 +1291,6 @@ async function parseAssetExcel(file){
   if(item.type.toUpperCase()==='PDA'&&item.serial.length<5)throw Error('Dòng '+line+': Serial PDA phải có ít nhất 5 ký tự');
   if(item.serial){
    const serial=item.serial.toUpperCase();if(serials.has(serial))throw Error('Dòng '+line+': Serial/IMEI trùng với dữ liệu đã có hoặc trong file');serials.add(serial);
-   if(item.type.toUpperCase()==='PDA'){const suffix=serial.slice(-5);if(lastFive.has(suffix))throw Error('Dòng '+line+': Năm ký tự cuối serial PDA trùng');lastFive.add(suffix)}
   }
   output.push(item);if(output.length+store.assets.length>=500)throw Error('Tối đa 499 CCDC trong bản kiểm thử');
  }
@@ -1356,6 +1376,15 @@ root.addEventListener('click',e=>{
  const editAccount=e.target.closest('[data-account-edit]');if(editAccount){if(denyOperation('access'))return;state.accountEdit=editAccount.dataset.accountEdit;state.modal='account';render();return}
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(nav.dataset.nav==='categories'||nav.dataset.nav==='resources'){state.catalogScope=nav.dataset.nav==='resources'?'resources':nav.dataset.catalogScope||'people';state.categoryTab=catalogFields(state.catalogScope)[0][0]}setView(nav.dataset.nav)}return}
  const photoEdit=e.target.closest('[data-photo-edit]');if(photoEdit){startPhotoEdit(photoEdit.dataset.photoEdit);return}
+ const choosePda=e.target.closest('[data-pda-choose]');if(choosePda){
+  const field=root.querySelector('#pda-device-code');if(!field)return;
+  const picked=pdaMatches(field.value).find(a=>a.id===choosePda.dataset.pdaChoose);
+  if(!picked)return;
+  field.value=picked.serial||picked.id;
+  const preview=root.querySelector('#pda-device-preview');if(preview)preview.innerHTML=pdaDeviceLookupPreview(field.value);
+  const warning=root.querySelector('#pda-scan-ambiguity');if(warning)warning.hidden=true;
+  root.querySelector('#pda-scan-form button[type="submit"]')?.focus();return;
+ }
  const assetLoan=e.target.closest('[data-asset-loan]');if(assetLoan){if(denyOperation('pda','view'))return;const asset=store.assets.find(a=>a.id===assetLoan.dataset.assetLoan);if(!isPdaAsset(asset))return;setView('pda');state.pdaMode=assetLoanOpen(asset)?'return':'borrow';state.pdaPrefill=asset.id;render();root.querySelector('#pda-staff-code')?.focus();return}
  const transfer=e.target.closest('[data-asset-transfer]');if(transfer){if(denyOperation('assets','edit'))return;const id=transfer.dataset.assetId||state.drawer,action=transfer.dataset.assetTransfer;const asset=store.assets.find(a=>a.id===id);if(!asset||!['lend','repair','receive'].includes(action))return;state.transferId=id;state.transferAction=action;state.drawer='';state.modal='transfer';render();return}
   const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
@@ -1426,7 +1455,7 @@ root.addEventListener('input',function(e){
   if(preview)preview.innerHTML=compactPersonPreview(person);return;
  }
  if(e.target.id==='pda-device-code'){
-  const preview=root.querySelector('#pda-device-preview');if(preview)preview.innerHTML=pdaDevicePreview(resolvePda(e.target.value));return;
+  const preview=root.querySelector('#pda-device-preview');if(preview)preview.innerHTML=pdaDeviceLookupPreview(e.target.value);const warning=root.querySelector('#pda-scan-ambiguity');if(warning)warning.hidden=true;return;
  }
  if(e.target.id==='global-search'){
   const input=e.target;state.search=input.value;
