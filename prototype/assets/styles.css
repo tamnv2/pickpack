@@ -716,6 +716,8 @@ html{scrollbar-gutter:stable}
 }
 
 /* v0.10.0 — one compact contextual date strip in the shared header. */
+.topbar:not(.topbar-dated){display:block;height:auto;min-height:52px;padding:0 15px}
+.topbar-primary{width:100%}
 .topbar-dated{display:block;height:auto;min-height:0;padding:0 15px}
 .topbar-primary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px}
 .topbar-context{display:flex;align-items:center;gap:14px;padding:7px 0;border-top:1px solid var(--border);min-height:53px;flex-wrap:wrap}
