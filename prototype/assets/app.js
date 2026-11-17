@@ -334,6 +334,7 @@ function saveCatalog(form){
  }
  if(editing){
   const i=list.indexOf(old);if(i<0)return;
+  if(field==='assetsType'&&old.toUpperCase()==='PDA'&&store.assets.some(isPdaAsset)){state.notice='Không thể đổi tên loại PDA khi đang có thiết bị mượn/trả';render();return}
   list[i]=values[0];const owner=catalogOwner(field);
   for(const row of store[owner.records])if(row[owner.property]===old)row[owner.property]=values[0];persist();
  }else{
@@ -525,7 +526,7 @@ function saveAssetForm(fd,editing){
   state.notice='Năm ký tự cuối serial PDA đã tồn tại';render();return;
  }
  if(current&&(assetLoanOpen(current)||current.activeTransfer)&&
-   (type!==current.type||stateValue==='Không sử dụng'&&assetUse(current)==='Có sử dụng'||serial!==String(current.serial||''))){
+   (type!==current.type||stateValue==='Không sử dụng'&&assetUse(current)==='Có sử dụng'||serial!==String(current.serial||'')||current.activeTransfer&&condition!==current.condition)){
   state.notice='CCDC đang được mượn hoặc gửi đi; không thể đổi loại, serial hoặc ngừng sử dụng';render();return;
  }
  const id=current?.id||'CCDC-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
@@ -564,7 +565,7 @@ function saveAssetTransfer(form){
   if(!target||target.length>120){state.notice='Cần nhập bộ phận hoặc đơn vị nhận';render();return}
   if(Number(asset.qty)>1){state.notice='Hồ sơ CCDC số lượng cũ cần tách từng thiết bị trước khi bàn giao';render();return}
   if(assetLoanOpen(asset)){state.notice='PDA đang được Picker mượn, cần trả trước khi bàn giao';render();return}
-  if(kind==='lend'&&assetUse(asset)==='Không sử dụng'){state.notice='CCDC không sử dụng, không thể cho mượn';render();return}
+  if(kind==='lend'&&(assetUse(asset)==='Không sử dụng'||asset.condition!=='Tốt')){state.notice='CCDC không đủ điều kiện để cho bộ phận mượn';render();return}
   const at=new Date().toISOString();
   asset.activeTransfer={kind,target,contact,at,note,condition:asset.condition};
   appendAssetHistory(asset,kind==='lend'?'Cho bộ phận mượn':'Gửi đi sửa chữa',target+' · '+contact,{kind,target,contact,note,condition:asset.condition});
@@ -990,9 +991,10 @@ function decodeBackupPortrait(item){
 }
 function validateOfflineBackup(snapshot){
  if(!snapshot||snapshot.format!==BACKUP_FORMAT||snapshot.schema!==BACKUP_SCHEMA)throw Error('File không phải bản sao lưu PickPack hợp lệ');
- if(!['0.9.7','0.9.8','0.9.9',WEB_VERSION].includes(snapshot.webVersion))throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở Web v'+WEB_VERSION+' để nhập');
+ if(!['0.9.7','0.9.8','0.9.9','0.10.0',WEB_VERSION].includes(snapshot.webVersion))throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở Web v'+WEB_VERSION+' để nhập');
  const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits,minutePictures=data.minuteImages;
  if(!records||!catalogData||!Array.isArray(pictures)||!Array.isArray(minutePictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
+ if(!Object.hasOwn(catalogData,'assetsCondition')&&snapshot.webVersion!==WEB_VERSION)catalogData.assetsCondition=[...RESOURCE_DEFAULTS.assetsCondition];
  for(const key of Object.keys(store)){
   const list=records[key];
   if(!Array.isArray(list)||list.length>=500||list.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw Error('Dữ liệu '+key+' không hợp lệ');
