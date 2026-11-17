@@ -147,3 +147,10 @@ python tests/hosted_smoke.py
 - Trong hồ sơ hoặc kết quả quét có nút **Căn chỉnh ảnh** (chỉ người có quyền sửa nhân sự). Sau xác nhận mật khẩu mock, Web mở trực tiếp khung crop; zoom mặc định 125%, có thể thu về 100% vừa khung; kéo ảnh và nhấn Áp dụng rồi Lưu. Giữ ảnh gốc riêng, hủy không làm thay đổi dữ liệu.
 - Bản v0.9.8 dùng lại hồ sơ/ảnh local trên cùng origin; JSON backup schema 2 từ v0.9.7 cũng được nhập vào v0.9.8; chuyển từ GitHack sang domain Cloudflare cần export/import do dữ liệu lưu theo origin.
 - **Cloudflare:** 7 static assets có thể host theo Workers Static Assets, nhưng Web này CHƯA có server API, xác thực Firebase UID/role chung, RBAC, dữ liệu shared, realtime và lưu ảnh private. Không thể coi static preview là production-service tương thích 100%; các kiểm thử tích hợp cần hoàn tất trước khi phát hành. Chưa tạo tài nguyên hay deploy.
+
+## Web v0.11.1 — Chỉnh sửa trước, xác nhận khi lưu; CCDC Excel và ca/PDA
+- Nhấn **Sửa** để chỉnh thông tin trước. Khi nhấn **Lưu**, nhập mật khẩu tài khoản hiện tại; nhập sai không ghi, **Quay lại chỉnh sửa** vẫn giữ nội dung đang nhập. Xóa và thay thế dữ liệu vẫn có xác nhận riêng.
+- Quản lý CCDC → **Tải mẫu Excel** → điền 5 cột: Loại CCDC, Serial / IMEI, Tình trạng vật lý, Trạng thái sử dụng, Ghi chú → **Nhập Excel**. Mỗi dòng là một vật lý, sinh mã tự động; cần khai báo trước Loại CCDC và Tình trạng trong Danh mục; không chấp nhận trùng serial (PDA không trùng 5 ký tự cuối), file sai không ghi dòng nào.
+- Chọn ngày tại **một icon lịch** trong thanh trên cùng cạnh danh sách kỳ nhanh; mở được chọn ngày bắt đầu/kết thúc.
+- Quét vào/ra ca có bảng tổng hợp theo **Ca**, **Vị trí chính**, **Nhà thầu** (= danh mục Nhà cung cấp có sẵn) và 3 bộ lọc dữ liệu. Cột PDA đang dùng hiển thị tình trạng mượn hiện tại lấy theo mã nhân viên từ nghiệp vụ mượn/trả CCDC PDA; nhân sự Pick chưa mượn hiện **Chưa mượn**.
+- Đây chỉ là Web kiểm thử offline. Mật khẩu kiểm thử không bảo vệ dữ liệu thật; không nhập dữ liệu nhân sự thật trên CDN công khai. Không được hiểu là đã kết nối service hoặc phát hành.
