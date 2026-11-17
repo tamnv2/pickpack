@@ -243,8 +243,8 @@ function coveragePanel(){
  ['Ra / vào ca',total(store.shifts),confirmed(store.shifts,'Trong ca'),'Trong ca'],
  ['Công nhật',total(store.labor),confirmed(store.labor,'Đã xác nhận'),'Đã xác nhận'],
  ['Biên bản',total(store.minutes),confirmed(store.minutes,'Đã xác nhận'),'Đã xác nhận'],
- ['Công cụ dụng cụ',total(store.assets),confirmed(store.assets,'Sẵn sàng'),'Sẵn sàng'],
- ['Mượn / trả PDA',total(store.pdaDevices),new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size,'Đang mượn']
+ ['Công cụ dụng cụ',total(store.assets),store.assets.filter(r=>assetUse(r)==='Có sử dụng').length,'Có sử dụng'],
+ ['Mượn / trả PDA',total(pdaAssets()),new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size,'Đang mượn']
  ];
  return `<section class="panel coverage-panel"><div class="panel-title"><div><h2>Trạng thái toàn hệ thống</h2><p>Hiện trạng tổng thể (không phụ thuộc khoảng ngày lọc)</p></div></div><div class="coverage-list">${sets.map(([name,total,part,desc])=>`<div class="coverage-row"><strong>${escape(name)}</strong><span>${escape(desc)}</span><b>${part} / ${total}</b><div class="coverage-track"><span style="width:${total?Math.min(100,Math.round(part/total*100)):0}%"></span></div></div>`).join('')}</div></section>`;
 }
@@ -259,12 +259,12 @@ function dashboard(){
  const inShift=datedRows('shifts').filter(r=>r.state==='Trong ca').length;
  const pendingLabor=datedRows('labor').filter(r=>!r.endTime||r.endTime==='—').length;
  const pendingMinutes=datedRows('minutes').filter(r=>r.state==='Chờ xác nhận').length;
- const flaggedAssets=datedRows('assets').filter(r=>r.state==='Cần kiểm tra'||(r.condition&&r.condition!=='Tốt')).length;
+ const flaggedAssets=datedRows('assets').filter(r=>r.condition&&r.condition!=='Tốt'||!!r.activeTransfer).length;
  const borrowed=new Set(datedRows('pda').filter(r=>r.state==='Đang mượn').map(r=>r.name)).size;
  const todayScans=datedRows('shifts').filter(r=>r.checkin!=='—').length;
- return `<div class="page-content overview-page">${pageHead()}<div id="dashboard-search-results" aria-live="polite">${dashboardSearchResults()}</div><div class="metrics overview-metrics">${stat('Tổng nhân sự',store.people.length,'Hồ sơ đang quản lý','blue','users')}${stat('Đã phân ca',store.people.filter(r=>r.shift).length,'Nhân sự có thông tin ca','green','calendar')}${stat('Đang trong ca',inShift,'Lượt ra/vào chưa kết thúc','green','clock')}${stat('Lượt vào ca trong kỳ',todayScans,todayDate,'blue','clock')}${stat('Công nhật chưa chốt',pendingLabor,'Chưa xác nhận','orange','calendar')}${stat('Biên bản chờ duyệt',pendingMinutes,'Chờ xác nhận','orange','file')}${stat('CCDC cần kiểm tra',flaggedAssets,'Theo tình trạng thiết bị','purple','boxes')}${stat('PDA đang mượn',`${borrowed} / ${store.pdaDevices.length}`,'Thiết bị hiện quản lý','purple','device')}</div><div class="overview-sections">${coveragePanel()}${panelAttention()}</div><div class="two-col lower">${workload()}${activity()}</div></div>`;
+ return `<div class="page-content overview-page">${pageHead()}<div id="dashboard-search-results" aria-live="polite">${dashboardSearchResults()}</div><div class="metrics overview-metrics">${stat('Tổng nhân sự',store.people.length,'Hồ sơ đang quản lý','blue','users')}${stat('Đã phân ca',store.people.filter(r=>r.shift).length,'Nhân sự có thông tin ca','green','calendar')}${stat('Đang trong ca',inShift,'Lượt ra/vào chưa kết thúc','green','clock')}${stat('Lượt vào ca trong kỳ',todayScans,todayDate,'blue','clock')}${stat('Công nhật chưa chốt',pendingLabor,'Chưa xác nhận','orange','calendar')}${stat('Biên bản chờ duyệt',pendingMinutes,'Chờ xác nhận','orange','file')}${stat('CCDC cần kiểm tra',flaggedAssets,'Theo tình trạng thiết bị','purple','boxes')}${stat('PDA đang mượn',`${borrowed} / ${pdaAssets().length}`,'Thiết bị hiện quản lý','purple','device')}</div><div class="overview-sections">${coveragePanel()}${panelAttention()}</div><div class="two-col lower">${workload()}${activity()}</div></div>`;
 }
-function tableCell(row,key,view){if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong></div></div>`;if(view==='assets'&&key==='linkedPda')return escape(assetLinkedDevice(row)?.id||'—');if(key==='state'||(view==='assets'&&key==='condition'))return badge(row[key]||'Chưa rõ');if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key]??'—')}
+function tableCell(row,key,view){if(view==='assets'&&key==='custodyLabel')return escape(assetCustody(row));if(view==='assets'&&key==='state')return badge(assetUse(row));if(key==='name')return `<div class="cell-name">${view==='people'?avatar(row):''}<div><strong>${escape(row.name)}</strong></div></div>`;if(key==='state'||(view==='assets'&&key==='condition'))return badge(row[key]||'Chưa rõ');if(key==='id')return `<span class="mono">${escape(row[key])}</span>`;return escape(row[key]??'—')}
 function filtered(){const set=datedRows(state.view);let rows=set.filter(x=>Object.values(x).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));if(state.filter!=='all')rows=rows.filter(x=>String(x.state)===state.filter);return rows}
 function controls(){
  const statuses=['people','labor'].includes(state.view)?[]:[...new Set((store[state.view]||[]).map(x=>x.state))];
@@ -272,7 +272,7 @@ function controls(){
 }
 function recordActions(r){
  if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button></span>`;
- return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem chi tiết">${icon('eye',16)}</button>${state.view==='assets'&&assetLinkedDevice(r)&&canAccess('pda')?`<button class="row-open" data-asset-loan="${escape(r.id)}" title="Mượn / trả PDA">${icon('device',16)}</button>`:''}${state.view==='pda'||!canAccess(state.view,'edit')?'':`<button class="row-open" data-edit="${escape(r.id)}" title="Sửa bản ghi">${icon('edit',16)}</button>`}${canAccess(state.view,'delete')?`<button class="row-open danger-text" data-delete="${escape(r.id)}" title="Xóa bản ghi">${icon('trash',16)}</button>`:''}</span>`;
+ return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem chi tiết">${icon('eye',16)}</button>${state.view==='assets'&&isPdaAsset(r)&&canAccess('pda')?`<button class="row-open" data-asset-loan="${escape(r.id)}" title="Mượn / trả PDA">${icon('device',16)}</button>`:''}${state.view==='pda'||!canAccess(state.view,'edit')?'':`<button class="row-open" data-edit="${escape(r.id)}" title="Sửa bản ghi">${icon('edit',16)}</button>`}${canAccess(state.view,'delete')?`<button class="row-open danger-text" data-delete="${escape(r.id)}" title="Xóa bản ghi">${icon('trash',16)}</button>`:''}</span>`;
 }
 function table(){
  const cols=columns[state.view],rows=filtered(),locked=state.view==='shifts'||!canAccess(state.view,'delete');
@@ -507,57 +507,88 @@ function saveDeviceForm(form){if(denyOperation('pda',state.deviceEdit?'edit':'cr
 }
 
 
-function assetLinkedDevice(asset){return asset?store.pdaDevices.find(d=>d.assetId&&d.assetId===asset.id)||null:null}
-function pdaAsset(device){return device?.assetId?store.assets.find(a=>a.id===device.assetId)||null:null}
-function assetLinkField(asset){
- const linked=assetLinkedDevice(asset),options=store.pdaDevices.filter(d=>!d.assetId||d.assetId===asset?.id);
- return `<label class="asset-pda-link">Liên kết mượn / trả PDA<select name="pdaLink" id="asset-pda-link"><option value="">Không liên kết</option>${options.map(d=>`<option value="${escape(d.id)}" ${linked?.id===d.id?'selected':''}>${escape(d.id)} · ${escape(d.serial)}</option>`).join('')}<option value="__new__">Tạo PDA từ hồ sơ CCDC này</option></select><small>Chỉ dùng cho CCDC loại PDA có serial. Mỗi thiết bị liên kết với tối đa một hồ sơ.</small></label>`;
+
+function isPdaAsset(asset){return String(asset?.type||'').trim().toUpperCase()==='PDA'&&!(Number(asset.qty)>1)}
+function pdaAssets(){return store.assets.filter(isPdaAsset)}
+function assetUse(asset){return asset?.state==='Không sử dụng'||asset?.state==='Ngừng sử dụng'?'Không sử dụng':'Có sử dụng'}
+function assetCustody(asset){
+ const t=asset?.activeTransfer;
+ return !t?'Tại kho':t.kind==='lend'?'Bộ phận mượn: '+t.target:'Đang gửi sửa: '+t.target;
 }
-function appendAssetHistory(asset,action,detail=''){
+function assetLoanOpen(asset){return store.pda.some(r=>r.state==='Đang mượn'&&(r.assetId===asset.id||r.name===asset.id))}
+function appendAssetHistory(asset,action,detail='',extra={}){
  if(!Array.isArray(asset.history))asset.history=[];
- asset.history.unshift({at:new Date().toISOString(),action,detail,by:actualUser()?.fullName||'Tài khoản thử'});
+ asset.history.unshift({at:new Date().toISOString(),action,detail,by:actualUser()?.fullName||'Tài khoản kiểm thử',...extra});
  if(asset.history.length>200)asset.history.length=200;
 }
 function saveAssetForm(fd,editing){
- const id=String(fd.get('id')||'').trim().toUpperCase();
- const current=editing?store.assets.find(r=>r.id===state.editId):null;
- if(!/^[A-Z0-9_-]{2,30}$/.test(id)||(!editing&&store.assets.some(a=>a.id===id))){state.notice='Mã CCDC không hợp lệ hoặc đã tồn tại';render();return}
+ const current=editing?store.assets.find(a=>a.id===state.editId):null;
  if(editing&&!current)return;
- const changes={};
- for(const [key] of ASSET_EDITOR)if(key!=='id')changes[key]=String(fd.get(key)||'').trim();
- if(changes.name.length<2||!changes.type){state.notice='Cần nhập tên và loại CCDC';render();return}
- if(changes.startDate&&!periodDate(changes.startDate)){state.notice='Ngày đưa vào sử dụng không hợp lệ';render();return}
- if(changes.serial&&store.assets.some(a=>a.id!==id&&String(a.serial||'').toUpperCase()===changes.serial.toUpperCase())){state.notice='Serial CCDC đã tồn tại';render();return}
- if(changes.tag&&store.assets.some(a=>a.id!==id&&String(a.tag||'').toUpperCase()===changes.tag.toUpperCase())){state.notice='Mã tem/QR đã tồn tại';render();return}
- const link=String(fd.get('pdaLink')||''),oldDevice=assetLinkedDevice(current);
- const target=link==='__new__'?null:store.pdaDevices.find(d=>d.id===link);
- if(link&&(!/PDA/i.test(changes.type)||changes.serial.length<5)){state.notice='Liên kết PDA cần chọn loại PDA và serial ít nhất 5 ký tự';render();return}
- if(link&&link!=='__new__'&&!target){state.notice='Mã PDA liên kết không tồn tại';render();return}
- if(target&&target.assetId&&target.assetId!==id){state.notice='PDA đã liên kết với CCDC khác';render();return}
- const serialChange=target&&target.serial.toUpperCase()!==changes.serial.toUpperCase();
- if(serialChange){
-  const last5=changes.serial.slice(-5);
-  if(store.pda.some(p=>p.name===target.id&&p.state==='Đang mượn')){state.notice='PDA đang được mượn, không thể đổi serial';render();return}
-  if(store.pdaDevices.some(d=>d.id!==target.id&&(d.serial.toUpperCase()===changes.serial.toUpperCase()||d.last5===last5))){state.notice='Serial hoặc 5 ký tự cuối PDA đã tồn tại';render();return}
+ const type=String(fd.get('type')||'').trim(),serial=String(fd.get('serial')||'').trim(),condition=String(fd.get('condition')||'').trim();
+ const stateValue=String(fd.get('state')||'').trim(),note=String(fd.get('note')||'').trim();
+ if(!catalogs.assetsType.includes(type)||!catalogs.assetsCondition.includes(condition)||!['Có sử dụng','Không sử dụng'].includes(stateValue)){
+  state.notice='Vui lòng chọn loại, tình trạng và trạng thái CCDC hợp lệ';render();return;
  }
- if(oldDevice&&oldDevice.id!==target?.id&&store.pda.some(p=>p.name===oldDevice.id&&p.state==='Đang mượn')){state.notice='PDA đang được mượn, không thể đổi liên kết';render();return}
- if(link==='__new__'){
-  const last5=changes.serial.slice(-5);
-  if(store.pdaDevices.some(d=>d.id===id||d.serial.toUpperCase()===changes.serial.toUpperCase()||d.last5===last5)){state.notice='Mã, serial hoặc 5 ký tự cuối PDA đã có trong sổ';render();return}
+ if(serial.length>120||note.length>500||isPdaAsset({type})&&!serial){
+  state.notice='Serial/IMEI PDA là bắt buộc; ghi chú không vượt 500 ký tự';render();return;
  }
- const opened=target&&store.pda.some(p=>p.name===target.id&&p.state==='Đang mượn');
- if(opened)changes.state='Đang sử dụng';
- const row=current||{id,createdAt:vnTodayISO(),history:[]};
- Object.assign(row,changes,{updatedAt:new Date().toLocaleString('vi-VN',{hour12:false}),updatedBy:actualUser()?.fullName||'Tài khoản thử'});
- appendAssetHistory(row,editing?'Chỉnh sửa CCDC':'Thêm CCDC');
- if(oldDevice&&oldDevice!==target){oldDevice.assetId='';appendAssetHistory(row,'Ngắt liên kết PDA',oldDevice.id)}
- if(target){target.assetId=id;if(serialChange){target.serial=changes.serial;target.last5=changes.serial.slice(-5);appendAssetHistory(row,'Sửa serial PDA',target.id)}if(target!==oldDevice)appendAssetHistory(row,'Liên kết PDA',target.id)}
- if(link==='__new__'){store.pdaDevices.push({id,serial:changes.serial,last5:changes.serial.slice(-5),source:'Từ CCDC',note:'',assetId:id});appendAssetHistory(row,'Tạo và liên kết PDA',id)}
- if(!editing)store.assets.unshift(row);
+ if(serial&&store.assets.some(a=>a.id!==current?.id&&String(a.serial||'').toUpperCase()===serial.toUpperCase())){
+  state.notice='Serial / IMEI đã tồn tại';render();return;
+ }
+ if(type.toUpperCase()==='PDA'&&serial.length<5){
+  state.notice='Serial PDA cần ít nhất 5 ký tự để nhận diện khi quét';render();return;
+ }
+ if(type.toUpperCase()==='PDA'&&store.assets.some(a=>a.id!==current?.id&&isPdaAsset(a)&&serial&&String(a.serial||'').toUpperCase().endsWith(serial.slice(-5).toUpperCase()))){
+  state.notice='Năm ký tự cuối serial PDA đã tồn tại';render();return;
+ }
+ if(current&&(assetLoanOpen(current)||current.activeTransfer)&&
+   (type!==current.type||stateValue==='Không sử dụng'&&assetUse(current)==='Có sử dụng'||serial!==String(current.serial||''))){
+  state.notice='CCDC đang được mượn hoặc gửi đi; không thể đổi loại, serial hoặc ngừng sử dụng';render();return;
+ }
+ const id=current?.id||'CCDC-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+ const changes={type,serial,condition,state:stateValue,note,name:type,updatedBy:actualUser()?.fullName||'Tài khoản kiểm thử',updatedAt:new Date().toLocaleString('vi-VN',{hour12:false})};
+ const asset=current||{id,createdAt:vnTodayISO(),history:[]};
+ const prior=current?ASSET_EDITOR.map(([k])=>String(current[k]??'')).join('|'):'';
+ Object.assign(asset,changes);
+ if(!current)store.assets.unshift(asset);
+ if(!editing||prior!==ASSET_EDITOR.map(([k])=>String(asset[k]??'')).join('|'))appendAssetHistory(asset,editing?'Cập nhật hồ sơ CCDC':'Thêm CCDC',serial);
  persist();state.modal='';state.editId='';state.search='';state.filter='all';
- state.notice=editing?'Đã cập nhật CCDC':'Đã thêm một CCDC riêng biệt';render();
+ state.notice=editing?'Đã cập nhật CCDC':'Đã tạo hồ sơ CCDC riêng biệt';render();
 }
-
+function assetTransferModal(){
+ const a=store.assets.find(x=>x.id===state.transferId);
+ if(!a)return '';
+ const receive=state.transferAction==='receive',repair=state.transferAction==='repair';
+ const title=receive?'Nhận lại CCDC':repair?'Gửi CCDC đi sửa chữa':'Cho bộ phận khác mượn';
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide asset-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-title"><div class="modal-head"><h2 id="transfer-title">${title}</h2><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="asset-transfer-form"><div class="asset-transfer-summary"><strong>${escape(a.id)}</strong><span>${escape(a.type)} · ${escape(a.serial||'Không serial')}</span><small>${escape(assetCustody(a))}</small></div><div class="form-grid">${receive?`<label>Người bàn giao lại<input name="contact" required maxlength="120" placeholder="Người giao lại CCDC"></label><label>Tình trạng khi nhận<select name="condition" required>${catalogs.assetsCondition.map(v=>`<option value="${escape(v)}" ${v===a.condition?'selected':''}>${escape(v)}</option>`).join('')}</select></label>`:`<label>${repair?'Đơn vị sửa chữa':'Bộ phận mượn'}<input name="target" required maxlength="120" placeholder="${repair?'Tên nơi sửa chữa':'Tên bộ phận nhận'}"></label><label>Người tiếp nhận<input name="contact" required maxlength="120" placeholder="Họ tên người nhận"></label>`}<label class="wide-field">Ghi chú bàn giao / chứng từ<textarea name="note" rows="2" maxlength="500" placeholder="Tình trạng, lý do, số phiếu (nếu có)"></textarea></label></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn primary">Xác nhận ${receive?'nhận lại':repair?'gửi sửa':'cho mượn'}</button></div></form></section></div>`;
+}
+function saveAssetTransfer(form){
+ if(denyOperation('assets','edit'))return;
+ const asset=store.assets.find(a=>a.id===state.transferId);
+ if(!asset)return;
+ const fd=new FormData(form),target=String(fd.get('target')||'').trim(),contact=String(fd.get('contact')||'').trim(),note=String(fd.get('note')||'').trim();
+ if(!contact||contact.length>120||note.length>500){state.notice='Cần nhập người giao/nhận hợp lệ';render();return}
+ if(state.transferAction==='receive'){
+  if(!asset.activeTransfer){state.notice='CCDC không có lượt bàn giao đang mở';render();return}
+  const condition=String(fd.get('condition')||'');
+  if(!catalogs.assetsCondition.includes(condition)){state.notice='Tình trạng vật lý chưa có trong danh mục';render();return}
+  const sent=asset.activeTransfer;
+  asset.condition=condition;asset.activeTransfer=null;
+  appendAssetHistory(asset,sent.kind==='repair'?'Nhận lại sau sửa chữa':'Nhận lại từ bộ phận',sent.target+' · '+contact,{kind:'receive',target:sent.target,contact,note,condition});
+ }else{
+  const kind=state.transferAction;
+  if(!['lend','repair'].includes(kind)||asset.activeTransfer){state.notice='CCDC đang có lượt bàn giao chưa kết thúc';render();return}
+  if(!target||target.length>120){state.notice='Cần nhập bộ phận hoặc đơn vị nhận';render();return}
+  if(assetLoanOpen(asset)){state.notice='PDA đang được Picker mượn, cần trả trước khi bàn giao';render();return}
+  if(kind==='lend'&&assetUse(asset)==='Không sử dụng'){state.notice='CCDC không sử dụng, không thể cho mượn';render();return}
+  const at=new Date().toISOString();
+  asset.activeTransfer={kind,target,contact,at,note,condition:asset.condition};
+  appendAssetHistory(asset,kind==='lend'?'Cho bộ phận mượn':'Gửi đi sửa chữa',target+' · '+contact,{kind,target,contact,note,condition:asset.condition});
+ }
+ asset.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});asset.updatedBy=actualUser()?.fullName||'Tài khoản kiểm thử';
+ persist();state.modal='';state.transferId='';state.transferAction='';
+ state.notice='Đã ghi nhận bàn giao CCDC và lưu lịch sử';render();
+}
 function quickLabel(){return state.view==='pda'?'Mượn / trả':state.view==='shifts'?'Quét ca':state.view==='labor'?'Xác nhận công':state.view==='minutes'?'Duyệt biên bản':'Đổi trạng thái'}
 function drawer(){
  if(!state.drawer)return '';
@@ -574,8 +605,8 @@ function fieldInput(key,label,value,editing=false){
  const listKey=state.view==='people'&&CATEGORY_FIELDS.some(([k])=>k===key)?key:state.view==='labor'&&key==='work'?'laborWork':state.view==='minutes'&&key==='type'?'minutesType':state.view==='assets'&&key==='type'?'assetsType':state.view==='assets'&&key==='condition'?'assetsCondition':'';
  if(listKey){const choices=catalogs[listKey]||[];return `<label>${escape(label)}<select name="${key}" required><option value="">— Chọn ${escape(label.toLowerCase())} —</option>${[...new Set([...choices,...(v&&!choices.includes(v)?[v]:[])])].filter(Boolean).map(x=>`<option value="${escape(x)}" ${x===v?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`}
  const opts=key==='state'?STATES_BY_MODULE[state.view==='dashboard'?'minutes':state.view]:FIELD_OPTIONS[key];
- if(opts)return `<label>${escape(label)}<select name="${key}" ${key==='shift'?'':'required'}><option value="">${key==='shift'?'Chưa phân ca':'— Chọn —'}</option>${[...new Set([...opts,v])].filter(Boolean).map(x=>`<option value="${escape(x)}" ${x===v?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`;
- if(key==='state'&&state.view==='assets')return `<label>${escape(label)}<select name="state" required><option value="Có sử dụng" ${v!=='Không sử dụng'?'selected':''}>Có sử dụng</option><option value="Không sử dụng" ${v==='Không sử dụng'?'selected':''}>Không sử dụng</option></select></label>`;
+ if(opts)return `<label>${escape(label)}<select name="${key}" ${key==='shift'?'':'required'}>${state.view==='assets'?'':`<option value="">${key==='shift'?'Chưa phân ca':'— Chọn —'}</option>`}${[...new Set([...opts,state.view==='assets'?assetUse({state:v}):v])].filter(Boolean).map(x=>`<option value="${escape(x)}" ${x===(state.view==='assets'?assetUse({state:v}):v)?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`;
+ 
  if(key==='startDate'){const parts=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v),iso=parts?`${parts[3]}-${parts[2]}-${parts[1]}`:v;return `<label>${escape(label)}<input type="date" name="startDate" value="${escape(iso)}" autocomplete="off"></label>`}
  if(key==='startTime'||key==='endTime')return `<label>${escape(label)}<input name="${key}" type="time" step="1" value="${v==='—'?'':escape(v)}" ${key==='startTime'?'required':''}></label>`;
  if(key==='qty')return `<label>${escape(label)}<input type="number" min="0" max="99999" name="${key}" value="${escape(v)}" required></label>`;
@@ -830,7 +861,7 @@ function modal(){
  if(state.modal==='confirm')return confirmModal();
  if(state.modal==='portrait')return portraitModal();
  if(state.modal==='minute-zoom')return `<div class="modal-overlay" data-action="close-modal"><section class="modal minute-zoom-modal" role="dialog" aria-modal="true" aria-label="Xem ảnh biên bản"><button type="button" class="icon-button" data-action="close-modal">×</button><img src="${state.minuteZoomUrl}" alt="Ảnh biên bản nguyên bản"></section></div>`;
- if(state.modal==='device')return deviceModal();
+ if(state.modal==='transfer')return assetTransferModal();
  if(state.modal==='settings')return prefsModal();
  if(state.modal==='account')return accountModal();
  if(state.modal==='notifications')return noticesModal();
@@ -1210,7 +1241,7 @@ root.addEventListener('submit',function(e){
  if(e.target.id==='personal-settings-form'){e.preventDefault();savePersonalSettings(e.target);return}
  if(e.target.getAttribute('id')==='record-form'){e.preventDefault();saveForm(e.target)}
  if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
- if(e.target.getAttribute('id')==='device-form'){e.preventDefault();saveDeviceForm(e.target)}
+ if(e.target.id==='asset-transfer-form'){e.preventDefault();saveAssetTransfer(e.target)}
 });
 root.addEventListener('click',e=>{
  const closeToast=e.target.closest('[data-toast-close]');if(closeToast){const i=notices.findIndex(x=>x.id===Number(closeToast.dataset.toastClose));if(i>=0)notices.splice(i,1);refreshToasts();return}
@@ -1227,7 +1258,8 @@ root.addEventListener('click',e=>{
  const editAccount=e.target.closest('[data-account-edit]');if(editAccount){if(denyOperation('access'))return;state.accountEdit=editAccount.dataset.accountEdit;state.modal='account';render();return}
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(nav.dataset.nav==='categories'||nav.dataset.nav==='resources'){state.catalogScope=nav.dataset.nav==='resources'?'resources':nav.dataset.catalogScope||'people';state.categoryTab=catalogFields(state.catalogScope)[0][0]}setView(nav.dataset.nav)}return}
  const photoEdit=e.target.closest('[data-photo-edit]');if(photoEdit){startPhotoEdit(photoEdit.dataset.photoEdit);return}
- const assetLoan=e.target.closest('[data-asset-loan]');if(assetLoan){if(denyOperation('pda','view'))return;const asset=store.assets.find(a=>a.id===assetLoan.dataset.assetLoan),device=assetLinkedDevice(asset);if(!device){state.notice='CCDC chưa liên kết thiết bị PDA';render();return}setView('pda');state.pdaMode=store.pda.some(r=>r.name===device.id&&r.state==='Đang mượn')?'return':'borrow';state.pdaPrefill=device.id;render();root.querySelector('#pda-staff-code')?.focus();return}
+ const assetLoan=e.target.closest('[data-asset-loan]');if(assetLoan){if(denyOperation('pda','view'))return;const asset=store.assets.find(a=>a.id===assetLoan.dataset.assetLoan);if(!isPdaAsset(asset))return;setView('pda');state.pdaMode=assetLoanOpen(asset)?'return':'borrow';state.pdaPrefill=asset.id;render();root.querySelector('#pda-staff-code')?.focus();return}
+ const transfer=e.target.closest('[data-asset-transfer]');if(transfer){if(denyOperation('assets','edit'))return;const id=transfer.dataset.assetId||state.drawer,action=transfer.dataset.assetTransfer;const asset=store.assets.find(a=>a.id===id);if(!asset||!['lend','repair','receive'].includes(action))return;confirmDialog('Xác nhận thao tác CCDC','Nhập mật khẩu trước khi ghi nhận bàn giao '+id,()=>{state.transferId=id;state.transferAction=action;state.drawer='';state.modal='transfer'});return}
   const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
  const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;if(state.view==='shifts')return;const record=edit.dataset.edit;confirmDialog('Xác nhận sửa dữ liệu',`Nhập mật khẩu trước khi sửa bản ghi ${record}`,()=>{state.drawer='';safeHistory('replaceState',href(state.view));state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit'});return}
  const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
