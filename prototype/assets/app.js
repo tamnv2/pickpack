@@ -369,7 +369,7 @@ function savePersonalSettings(form){
 }
 function categoriesPage(){
  const field=state.categoryTab,fields=catalogFields(state.catalogScope),label=fields.find(([k])=>k===field)?.[1]||'Danh mục',values=catalogs[field]||[];const owner=catalogOwner(field),heading=state.catalogScope==='people'?'Danh mục nhân sự':state.catalogScope==='resources'?'Quản lý tài nguyên':EXTRA_CATALOGS[state.catalogScope]?.title||'Danh mục';const rows=values.map((value,i)=>({value,i})).filter(({value})=>value.toLocaleLowerCase('vi').includes(state.search.trim().toLocaleLowerCase('vi')));
- return `<div class="page-content catalog-page"><div class="catalog-heading"><strong>${escape(heading)}</strong>${state.catalogScope==='resources'?'':`<a class="btn ghost" data-nav="${state.catalogScope}" href="${href(state.catalogScope)}">← ${escape(PAGES[state.catalogScope].title)}</a>`}</div><div class="catalog-tabs" role="group" aria-label="Chọn danh mục">${fields.map(([key,name])=>`<button type="button" class="${field===key?'active':''}" data-category-tab="${key}" aria-pressed="${field===key}">${escape(name)} <small>${catalogs[key].length}</small></button>`).join('')}</div><section class="panel table-panel catalog-panel"><div class="table-controls"><span class="records-label">${escape(label)} <b>${values.length}</b></span>${canAccess(state.catalogScope,'create')?`<button class="btn primary" data-action="category-add">${icon('plus',16)} Thêm mục</button>`:''}</div><div class="table-scroll"><table><thead><tr><th>Tên danh mục</th><th>Đang sử dụng</th><th>Thao tác</th></tr></thead><tbody>${rows.map(({value,i})=>`<tr><td><strong>${escape(value)}</strong></td><td>${store[owner.records].filter(p=>p[owner.property]===value).length}</td><td><span class="row-actions">${canAccess(state.catalogScope,'edit')?`<button class="row-open" data-category-edit="${i}" title="Sửa ${escape(value)}" aria-label="Sửa ${escape(value)}">${icon('edit',16)}</button>`:''}${canAccess(state.catalogScope,'delete')?`<button class="row-open danger-text" data-category-delete="${i}" title="Xóa ${escape(value)}" aria-label="Xóa ${escape(value)}">${icon('trash',16)}</button>`:''}</span></td></tr>`).join('')}</tbody></table></div><div class="table-footer">Dữ liệu dùng cho nghiệp vụ liên quan; không xóa mục đang được sử dụng. User là mã làm việc giả lập, không phải tài khoản đăng nhập.</div></section></div>`;
+ return `<div class="page-content catalog-page"><div class="catalog-heading"><strong>${escape(heading)}</strong>${state.catalogScope==='resources'?'':`<a class="btn ghost" data-nav="${state.catalogScope}" href="${href(state.catalogScope)}">← ${escape(PAGES[state.catalogScope].title)}</a>`}</div><div class="catalog-tabs" role="group" aria-label="Chọn danh mục">${fields.map(([key,name])=>`<button type="button" class="${field===key?'active':''}" data-category-tab="${key}" aria-pressed="${field===key}">${escape(name)} <small>${catalogs[key].length}</small></button>`).join('')}</div><section class="panel table-panel catalog-panel"><div class="table-controls"><span class="records-label">${escape(label)} <b>${values.length}</b></span>${canAccess(state.catalogScope,'create')?`<button class="btn primary" data-action="category-add">${icon('plus',16)} Thêm mục</button>`:''}</div><div class="table-scroll"><table><thead><tr><th>Tên danh mục</th><th>Đang sử dụng</th><th>Thao tác</th></tr></thead><tbody>${rows.map(({value,i})=>`<tr><td><strong>${escape(value)}</strong></td><td>${store[owner.records].filter(p=>p[owner.property]===value).length}</td><td><span class="row-actions">${canAccess(state.catalogScope,'edit')?`<button class="row-open" data-category-edit="${i}" title="Sửa ${escape(value)}" aria-label="Sửa ${escape(value)}">${icon('edit',16)}</button>`:''}${canAccess(state.catalogScope,'delete')?`<button class="row-open danger-text" data-category-delete="${i}" title="Xóa ${escape(value)}" aria-label="Xóa ${escape(value)}">${icon('trash',16)}</button>`:''}</span></td></tr>`).join('')}</tbody></table></div><div class="table-footer">Dữ liệu dùng cho nghiệp vụ liên quan; không xóa mục đang được sử dụng. User làm việc không phải tài khoản đăng nhập hệ thống.</div></section></div>`;
 }
 function catalogModal(){
  const editing=state.modal==='category-edit',caption=catalogFields(state.catalogScope).find(([k])=>k===state.categoryTab)?.[1],value=editing?state.categoryEdit:'';
@@ -575,7 +575,7 @@ function assetCustody(asset){
 function assetLoanOpen(asset){return store.pda.some(r=>r.state==='Đang mượn'&&(r.assetId===asset.id||r.name===asset.id))}
 function appendAssetHistory(asset,action,detail='',extra={}){
  if(!Array.isArray(asset.history))asset.history=[];
- asset.history.unshift({at:new Date().toISOString(),action,detail,by:actualUser()?.fullName||'Tài khoản kiểm thử',...extra});
+ asset.history.unshift({at:new Date().toISOString(),action,detail,by:actualUser()?.fullName||'Người dùng',...extra});
  if(asset.history.length>200)asset.history.length=200;
 }
 function saveAssetForm(fd,editing){
@@ -600,7 +600,7 @@ function saveAssetForm(fd,editing){
   state.notice='CCDC đang được mượn hoặc gửi đi; không thể đổi loại, serial hoặc ngừng sử dụng';render();return;
  }
  const id=current?.id||'CCDC-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
- const changes={type,serial,condition,state:stateValue,note,name:type,updatedBy:actualUser()?.fullName||'Tài khoản kiểm thử',updatedAt:new Date().toLocaleString('vi-VN',{hour12:false})};
+ const changes={type,serial,condition,state:stateValue,note,name:type,updatedBy:actualUser()?.fullName||'Người dùng',updatedAt:new Date().toLocaleString('vi-VN',{hour12:false})};
  const asset=current||{id,createdAt:vnTodayISO(),history:[]};
  const prior=current?ASSET_EDITOR.map(([k])=>String(current[k]??'')).join('|'):'';
  Object.assign(asset,changes);
@@ -650,7 +650,7 @@ function saveAssetTransfer(form){
   asset.activeTransfer={kind,target,contact,at,note,condition:asset.condition};
   appendAssetHistory(asset,kind==='lend'?'Cho bộ phận mượn':'Gửi đi sửa chữa',target+' · '+contact,{kind,target,contact,note,condition:asset.condition});
  }
- asset.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});asset.updatedBy=actualUser()?.fullName||'Tài khoản kiểm thử';
+ asset.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});asset.updatedBy=actualUser()?.fullName||'Người dùng';
  persist();state.modal='';state.transferId='';state.transferAction='';
  state.notice='Đã ghi nhận biến động CCDC và lưu lịch sử';render();
 }
@@ -1054,7 +1054,7 @@ function saveForm(form){if(denyOperation(state.view,state.modal==='edit'?'edit':
   const changes={};for(const [k] of PERSON_EDITOR){if(k==='id')continue;changes[k]=k==='startDate'&&fd.get(k)?String(fd.get(k)).replace(/^(\d{4})-(\d{2})-(\d{2})$/,'$3/$2/$1'):String(fd.get(k)||'').trim()}
   changes.photo=state.photoDraft||'';
   changes.initial=name.split(' ').at(-1).slice(0,2);
-  changes.updatedBy=actualUser()?.fullName||'Tài khoản kiểm thử';
+  changes.updatedBy=actualUser()?.fullName||'Người dùng';
   changes.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});
   if(editing){const row=store.people.find(p=>p.id===state.editId);if(!row)return;Object.assign(row,changes);state.notice='Đã cập nhật hồ sơ nhân sự'}
   else{store.people.unshift({id,...changes,createdAt:vnTodayISO()});state.notice='Đã thêm nhân sự'}
@@ -1254,7 +1254,7 @@ async function importOfflineBackup(file){
  if(!file)return;
  try{
   const snapshot=JSON.parse(await file.text()),checked=validateOfflineBackup(snapshot);
-  confirmDialog('Nhập dữ liệu kiểm thử','Bản sao lưu v'+snapshot.webVersion+' gồm '+checked.records.people.length+' nhân sự và '+checked.photos.length+' ảnh gốc. Nhập sẽ THAY THẾ toàn bộ dữ liệu và danh mục của trình duyệt này. Hãy xuất bản sao lưu hiện tại trước khi tiếp tục.',()=>{void commitOfflineBackup(checked)});
+  confirmDialog('Nhập bản sao lưu','Bản sao lưu v'+snapshot.webVersion+' gồm '+checked.records.people.length+' nhân sự và '+checked.photos.length+' ảnh gốc. Nhập sẽ THAY THẾ toàn bộ dữ liệu và danh mục của trình duyệt này. Hãy xuất bản sao lưu hiện tại trước khi tiếp tục.',()=>{void commitOfflineBackup(checked)});
  }catch(err){state.notice='Không thể nhập file: '+(err?.message||'File không hợp lệ');refreshToasts()}
 }
 
@@ -1389,7 +1389,7 @@ async function importAssetsExcel(file){
    try{
     for(const item of rows){
      const id='CCDC-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
-     const asset={id,...item,name:item.type,createdAt:vnTodayISO(),updatedAt:new Date().toLocaleString('vi-VN',{hour12:false}),updatedBy:actualUser()?.fullName||'Tài khoản kiểm thử',history:[]};
+     const asset={id,...item,name:item.type,createdAt:vnTodayISO(),updatedAt:new Date().toLocaleString('vi-VN',{hour12:false}),updatedBy:actualUser()?.fullName||'Người dùng',history:[]};
      appendAssetHistory(asset,'Nhập CCDC từ Excel',asset.serial);store.assets.unshift(asset);
     }
     persist();state.notice='Đã nhập '+rows.length+' CCDC từ Excel';render();
@@ -1499,7 +1499,7 @@ root.addEventListener('click',e=>{
  case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
  case'bulk-delete':deleteIds([...state.selected]);return;
  
- case'backup-reset':if(denyOperation('access'))return;confirmDialog('Xóa toàn bộ dữ liệu kiểm thử','Thao tác này sẽ XÓA TẤT CẢ dữ liệu nghiệp vụ, danh mục, user, PDA và ảnh đã lưu trên trình duyệt này (gồm dữ liệu Web v0.9.3). Không thể hoàn tác. Hãy xuất file sao lưu trước khi tiếp tục.',()=>{void resetOfflineTestData()});return;
+ case'backup-reset':if(denyOperation('access'))return;confirmDialog('Xóa toàn bộ dữ liệu','Toàn bộ dữ liệu nghiệp vụ, danh mục, user làm việc và ảnh trong trình duyệt này sẽ bị xóa. Không thể hoàn tác.',()=>{void resetOfflineTestData()});return;
  case'assets-excel-template':confirmFileAction('download','Tải file mẫu CCDC (Excel) về thiết bị?',downloadAssetTemplate);return;case'assets-excel-import':if(denyOperation('assets','create'))return;root.querySelector('#assets-excel-file')?.click();return;case'excel-template':confirmFileAction('download','Tải file mẫu nhân sự (Excel) về thiết bị?',downloadPersonnelTemplate);return;
  case'excel-import':if(denyOperation('people','create'))return;root.querySelector('#staff-excel-import')?.click();return;
  case'backup-export':if(denyOperation('access'))return;confirmFileAction('download','Xuất bản sao lưu JSON chứa dữ liệu nghiệp vụ và ảnh?',()=>{void exportOfflineBackup()});return;
