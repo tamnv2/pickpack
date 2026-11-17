@@ -265,7 +265,7 @@ try:
         assert page.locator('.corporate-brand span').all_inner_texts() == ['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
         assert page.locator('.shortcut-panel').count() == 0
         assert page.locator('.overview-page [data-action="add"]').count() == 0
-        assert page.locator('.overview-page [data-action="export"]').count() == 1
+        assert page.locator('.topbar-context [data-action="export"]').count() == 1
         page.locator('[data-theme-choice="auto"]').click()
         assert page.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')") == 'auto'
         page.locator('[data-theme-choice="light"]').click()
