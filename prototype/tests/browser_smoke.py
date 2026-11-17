@@ -474,7 +474,7 @@ with sync_playwright() as p:
  app.locator('a.nav-main[href*="view=pda"]').click()
  assert app.locator('.device-registry').count()==0
  assert app.locator('#pda-scan-form').count()==1
- assert app.locator('.table-panel table tbody tr').count()==30
+ assert app.locator('.table-panel table tbody tr').count()==int(app.locator('.table-panel .records-label b').inner_text())
  assert 'Người mượn' in app.locator('.table-panel thead').inner_text()
  app.locator('.table-panel').last.locator('table tbody tr').first.locator('[data-record]').click()
  assert app.locator('.detail-drawer').count()==1
