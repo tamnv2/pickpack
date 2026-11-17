@@ -24,7 +24,7 @@ fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encodi
 for i,device in enumerate(fixture['records']['pdaDevices']):
  fixture['records']['assets'][-(i+1)]={'id':device['id'],'name':'PDA','type':'PDA','serial':device['serial'],'condition':'Tốt','state':'Có sử dụng','note':'Mẫu thử nghiệm','createdAt':'2026-11-16','history':[]}
 
-assert version=='0.11.0'
+assert version=='0.11.1'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -227,6 +227,29 @@ try:
         blank.locator('#pda-device-code').fill(first_pda)
         blank.locator('#pda-device-code').press('Enter')
         assert f'Đã trả {first_pda}' in blank.locator('.scan-outcome').inner_text()
+        blank.locator('a.nav-main[href*="view=people"]').click()
+        assert 'Chưa mượn' in blank.locator('.people-table tbody tr').first.inner_text()
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        assert blank.locator('[data-action="assets-excel-template"]').count()==1
+        with blank.expect_download() as template:
+            blank.locator('[data-action="assets-excel-template"]').click()
+        workbook=load_workbook(BytesIO(Path(template.value.path()).read_bytes()))
+        sheet=workbook.active
+        assert [v.value for v in sheet[1]]==['Loại CCDC','Serial / IMEI','Tình trạng vật lý','Trạng thái sử dụng','Ghi chú']
+        sheet.append(['PDA','TEST-CCDC-67890','Tốt','Có sử dụng','PDA từ Excel giả lập'])
+        sample=BytesIO();workbook.save(sample)
+        blank.locator('#assets-excel-file').set_input_files({'name':'assets.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
+        assert blank.locator('#confirm-form').count()==1
+        blank.locator('#confirm-password').fill('wrong')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        assert 'Mật khẩu không đúng' in blank.locator('#confirm-error').inner_text()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==2
+        blank.locator('#confirm-password').fill('1')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==3
+        blank.locator('#assets-excel-file').set_input_files({'name':'duplicate.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
+        assert blank.locator('#confirm-form').count()==0
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==3
         blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
         # Regression fixtures live in tests/, never in the public app's initialization.
@@ -248,6 +271,12 @@ try:
         page.wait_for_url('**/app.html?view=dashboard*')
         assert page.locator('#period-preset').input_value()=='today'
         page.locator('#period-preset').select_option('all')
+        page.locator('a.nav-main[href*="view=shifts"]').click()
+        assert page.locator('.shift-summary-group').count()==3
+        assert page.locator('[data-shift-filter]').count()==3
+        page.locator('[data-shift-filter="shift"]').select_option('Ca 1')
+        assert 0 < page.locator('.table-panel tbody tr').count() <= 42
+        page.locator('a.nav-main[href*="view=dashboard"]').click()
         assert page.locator('a.nav-main').count() == 9
         assert page.locator('.side-bottom .web-version').inner_text()==f'Web v{version}'
         assert page.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
