@@ -953,3 +953,20 @@ html{scrollbar-gutter:stable}
 }
 
 @media(min-width:1121px){.shift-scan-station .shift-scan-toolbar.shift-scan-exit{grid-template-columns:max-content minmax(300px,1fr)}}
+
+
+/* v0.12.2: align scan labels to a consistent vertical rhythm. */
+.shift-scan-station .shift-scan-entry{display:grid;align-content:end;gap:6px}
+.shift-scan-station .shift-scan-choice .scan-code-label,.shift-scan-station .shift-scan-entry .scan-code-label{line-height:1.4;min-height:calc(16px * var(--text-scale));margin:0 0 1px}
+.shift-correction-modal .form-grid{padding:18px 20px 5px}
+.shift-correction-modal .form-grid label{display:grid;gap:8px;font-weight:700;font-size:calc(11px * var(--text-scale))}
+.shift-correction-modal .form-grid input{width:100%;min-height:42px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--control);color:var(--text)}
+/* The same seven accents work in light and dark mode. */
+:root[data-theme=dark][data-accent=red]{--primary:#f1787c;--primary-hover:#ff9498;--primary-soft:#422b32;--focus:#d8767d;--sidebar-active:#40252c}
+:root[data-theme=dark][data-accent=orange]{--primary:#ffa166;--primary-hover:#ffb887;--primary-soft:#493528;--focus:#df9b70;--sidebar-active:#403025}
+:root[data-theme=dark][data-accent=yellow]{--primary:#efce63;--primary-hover:#ffe18a;--primary-soft:#443d26;--focus:#d4bb70;--sidebar-active:#3b3421}
+:root[data-theme=dark][data-accent=green]{--primary:#72d5a3;--primary-hover:#91ebba;--primary-soft:#263f36;--focus:#78c99d;--sidebar-active:#21382f}
+:root[data-theme=dark][data-accent=blue]{--primary:#82b5ff;--primary-hover:#a3caff;--primary-soft:#273c58;--focus:#7daae8;--sidebar-active:#213550}
+:root[data-theme=dark][data-accent=indigo]{--primary:#afb3ff;--primary-hover:#c4c7ff;--primary-soft:#333551;--focus:#a8aceb;--sidebar-active:#2a2c47}
+:root[data-theme=dark][data-accent=violet]{--primary:#d2a3f9;--primary-hover:#e1bbff;--primary-soft:#3f3050;--focus:#c698e8;--sidebar-active:#352640}
+:root[data-theme=dark] .btn.primary,:root[data-theme=dark] .scan-mode button.active{color:#14202b}
