@@ -241,7 +241,7 @@ try:
         sheet.append(['PDA','SYNTH-BETA-00228','Tốt','Có sử dụng','Máy thử B'])
         sample=BytesIO();workbook.save(sample)
         blank.locator('#assets-excel-file').set_input_files({'name':'assets.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
-        assert blank.locator('#confirm-form').count()==1
+        blank.locator('#confirm-form').wait_for(timeout=10000)
         blank.locator('#confirm-password').fill('wrong')
         blank.locator('#confirm-form button[type="submit"]').click()
         assert 'Mật khẩu không đúng' in blank.locator('#confirm-error').inner_text()
@@ -250,6 +250,7 @@ try:
         blank.locator('#confirm-form button[type="submit"]').click()
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==5
         blank.locator('#assets-excel-file').set_input_files({'name':'duplicate.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
+        blank.wait_for_function("() => [...document.querySelectorAll('.toast-stack .toast')].some(n=>n.textContent.includes('trùng'))",timeout=10000)
         assert blank.locator('#confirm-form').count()==0
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==5
         # Manual CCDC creation must allow another distinct full serial with the same last 5 characters.
