@@ -265,7 +265,7 @@ try:
         blank.locator('#record-form button[type="submit"]').click()
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==6
         assert 'Serial / IMEI đã tồn tại' in blank.locator('.toast-stack .toast').last.inner_text()
-        blank.locator('#record-form [data-action="close-modal"]').click()
+        blank.locator('.modal-head [data-action="close-modal"]').click()
         blank.locator('a.nav-main[href*="view=pda"]').click()
         blank.locator('[data-pda-mode="borrow"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
