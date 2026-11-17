@@ -172,3 +172,9 @@ python tests/hosted_smoke.py
 - Dashboard CCDC ưu tiên các thẻ **theo từng Loại CCDC** trong danh mục và dữ liệu thực tế; hiển thị cả danh mục chưa có thiết bị (0), thống kê Có/Không sử dụng, đang mượn, đang sửa. Không tự sinh thiết bị mẫu trên Web trắng.
 - Tổng quan vận hành không còn nút tải/xuất; bộ lọc ngày vẫn dùng được. Mục Quét vào/ra ca không còn khối Phân bổ nhân sự, ô Quét mã nhân viên nằm cùng hàng với các nút thao tác và ca trên desktop, dồn sang phải; màn hình nhỏ tự xếp lại.
 - Web vẫn chỉ kiểm thử cục bộ, không kết nối Auth/Realtime/Production. Dùng dữ liệu giả khi mở CDN công khai.
+
+## Web v0.12.2 — sửa giờ ca và xác nhận tệp
+- Quét vào/ra: nhãn đồng đều; bỏ mô tả kỹ thuật/Owner. Bản ghi ca có nút **Sửa giờ vào / ra** (quyền Sửa) và **Hủy lượt ra ca** (quyền Xóa, khi có giờ ra). Lưu và hủy phải nhập mật khẩu hiện tại; hủy giờ ra không xóa lượt vào, giữ nhật ký chỉnh sửa.
+- Nhập ảnh/Excel/JSON và dán ảnh: hiện hộp xác nhận trước khi xử lý file. Mọi tải Excel/template/JSON cũng hiện xác nhận trước khi tải; Hủy không phát sinh thao tác. Nhập dữ liệu vẫn có bước xác nhận nghiệp vụ sau khi kiểm tra file.
+- Cài đặt cá nhân: 7 màu chủ đạo hiển thị trên cả hai giao diện sáng và tối, lưu màu đã chọn, tự dùng sắc độ phù hợp theme.
+- Giao diện chỉ hiển thị thông tin nghiệp vụ; các lưu ý về mock data/bảo mật nằm trong tài liệu này. Web là offline demo, không kết nối backend Production.
