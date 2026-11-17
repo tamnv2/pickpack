@@ -29,7 +29,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.11.0'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.11.1'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -40,7 +40,7 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.11.0 browser must have no test records or catalogs.
+ # A fresh Web v0.11.1 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -57,7 +57,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.11.0'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.11.1'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -173,9 +173,13 @@ with sync_playwright() as p:
   assert app.locator('.page-header h1').count()==0
   assert app.locator('.module-summary').count()==0
  def authorize(password='1'):
-  assert app.locator('#confirm-form').count()==1
-  app.locator('#confirm-password').fill(password)
-  app.locator('#confirm-form button[type="submit"]').click()
+  if app.locator('#draft-confirm-form').count():
+   app.locator('#draft-password').fill(password)
+   app.locator('#draft-confirm-form button[type="submit"]').click()
+  else:
+   assert app.locator('#confirm-form').count()==1
+   app.locator('#confirm-password').fill(password)
+   app.locator('#confirm-form button[type="submit"]').click()
  print('testing labor QR scan',flush=True)
  app.locator('a.nav-main[href*="view=labor"]').click()
  assert app.locator('#labor-scan-form').count()==1
@@ -189,13 +193,13 @@ with sync_playwright() as p:
  assert app.locator('.records-label b').inner_text()=='43'
  assert app.locator('#labor-work').input_value()=='Pick'
  app.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
- authorize('wrong')
- assert app.locator('#confirm-error').inner_text()=='Mật khẩu không đúng'
- authorize()
  assert app.locator('#record-form').count()==1
  app.locator('#record-form select[name="work"]').select_option('Pick')
  app.locator('#record-form input[name="startTime"]').fill('06:30:01')
  app.locator('#record-form button[type="submit"]').click()
+ authorize('wrong')
+ assert app.locator('#draft-confirm-error').inner_text()=='Mật khẩu không đúng'
+ authorize()
  assert '06:30:01' in app.locator('.table-panel').last.locator('tbody tr').first.inner_text()
  app.locator('#labor-staff-code').fill('90000034')
  app.locator('#labor-staff-code').press('Enter')
@@ -299,11 +303,11 @@ with sync_playwright() as p:
  assert app.locator('.catalog-tabs [data-category-tab]').count()==5
  assert app.locator('.catalog-panel tbody tr').count()==4
  app.locator('.catalog-panel [data-category-edit="0"]').click()
- assert app.locator('#confirm-form').count()==1
- authorize()
+ assert app.locator('#catalog-form').count()==1
  app.locator('#catalog-form input[name="value"]').fill('Pick thử')
  assert 'is-valid' in app.locator('#catalog-form input[name="value"]').get_attribute('class')
  app.locator('#catalog-form button[type="submit"]').click()
+ authorize()
  assert app.get_by_text('Pick thử',exact=True).count()==1
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people[0].position")=='Pick thử'
  app.locator('.catalog-panel [data-category-delete="0"]').click()
@@ -351,9 +355,9 @@ with sync_playwright() as p:
  app.locator('#catalog-form button[type="submit"]').click()
  assert app.get_by_text('pp1291.pk99',exact=True).count()==1
  app.locator('[data-category-edit="20"]').click()
- authorize()
  app.locator('#catalog-form input[name="value"]').fill('pp1291.pk98')
  app.locator('#catalog-form button[type="submit"]').click()
+ authorize()
  assert app.get_by_text('pp1291.pk98',exact=True).count()==1
  app.locator('[data-category-delete="20"]').click()
  authorize()
@@ -419,19 +423,19 @@ with sync_playwright() as p:
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(x=>x.id==='90009999').photo.startsWith('data:image/jpeg;base64,')")
  print('testing edit',flush=True)
  app.locator('table tbody tr').first.locator('[data-edit]').click()
- authorize()
  app.locator('[data-action="adjust-photo"]').click()
  app.locator('#crop-dialog #crop-canvas').wait_for()
  app.locator('#crop-dialog [data-action="crop-cancel"]').first.click()
  assert app.locator('#crop-dialog').count()==0
  app.locator('#record-form input[name="name"]').fill('Nhân viên giả lập đã chỉnh sửa')
  app.locator('#record-form button[type="submit"]').click()
+ authorize()
  assert 'đã chỉnh sửa' in app.locator('table tbody tr').first.inner_text()
  app.locator('table tbody tr').first.locator('[data-edit]').click()
- authorize()
  assert app.locator('#record-form input[name="startDate"]').input_value()=='2026-12-01'
  app.locator('#record-form input[name="startDate"]').fill('2026-10-03')
  app.locator('#record-form button[type="submit"]').click()
+ authorize()
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(p=>p.id==='90009999').startDate")=='03/10/2026'
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.find(p=>p.id==='90009999').phone")=='0001234567'
  print('testing delete',flush=True)
