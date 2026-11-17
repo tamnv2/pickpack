@@ -150,7 +150,6 @@ with sync_playwright() as p:
  assert app.evaluate('document.documentElement.dataset.theme')==('light' if 6<=vn_hour<18 else 'dark')
  app.locator('button[data-theme-choice="dark"]').click()
  assert app.evaluate("document.documentElement.getAttribute('data-theme')")=='dark'
- app.locator('button[data-theme-choice="light"]').click()
  app.locator('.top-profile').click()
  app.locator('button[data-action="settings"]').click()
  assert app.locator('button[data-accent-choice="green"]').get_attribute('aria-pressed')=='true'
@@ -159,6 +158,7 @@ with sync_playwright() as p:
  assert app.evaluate("document.documentElement.dataset.accent")=='violet'
  assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()")=='#d2a3f9'
  app.locator('button[data-action="close-modal"]').last.click()
+ app.locator('button[data-theme-choice="light"]').click()
  assert app.locator('.nav-external').count()==0
  assert app.locator('a.nav-main').first.get_attribute('href').startswith('app.html?')
  app.screenshot(path=str(root/'preview-dashboard.png'),full_page=True)
