@@ -946,6 +946,50 @@ function finishConfirmation(form){
  if(typeof action==='function')action();
  render();
 }
+
+function shiftStamp(date,time,nextDay=false){
+ const d=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(date||'')),t=/^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(String(time||''));
+ if(!d||!t||Number(t[1])>23||Number(t[2])>59||Number(t[3]||0)>59)return null;
+ const base=new Date(d[3]+'-'+d[2]+'-'+d[1]+'T00:00:00+07:00');
+ if(Number.isNaN(base.getTime())||new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,day:'2-digit',month:'2-digit',year:'numeric'}).format(base)!==date)return null;
+ if(nextDay)base.setUTCDate(base.getUTCDate()+1);
+ const ms=(Number(t[1])*3600+Number(t[2])*60+Number(t[3]||0))*1000;
+ return {iso:new Date(base.getTime()+ms).toISOString(),time:t[1]+':'+t[2]+':'+(t[3]||'00')};
+}
+function shiftCorrectionModal(){
+ const r=store.shifts.find(x=>x.id===state.editId);if(!r)return '';
+ const undo=r.checkout&&r.checkout!=='—'&&canAccess('shifts','delete')?'<button type="button" class="btn danger" data-shift-undo="'+escape(r.id)+'">Hủy lượt ra ca</button>':'';
+ return '<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide shift-correction-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><h2 id="modal-title">Sửa giờ vào / ra ca</h2><small>'+escape((r.name||r.staff)+' · '+r.staff+' · '+r.date+' · '+r.shift)+'</small></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="record-form"><div class="form-grid"><label>Giờ vào ca<input name="checkin" type="time" step="1" value="'+escape(r.checkin==='—'?'':r.checkin||'')+'" required></label><label>Giờ ra ca<input name="checkout" type="time" step="1" value="'+escape(r.checkout==='—'?'':r.checkout||'')+'"></label></div><div class="modal-actions">'+undo+'<button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn primary">Lưu giờ ca</button></div></form></section></div>';
+}
+function saveShiftCorrection(fd){
+ if(denyOperation('shifts','edit'))return;
+ const r=store.shifts.find(x=>x.id===state.editId);if(!r)return;
+ const tIn=String(fd.get('checkin')||''),tOut=String(fd.get('checkout')||''),start=shiftStamp(r.date,tIn),end=tOut?shiftStamp(r.date,tOut,tOut<tIn):null;
+ const reject=msg=>{state.notice=msg;refreshToasts()};
+ if(!start||(tOut&&!end))return reject('Giờ vào / ra ca không hợp lệ');
+ if(end&&(new Date(end.iso)-new Date(start.iso))<=0)return reject('Giờ ra ca phải sau giờ vào ca');
+ if(!end&&store.shifts.some(x=>x.id!==r.id&&x.staff===r.staff&&x.state==='Trong ca'))return reject('Nhân viên đang có ca khác chưa kết thúc');
+ const before={checkin:r.checkin,checkout:r.checkout,state:r.state},after={checkin:start.time,checkout:end?.time||'—',state:end?'Đã ra ca':'Trong ca'};
+ if(!Object.keys(after).every(k=>before[k]===after[k])){
+  Object.assign(r,after,{checkinAt:start.iso,checkoutAt:end?.iso||''});
+  r.corrections=Array.isArray(r.corrections)?r.corrections:[];
+  r.corrections.push({at:new Date().toISOString(),by:actualUser()?.username||'—',action:!end&&before.checkout!=='—'?'Hủy giờ ra ca':'Sửa giờ ca',before,after});
+  persist();
+ }
+ state.modal='';state.editId='';state.drawer='';state.notice='Đã cập nhật giờ ra / vào ca';render();
+}
+function undoShiftCheckout(id){
+ if(denyOperation('shifts','delete'))return;
+ const row=store.shifts.find(r=>r.id===id);if(!row||!row.checkout||row.checkout==='—')return;
+ if(store.shifts.some(x=>x.id!==id&&x.staff===row.staff&&x.state==='Trong ca')){state.notice='Nhân viên đang có ca khác chưa kết thúc';refreshToasts();return}
+ confirmDialog('Hủy lượt ra ca','Hủy giờ ra '+row.checkout+' của '+row.name+' ('+row.staff+') ngày '+row.date+'? Lượt vào ca được giữ.',()=>{
+  const before={checkin:row.checkin,checkout:row.checkout,state:row.state};
+  row.checkout='—';row.checkoutAt='';row.state='Trong ca';
+  row.corrections=Array.isArray(row.corrections)?row.corrections:[];
+  row.corrections.push({at:new Date().toISOString(),by:actualUser()?.username||'—',action:'Hủy giờ ra ca',before,after:{checkin:row.checkin,checkout:'—',state:'Trong ca'}});
+  persist();state.drawer='';state.editId='';state.notice='Đã hủy lượt ra ca';
+ },true);
+}
 function modal(){
  if(!state.modal)return '';
  if(state.modal==='confirm')return confirmModal();
