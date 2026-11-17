@@ -398,7 +398,7 @@ function saveCatalog(form){
   const i=list.indexOf(old);if(i<0)return;
   if(field==='assetsType'&&old.toUpperCase()==='PDA'&&store.assets.some(isPdaAsset)){state.notice='Không thể đổi tên loại PDA khi đang có thiết bị mượn/trả';render();return}
   list[i]=values[0];const owner=catalogOwner(field);
-  for(const row of store[owner.records])if(row[owner.property]===old)row[owner.property]=values[0];persist();
+  for(const row of store[owner.records])if(row[owner.property]===old)row[owner.property]=values[0];if(field==='department')for(const asset of store.assets)if(asset.activeTransfer?.kind==='lend'&&asset.activeTransfer.target===old)asset.activeTransfer.target=values[0];persist();
  }else{
   if(list.length+values.length>=200){state.notice='Đạt giới hạn 199 mục trong một danh mục';refreshToasts();return}
   list.push(...values);
@@ -407,7 +407,7 @@ function saveCatalog(form){
 }
 function deleteCatalog(index){
  const field=state.categoryTab,value=catalogs[field]?.[index];if(value===undefined)return;
- const owner=catalogOwner(field);if(store[owner.records].some(p=>p[owner.property]===value)){state.notice='Không thể xóa: danh mục đang được sử dụng';render();return}
+ const owner=catalogOwner(field);if(store[owner.records].some(p=>p[owner.property]===value)||(field==='department'&&store.assets.some(a=>a.activeTransfer?.kind==='lend'&&a.activeTransfer.target===value))){state.notice='Không thể xóa: danh mục đang được sử dụng';render();return}
  confirmDialog('Xóa danh mục',`Xóa danh mục "${value}"?`,()=>{catalogs[field].splice(index,1);persistCatalogs();state.notice='Đã xóa danh mục'});
 }
 function scanPreview(person){
@@ -584,7 +584,7 @@ function pdaAssets(){return store.assets.filter(isPdaAsset)}
 function assetUse(asset){return asset?.state==='Không sử dụng'||asset?.state==='Ngừng sử dụng'?'Không sử dụng':'Có sử dụng'}
 function assetCustody(asset){
  const t=asset?.activeTransfer;
- return !t?'Tại kho':t.kind==='lend'?'Bộ phận mượn: '+t.target:'Đang gửi sửa: '+t.target;
+ return !t?'Tại kho':t.kind==='lend'?'Bộ phận mượn: '+(t.target==='Khác'?'Khác · '+(t.note||'Chưa ghi rõ'):t.target):'Đang gửi sửa: '+t.target;
 }
 function assetLoanOpen(asset){return store.pda.some(r=>r.state==='Đang mượn'&&(r.assetId===asset.id||r.name===asset.id))}
 function appendAssetHistory(asset,action,detail='',extra={}){
@@ -624,39 +624,49 @@ function saveAssetForm(fd,editing){
  state.notice=editing?'Đã cập nhật CCDC':'Đã tạo hồ sơ CCDC riêng biệt';render();
 }
 function assetTransferModal(){
- const a=store.assets.find(x=>x.id===state.transferId);
- if(!a)return '';
- const receive=state.transferAction==='receive',repair=state.transferAction==='repair';
- const title=receive?'Nhận lại CCDC':repair?'Gửi CCDC đi sửa chữa':'Cho bộ phận khác mượn';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide asset-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-title"><div class="modal-head"><h2 id="transfer-title">${title}</h2><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="asset-transfer-form"><div class="asset-transfer-summary"><strong>${escape(a.id)}</strong><span>${escape(a.type)} · ${escape(a.serial||'Không serial')}</span><small>${escape(assetCustody(a))}</small></div><div class="form-grid">${receive?`<label>Người bàn giao lại<input name="contact" required maxlength="120" placeholder="Người giao lại CCDC"></label><label>Tình trạng khi nhận<select name="condition" required>${catalogs.assetsCondition.map(v=>`<option value="${escape(v)}" ${v===a.condition?'selected':''}>${escape(v)}</option>`).join('')}</select></label>`:`<label>${repair?'Đơn vị sửa chữa':'Bộ phận mượn'}<input name="target" required maxlength="120" placeholder="${repair?'Tên nơi sửa chữa':'Tên bộ phận nhận'}"></label><label>Người tiếp nhận<input name="contact" required maxlength="120" placeholder="Họ tên người nhận"></label>`}<label class="wide-field">Ghi chú bàn giao / chứng từ<textarea name="note" rows="2" maxlength="500" placeholder="Tình trạng, lý do, số phiếu (nếu có)"></textarea></label></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn primary">Xác nhận ${receive?'nhận lại':repair?'gửi sửa':'cho mượn'}</button></div></form></section></div>`;
+ const a=store.assets.find(x=>x.id===state.transferId);if(!a)return '';
+ const receive=state.transferAction==='receive',repair=state.transferAction==='repair',sent=a.activeTransfer;
+ const title=receive?(sent?.kind==='repair'?'Nhận lại sau sửa chữa':'Nhận lại CCDC'):repair?'Gửi CCDC đi sửa chữa':'Cho bộ phận mượn CCDC';
+ const departments=[...new Set([...(catalogs.department||[]).filter(Boolean),'Khác'])];
+ const noteRequired=repair;
+ const destination=receive
+  ? `<div class="asset-transfer-context"><span>Hình thức: ${sent?.kind==='repair'?'Sửa chữa':'Cho mượn'}</span><strong>Nơi đã bàn giao: ${escape(sent?.target==='Khác'?(sent.note||'Khác'):sent?.target||'—')}</strong><small>Người nhận trước: ${escape(sent?.contact||'—')} · Ghi chú: ${escape(sent?.note||'—')}</small></div>`
+  : '';
+ const body=receive?`<label>Người bàn giao lại<input name="contact" required maxlength="120" placeholder="Họ tên người giao lại"></label><label>Tình trạng khi nhận<select name="condition" required>${catalogs.assetsCondition.map(v=>`<option value="${escape(v)}" ${v===a.condition?'selected':''}>${escape(v)}</option>`).join('')}</select></label><label>Trạng thái sử dụng<select name="state" required><option value="Có sử dụng" ${assetUse(a)==='Có sử dụng'?'selected':''}>Có sử dụng</option><option value="Không sử dụng" ${assetUse(a)==='Không sử dụng'?'selected':''}>Không sử dụng</option></select></label>`
+ : `${repair?`<label>${'Đơn vị sửa chữa'}<input name="target" required maxlength="120" placeholder="Nhập tên đơn vị nhận sửa chữa"></label>`:`<label>Bộ phận mượn<select name="target" id="transfer-department" required><option value="">— Chọn bộ phận —</option>${departments.map(d=>`<option value="${escape(d)}">${escape(d)}</option>`).join('')}</select></label>`}<label>Người tiếp nhận<input name="contact" required maxlength="120" placeholder="Họ tên người nhận"></label>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide asset-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-title"><div class="modal-head"><div><small>BIẾN ĐỘNG CCDC</small><h2 id="transfer-title">${title}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="asset-transfer-form"><div class="asset-transfer-summary"><strong>${escape(a.id)}</strong><span>${escape(a.type)} · ${escape(a.serial||'Không serial')}</span><small>${escape(assetCustody(a))}</small></div>${destination}<div class="form-grid">${body}<label class="wide-field">${repair?'Lý do sửa chữa / Ghi chú':receive?'Ghi chú khi nhận lại':'Ghi chú / Chứng từ'}<textarea name="note" id="asset-transfer-note" rows="3" maxlength="500" ${noteRequired?'required':''} placeholder="${repair?'Mô tả hỏng hóc hoặc lý do cần sửa':receive?'Tình trạng nhận, thông tin biên bản (nếu có)':'Nếu chọn Khác, bắt buộc ghi rõ bộ phận/nơi mượn'}"></textarea></label></div><p class="asset-transfer-help">${receive?'Xác nhận tình trạng thực tế và trạng thái sử dụng khi nhận lại.':repair?'Ghi nhận nguyên nhân sửa chữa và nơi tiếp nhận; chỉ được nhận lại sau khi kết thúc lượt gửi sửa.':'Bộ phận được lấy từ danh mục Nhân sự. Nếu ngoài danh mục, chọn Khác và ghi rõ trong Ghi chú.'}</p><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn primary">Xác nhận ${receive?'nhận lại':repair?'gửi sửa':'cho mượn'}</button></div></form></section></div>`;
 }
 function saveAssetTransfer(form){
  if(denyOperation('assets','edit'))return;
- const asset=store.assets.find(a=>a.id===state.transferId);
- if(!asset)return;
+ const asset=store.assets.find(a=>a.id===state.transferId);if(!asset)return;
  const fd=new FormData(form),target=String(fd.get('target')||'').trim(),contact=String(fd.get('contact')||'').trim(),note=String(fd.get('note')||'').trim();
- if(!contact||contact.length>120||note.length>500){state.notice='Cần nhập người giao/nhận hợp lệ';render();return}
+ const reject=message=>{state.notice=message;refreshToasts();return};
+ if(!contact||contact.length>120||note.length>500)return reject('Cần nhập người giao/nhận hợp lệ; ghi chú tối đa 500 ký tự');
  if(state.transferAction==='receive'){
-  if(!asset.activeTransfer){state.notice='CCDC không có lượt bàn giao đang mở';render();return}
-  const condition=String(fd.get('condition')||'');
-  if(!catalogs.assetsCondition.includes(condition)){state.notice='Tình trạng vật lý chưa có trong danh mục';render();return}
-  const sent=asset.activeTransfer;
-  asset.condition=condition;asset.activeTransfer=null;
-  appendAssetHistory(asset,sent.kind==='repair'?'Nhận lại sau sửa chữa':'Nhận lại từ bộ phận',sent.target+' · '+contact,{kind:'receive',target:sent.target,contact,note,condition});
+  const sent=asset.activeTransfer;if(!sent)return reject('CCDC không có lượt bàn giao đang mở');
+  const condition=String(fd.get('condition')||''),use=String(fd.get('state')||'');
+  if(!catalogs.assetsCondition.includes(condition))return reject('Tình trạng vật lý chưa có trong danh mục');
+  if(!['Có sử dụng','Không sử dụng'].includes(use))return reject('Trạng thái sử dụng không hợp lệ');
+  if(use==='Có sử dụng'&&condition!=='Tốt')return reject('Chỉ đặt Có sử dụng khi tình trạng vật lý là Tốt');
+  asset.condition=condition;asset.state=use;asset.activeTransfer=null;
+  appendAssetHistory(asset,sent.kind==='repair'?'Nhận lại sau sửa chữa':'Nhận lại từ bộ phận',sent.target+' · '+contact,{kind:'receive',sourceKind:sent.kind,target:sent.target,contact,note,condition,state:use});
  }else{
   const kind=state.transferAction;
-  if(!['lend','repair'].includes(kind)||asset.activeTransfer){state.notice='CCDC đang có lượt bàn giao chưa kết thúc';render();return}
-  if(!target||target.length>120){state.notice='Cần nhập bộ phận hoặc đơn vị nhận';render();return}
-  if(Number(asset.qty)>1){state.notice='Hồ sơ CCDC số lượng cũ cần tách từng thiết bị trước khi bàn giao';render();return}
-  if(assetLoanOpen(asset)){state.notice='PDA đang được Picker mượn, cần trả trước khi bàn giao';render();return}
-  if(kind==='lend'&&(assetUse(asset)==='Không sử dụng'||asset.condition!=='Tốt')){state.notice='CCDC không đủ điều kiện để cho bộ phận mượn';render();return}
+  if(!['lend','repair'].includes(kind)||asset.activeTransfer)return reject('CCDC đang có lượt bàn giao chưa kết thúc');
+  if(!target||target.length>120)return reject('Cần chọn bộ phận hoặc nhập đơn vị nhận');
+  if(kind==='lend'&&target!=='Khác'&&!catalogs.department.includes(target))return reject('Bộ phận mượn phải có trong danh mục Nhân sự');
+  if(kind==='lend'&&target==='Khác'&&!note)return reject('Khi chọn Khác, cần ghi rõ nơi mượn trong Ghi chú');
+  if(kind==='repair'&&!note)return reject('Cần ghi rõ lý do sửa chữa trong Ghi chú');
+  if(Number(asset.qty)>1)return reject('Hồ sơ số lượng cũ cần tách từng CCDC trước khi bàn giao');
+  if(assetLoanOpen(asset))return reject('PDA đang được Picker mượn, cần trả trước khi bàn giao');
+  if(kind==='lend'&&(assetUse(asset)==='Không sử dụng'||asset.condition!=='Tốt'))return reject('CCDC không đủ điều kiện để cho bộ phận mượn');
   const at=new Date().toISOString();
   asset.activeTransfer={kind,target,contact,at,note,condition:asset.condition};
   appendAssetHistory(asset,kind==='lend'?'Cho bộ phận mượn':'Gửi đi sửa chữa',target+' · '+contact,{kind,target,contact,note,condition:asset.condition});
  }
  asset.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});asset.updatedBy=actualUser()?.fullName||'Tài khoản kiểm thử';
  persist();state.modal='';state.transferId='';state.transferAction='';
- state.notice='Đã ghi nhận bàn giao CCDC và lưu lịch sử';render();
+ state.notice='Đã ghi nhận biến động CCDC và lưu lịch sử';render();
 }
 function quickLabel(){return state.view==='pda'?'Mượn / trả':state.view==='shifts'?'Quét ca':state.view==='labor'?'Xác nhận công':state.view==='minutes'?'Duyệt biên bản':'Đổi trạng thái'}
 function drawer(){
