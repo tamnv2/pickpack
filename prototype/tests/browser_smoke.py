@@ -541,5 +541,5 @@ with sync_playwright() as p:
  rolecheck.locator('#period-preset').select_option('today')
  assert rolecheck.locator('#period-from').input_value()==rolecheck.locator('#period-to').input_value()
  rolecheck.close()
- print('PASS: v0.9.9 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
+ print('PASS: v0.10.0 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
