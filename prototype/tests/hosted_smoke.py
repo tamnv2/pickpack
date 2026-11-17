@@ -583,7 +583,7 @@ try:
         second.evaluate("""b64=>{
           const data=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)),file=new File([data],'minutes.png',{type:'image/png'});
           const transfer=new DataTransfer();transfer.items.add(file);
-          document.querySelector('#record-form [name="name"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
+          document.querySelector('#record-form [name="note"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
         }""",photo_b64)
         second.locator('#minute-editor-gallery img').wait_for()
         assert second.locator('#minute-image-count').inner_text()=='1'
