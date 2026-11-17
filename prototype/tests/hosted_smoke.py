@@ -20,7 +20,11 @@ webroot = Path(__file__).resolve().parents[1] / 'dist'
 assert (webroot / 'index.html').is_file(), 'Run npm run build first'
 version=json.loads((webroot.parent/'package.json').read_text(encoding='utf-8'))['version']
 fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encoding='utf-8'))
-assert version=='0.10.0'
+# Synthetic fixtures: each PDA is a single CCDC asset. No production data is seeded.
+for i,device in enumerate(fixture['records']['pdaDevices']):
+ fixture['records']['assets'][-(i+1)]={'id':device['id'],'name':'PDA','type':'PDA','serial':device['serial'],'condition':'Tốt','state':'Có sử dụng','note':'Mẫu thử nghiệm','createdAt':'2026-11-16','history':[]}
+
+assert version=='0.11.0'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -50,14 +54,20 @@ try:
         assert blank.locator('.catalog-panel tbody tr').count()==0
         blank.locator('a.nav-main[href*="view=pda"]').click()
         assert blank.locator('.device-registry tbody tr').count()==0
-        assert blank.locator('[data-action="device-add"]').is_visible()
-        blank.locator('[data-action="device-add"]').click()
-        blank.locator('#device-form [name="id"]').fill('PDA-11')
-        blank.locator('#device-form [name="serial"]').fill('SYNTHETIC-54321')
-        blank.locator('#device-form [name="source"]').fill('Kho thử nghiệm')
-        blank.locator('#device-form button[type="submit"]').click()
+        assert blank.locator('[data-action="device-add"],#device-form').count()==0
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        blank.locator('[data-action="add"]').click()
+        assert [el.get_attribute('name') for el in blank.locator('#record-form [name]').all()]==['type','serial','condition','state','note']
+        blank.locator('#record-form [name="type"]').select_option('PDA')
+        blank.locator('#record-form [name="serial"]').fill('SYNTHETIC-54321')
+        blank.locator('#record-form [name="note"]').fill('PDA kiểm thử 1')
+        blank.locator('#record-form button[type="submit"]').click()
+        first_pda=blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].id")
+        assert blank.locator('.module-table tbody tr').count()==1
+        blank.locator('a.nav-main[href*="view=pda"]').click()
         assert blank.locator('.device-registry tbody tr').count()==1
-        assert '54321' in blank.locator('.device-registry tbody tr').first.inner_text()
+        assert first_pda in blank.locator('.device-registry tbody tr').first.inner_text()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.length")==0
         blank.locator('a.nav-main[href*="view=people"]').click()
         blank.locator('[data-catalog-scope="people"]').click()
         for field,value in [('position','Pick'),('supplier','Nhà cung cấp A'),('department','Pick Pack'),('site','1291'),('warehouse','HY1')]:
@@ -79,14 +89,14 @@ try:
         blank.locator('a.nav-main[href*="view=pda"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
         blank.locator('#pda-staff-code').press('Enter')
-        blank.locator('#pda-device-code').fill('PDA-11')
+        blank.locator('#pda-device-code').fill(first_pda)
         blank.locator('#pda-device-code').press('Enter')
-        assert 'Đã mượn PDA-11' in blank.locator('.scan-outcome').inner_text()
+        assert f'Đã mượn {first_pda}' in blank.locator('.scan-outcome').inner_text()
         blank.locator('[data-pda-mode="return"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
-        blank.locator('#pda-device-code').fill('PDA-11')
+        blank.locator('#pda-device-code').fill(first_pda)
         blank.locator('#pda-device-code').press('Enter')
-        assert 'Đã trả PDA-11' in blank.locator('.scan-outcome').inner_text()
+        assert f'Đã trả {first_pda}' in blank.locator('.scan-outcome').inner_text()
         # Personnel Excel template + compressed Excel import, all offline.
         blank.locator('a.nav-main[href*="view=people"]').click()
         assert blank.locator('[data-action="excel-template"]').count()==1
@@ -122,80 +132,101 @@ try:
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).people.some(x=>x.id==='00129999'&&x.phone==='0912345600')") is True
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_catalogs_v094')).position.includes('Pack thường')") is True
 
-        # V0.10: contextual period lives in the shared header and is hidden in catalog views.
-        blank.locator('a.nav-main[href*="view=resources"]').click()
-        assert blank.locator('#period-preset').count()==0
+
+        # v0.11: Date control sits inside the existing single sticky topbar row.
         blank.locator('a.nav-main[href*="view=assets"]').click()
-        assert blank.locator('.topbar-context #period-preset').input_value()=='today'
+        assert blank.locator('.topbar #period-preset').input_value()=='today'
+        assert blank.locator('.topbar-context').count()==0
+        assert blank.locator('.topbar').evaluate("el=>el.getBoundingClientRect().height<70")
         assert blank.locator('.page-content .date-toolbar').count()==0
+        blank.locator('[data-action="period-custom"]').click()
+        assert blank.locator('#period-from').is_visible()
+        assert blank.locator('#period-to').is_visible()
+        blank.locator('[data-action="period-done"]').click()
+        assert blank.locator('#period-from').count()==0
+        blank.locator('[data-catalog-scope="assets"]').click()
+        assert blank.locator('[data-category-tab="assetsType"]').count()==1
+        assert blank.locator('[data-category-tab="assetsCondition"]').count()==1
+        blank.locator('[data-category-tab="assetsCondition"]').click()
+        assert 'Tốt' in blank.locator('.catalog-panel tbody').inner_text()
+        blank.locator('.catalog-heading [data-nav="assets"]').click()
+        # Add second PDA; it becomes a PDA resource without a separate registry or linking.
         blank.locator('[data-action="add"]').click()
-        assert blank.locator('#record-form [name="qty"]').count()==0
-        blank.locator('#record-form [name="id"]').fill('CCDC-001')
-        blank.locator('#record-form [name="name"]').fill('PDA kiểm thử số một')
-        blank.locator('#record-form [name="type"]').select_option('PDA')
-        blank.locator('#record-form [name="serial"]').fill('SYNTHETIC-54321')
-        blank.locator('#record-form [name="tag"]').fill('QR-CCDC-001')
-        blank.locator('#record-form [name="department"]').fill('Pick Pack')
-        blank.locator('#record-form [name="location"]').fill('HY1 / 1291')
-        blank.locator('#asset-pda-link').select_option('PDA-11')
-        blank.locator('#record-form button[type="submit"]').click()
-        assert blank.locator('.module-table tbody tr').count()==1
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.find(d=>d.id==='PDA-11').assetId")=='CCDC-001'
-        with blank.expect_download() as exported_asset:
-            blank.locator('.table-controls [data-action="export"]').click()
-        wb=load_workbook(BytesIO(Path(exported_asset.value.path()).read_bytes()), read_only=True)
-        headers=[cell.value for cell in next(wb.active.rows)]
-        assert 'Mã CCDC' in headers and 'Tình trạng vật lý' in headers and 'Mã PDA liên kết' in headers
-        assert 'Số lượng' not in headers
-        blank.locator('[data-asset-loan]').first.click()
-        assert blank.locator('#pda-device-code').input_value()=='PDA-11'
-        assert blank.locator('#pda-device-preview').count()==1
-        blank.locator('#pda-staff-code').fill('98765432')
-        blank.locator('#pda-device-code').press('Enter')
-        assert 'Đã mượn PDA-11' in blank.locator('.scan-outcome').inner_text()
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].state")=='Đang sử dụng'
-        blank.locator('[data-pda-mode="return"]').click()
-        blank.locator('#pda-staff-code').fill('98765432')
-        blank.locator('#pda-device-code').fill('QR-CCDC-001')
-        blank.locator('#pda-device-code').press('Enter')
-        assert 'Đã trả PDA-11' in blank.locator('.scan-outcome').inner_text()
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].state")=='Sẵn sàng'
-        blank.locator('a.nav-main[href*="view=assets"]').click()
-        blank.locator('.module-table [data-edit="CCDC-001"]').click()
-        blank.locator('#confirm-password').fill('1')
-        blank.locator('#confirm-form button[type="submit"]').click()
-        blank.locator('#record-form [name="condition"]').select_option('Hư hỏng')
-        blank.locator('#record-form button[type="submit"]').click()
-        assert 'Hư hỏng' in blank.locator('.module-table tbody').inner_text()
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].history.length")>=4
-        blank.locator('[data-asset-loan]').first.click()
-        blank.locator('#pda-staff-code').fill('98765432')
-        blank.locator('#pda-device-code').press('Enter')
-        assert 'không sẵn sàng cấp phát' in blank.locator('.scan-outcome').inner_text()
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.filter(p=>p.name==='PDA-11'&&p.state==='Đang mượn').length")==0
-        # A new PDA is registered once from its unique CCDC record, not a manual total.
-        blank.locator('a.nav-main[href*="view=assets"]').click()
-        blank.locator('[data-action="add"]').click()
-        blank.locator('#record-form [name="id"]').fill('CCDC-002')
-        blank.locator('#record-form [name="name"]').fill('PDA kiểm thử số hai')
+        assert blank.locator('#record-form [name="qty"], #asset-pda-link').count()==0
         blank.locator('#record-form [name="type"]').select_option('PDA')
         blank.locator('#record-form [name="serial"]').fill('SYNTHETIC-11111')
-        blank.locator('#record-form [name="tag"]').fill('QR-CCDC-002')
-        blank.locator('#asset-pda-link').select_option('__new__')
         blank.locator('#record-form button[type="submit"]').click()
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.find(d=>d.id==='CCDC-002').assetId")=='CCDC-002'
-        assert blank.locator('.module-table tbody tr').count()==2
+        second_pda=blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].id")
+        assert second_pda!=first_pda
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.length")==0
+        with blank.expect_download() as export_asset:
+            blank.locator('.table-controls [data-action="export"]').click()
+        wb=load_workbook(BytesIO(Path(export_asset.value.path()).read_bytes()),read_only=True)
+        headers=[cell.value for cell in next(wb.active.rows)]
+        assert 'Loại CCDC' in headers and 'Tình trạng vật lý' in headers and 'Trạng thái sử dụng' in headers
+        assert 'Số lượng' not in headers and 'Mã PDA liên kết' not in headers
         blank.locator('a.nav-main[href*="view=pda"]').click()
-        assert 'CCDC-002' in blank.locator('.device-registry tbody').inner_text()
+        assert blank.locator('.device-registry tbody tr').count()==2
+        assert blank.locator('#pda-scan-form').count()==1
+        # Department loan and repair are distinct, auditable transfers.
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        blank.locator(f'[data-record="{first_pda}"]').click()
+        assert blank.locator('.detail-drawer [data-asset-transfer="lend"]').is_visible()
+        blank.locator('[data-asset-transfer="lend"]').click()
+        blank.locator('#confirm-password').fill('1')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        blank.locator('#asset-transfer-form [name="target"]').fill('Kho nhận A')
+        blank.locator('#asset-transfer-form [name="contact"]').fill('Người nhận kiểm thử')
+        blank.locator('#asset-transfer-form [name="note"]').fill('Phiếu mẫu 01')
+        blank.locator('#asset-transfer-form button[type="submit"]').click()
+        assert blank.evaluate("(id)=>JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer.kind",first_pda)=='lend'
+        blank.locator('[data-asset-loan]').first.click()
         blank.locator('#pda-staff-code').fill('98765432')
-        blank.locator('#pda-device-code').fill('QR-CCDC-002')
         blank.locator('#pda-device-code').press('Enter')
-        assert 'Đã mượn CCDC-002' in blank.locator('.scan-outcome').inner_text()
+        assert 'đang bàn giao' in blank.locator('.scan-outcome').inner_text()
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        blank.locator(f'[data-record="{first_pda}"]').click()
+        blank.locator('[data-asset-transfer="receive"]').click()
+        blank.locator('#confirm-password').fill('1')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        blank.locator('#asset-transfer-form [name="contact"]').fill('Người bàn giao lại A')
+        blank.locator('#asset-transfer-form button[type="submit"]').click()
+        assert blank.evaluate("(id)=>!JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer",first_pda)
+        blank.locator(f'[data-record="{first_pda}"]').click()
+        blank.locator('[data-asset-transfer="repair"]').click()
+        blank.locator('#confirm-password').fill('1')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        blank.locator('#asset-transfer-form [name="target"]').fill('Đơn vị sửa thử')
+        blank.locator('#asset-transfer-form [name="contact"]').fill('Kỹ thuật viên A')
+        blank.locator('#asset-transfer-form button[type="submit"]').click()
+        assert blank.evaluate("(id)=>JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer.kind",first_pda)=='repair'
+        blank.locator(f'[data-record="{first_pda}"]').click()
+        blank.locator('[data-asset-transfer="receive"]').click()
+        blank.locator('#confirm-password').fill('1')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        blank.locator('#asset-transfer-form [name="contact"]').fill('Kỹ thuật viên B')
+        blank.locator('#asset-transfer-form [name="condition"]').select_option('Hư hỏng')
+        blank.locator('#asset-transfer-form button[type="submit"]').click()
+        assert blank.evaluate("(id)=>JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).history.length",first_pda)>=6
+        blank.locator('[data-asset-loan]').first.click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'không đủ điều kiện sử dụng' in blank.locator('.scan-outcome').inner_text()
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        blank.locator(f'[data-edit="{first_pda}"]').click()
+        blank.locator('#confirm-password').fill('1')
+        blank.locator('#confirm-form button[type="submit"]').click()
+        blank.locator('#record-form [name="condition"]').select_option('Tốt')
+        blank.locator('#record-form button[type="submit"]').click()
+        blank.locator('[data-asset-loan]').first.click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').press('Enter')
+        assert f'Đã mượn {first_pda}' in blank.locator('.scan-outcome').inner_text()
         blank.locator('[data-pda-mode="return"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
-        blank.locator('#pda-device-code').fill('CCDC-002')
+        blank.locator('#pda-device-code').fill(first_pda)
         blank.locator('#pda-device-code').press('Enter')
-        assert 'Đã trả CCDC-002' in blank.locator('.scan-outcome').inner_text()
+        assert f'Đã trả {first_pda}' in blank.locator('.scan-outcome').inner_text()
         blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
         # Regression fixtures live in tests/, never in the public app's initialization.
@@ -265,7 +296,7 @@ try:
         assert page.locator('.corporate-brand span').all_inner_texts() == ['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
         assert page.locator('.shortcut-panel').count() == 0
         assert page.locator('.overview-page [data-action="add"]').count() == 0
-        assert page.locator('.topbar-context [data-action="export"]').count() == 1
+        assert page.locator('.topbar .period-export').count() == 1
         page.locator('[data-theme-choice="auto"]').click()
         assert page.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')") == 'auto'
         page.locator('[data-theme-choice="light"]').click()
@@ -561,7 +592,7 @@ try:
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.10.0-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.11.0-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -711,7 +742,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.10.0 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.11.0 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
