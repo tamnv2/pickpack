@@ -159,3 +159,10 @@ python tests/hosted_smoke.py
 - CCDC cho phép serial PDA **trùng 5 ký tự cuối** khi toàn bộ serial khác nhau. Thêm/sửa thủ công và Excel cùng một quy tắc; serial đầy đủ trùng (không phân biệt chữ hoa/thường) vẫn bị từ chối.
 - Quét mã CCDC/serial đầy đủ: tự xác định nếu duy nhất. Quét 5 ký tự cuối: nếu trùng nhiều máy, hiển thị danh sách serial đầy đủ, mã CCDC và tình trạng; đối chiếu máy thật, nhấn chọn đúng thiết bị, sau đó nhấn **Ghi nhận mượn/trả PDA**. Quét mã trùng mà chưa chọn **không được ghi** bất kỳ lượt nào.
 - Không nhập serial, ảnh và thông tin thiết bị thực trên preview CDN công khai; bản này chỉ có bảo vệ dữ liệu giả lập phía trình duyệt.
+
+## Web v0.12.0 — Theo dõi CCDC và kho ảnh biên bản
+- **Quản lý CCDC:** Có dashboard hiện trạng 8 chỉ số và 3 nhóm phân loại. Mỗi hồ sơ vật lý tính 1; không nhân hồ sơ cũ có số lượng tổng. Bảng bên dưới vẫn áp dụng kỳ ngày trên thanh ghim.
+- **Cho bộ phận mượn:** Chọn Bộ phận mượn từ danh mục Nhân sự → Bộ phận, hoặc Khác và nhập nơi mượn trong Ghi chú. **Gửi sửa:** nhập Đơn vị sửa chữa, Người tiếp nhận và lý do sửa trong Ghi chú. **Nhận lại:** nhập người bàn giao, xác định tình trạng vật lý và trạng thái sử dụng. Mọi biến động có nhật ký, không ghi trùng một lượt bàn giao.
+- **Quản lý biên bản:** Bấm Lưu biên bản, chọn Phân loại, Ngày biên bản mặc định hôm nay, nhập Ghi chú và chọn/dán ảnh (có thể nhiều ảnh). Tìm kiếm bằng phân loại, ngày và ghi chú. Không còn Tên, Người lập hoặc Trạng thái duyệt. Bản ghi trước đây không mất dữ liệu/ảnh; thông tin không còn dùng được ẩn khỏi UI.
+- **Bảng:** Độ rộng theo nội dung với khoảng đệm đều; có cuộn ngang khi nhiều cột. Xem chi tiết khi nội dung dài.
+- **Môi trường:** Chỉ dữ liệu giả lập tại trình duyệt, không có server RBAC, Firebase/Cloudflare Business API hay Production. Nên xuất backup đúng phiên bản trước khi chuyển máy.
