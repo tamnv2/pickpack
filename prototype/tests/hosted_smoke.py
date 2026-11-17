@@ -24,7 +24,11 @@ fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encodi
 for i,device in enumerate(fixture['records']['pdaDevices']):
  fixture['records']['assets'][-(i+1)]={'id':device['id'],'name':'PDA','type':'PDA','serial':device['serial'],'condition':'Tốt','state':'Có sử dụng','note':'Mẫu thử nghiệm','createdAt':'2026-11-16','history':[]}
 
-assert version=='0.12.1'
+assert version=='0.12.2'
+
+def approve_file(page):
+    assert page.locator('#file-confirm-form').count()==1
+    page.locator('#file-confirm-form button[type="submit"]').click()
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -109,6 +113,7 @@ try:
         assert blank.locator('[data-action="excel-template"]').count()==1
         with blank.expect_download() as template_download:
             blank.locator('[data-action="excel-template"]').click()
+            approve_file(blank)
         template_bytes=Path(template_download.value.path()).read_bytes()
         with ZipFile(BytesIO(template_bytes)) as zin:
             assert zin.testzip() is None
@@ -128,10 +133,12 @@ try:
             return content.getvalue()
         assert blank.locator('.records-label b').inner_text()=='1'
         blank.locator('#staff-excel-import').set_input_files({'name':'bad-staff.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':filled_template('98765432')})
+        approve_file(blank)
         assert blank.locator('#confirm-form').count()==0
         blank.wait_for_function("() => [...document.querySelectorAll('.toast-stack .toast')].some(n=>n.textContent.includes('đã tồn tại'))",timeout=7000)
         assert blank.locator('.records-label b').inner_text()=='1'
         blank.locator('#staff-excel-import').set_input_files({'name':'good-staff.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':filled_template('00129999')})
+        approve_file(blank)
         assert 'Thêm 1 nhân sự' in blank.locator('#confirm-message').inner_text()
         blank.locator('#confirm-password').fill('1')
         blank.locator('#confirm-form button[type="submit"]').click()
@@ -168,6 +175,7 @@ try:
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.length")==0
         with blank.expect_download() as export_asset:
             blank.locator('.table-controls [data-action="export"]').click()
+            approve_file(blank)
         wb=load_workbook(BytesIO(Path(export_asset.value.path()).read_bytes()),read_only=True)
         headers=[cell.value for cell in next(wb.active.rows)]
         assert 'Loại CCDC' in headers and 'Tình trạng vật lý' in headers and 'Trạng thái sử dụng' in headers
@@ -266,6 +274,7 @@ try:
         assert blank.locator('[data-action="assets-excel-template"]').count()==1
         with blank.expect_download() as template:
             blank.locator('[data-action="assets-excel-template"]').click()
+            approve_file(blank)
         workbook=load_workbook(BytesIO(Path(template.value.path()).read_bytes()))
         sheet=workbook.active
         assert [v.value for v in sheet[1]]==['Loại CCDC','Serial / IMEI','Tình trạng vật lý','Trạng thái sử dụng','Ghi chú']
@@ -274,6 +283,7 @@ try:
         sheet.append(['PDA','SYNTH-BETA-00228','Tốt','Có sử dụng','Máy thử B'])
         sample=BytesIO();workbook.save(sample)
         blank.locator('#assets-excel-file').set_input_files({'name':'assets.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
+        approve_file(blank)
         blank.locator('#confirm-form').wait_for(timeout=10000)
         blank.locator('#confirm-password').fill('wrong')
         blank.locator('#confirm-form button[type="submit"]').click()
@@ -283,6 +293,7 @@ try:
         blank.locator('#confirm-form button[type="submit"]').click()
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==5
         blank.locator('#assets-excel-file').set_input_files({'name':'duplicate.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
+        approve_file(blank)
         blank.wait_for_function("() => [...document.querySelectorAll('.toast-stack .toast')].some(n=>n.textContent.includes('trùng'))",timeout=10000)
         assert blank.locator('#confirm-form').count()==0
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==5
@@ -532,6 +543,7 @@ try:
           const transfer=new DataTransfer();transfer.items.add(file);
           document.querySelector('#record-form [name="note"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
         }""",photo_b64)
+        approve_file(second)
         second.locator('#crop-dialog #crop-canvas').wait_for()
         before_image=second.locator('#crop-dialog #crop-canvas').evaluate('el=>el.toDataURL()')
         second.locator('#crop-dialog #crop-zoom').evaluate("el=>{el.value='175';el.dispatchEvent(new Event('input',{bubbles:true}))}")
@@ -579,6 +591,7 @@ try:
 
         with second.expect_download() as finished:
             second.locator('button[data-action="export"]').click()
+            approve_file(second)
         download = finished.value
         assert download.suggested_filename.startswith('pickpack-people-')
         assert download.suggested_filename.endswith('.xlsx')
@@ -612,6 +625,7 @@ try:
           const transfer=new DataTransfer();transfer.items.add(file);
           document.querySelector('#record-form [name="note"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:transfer}));
         }""",photo_b64)
+        approve_file(second)
         second.locator('#minute-editor-gallery img').wait_for()
         assert second.locator('#minute-image-count').inner_text()=='1'
         second.locator('#record-form button[type="submit"]').click()
@@ -630,6 +644,7 @@ try:
         second.locator('.table-panel tbody tr').first.locator('[data-edit]').click()
         second.locator('#minute-editor-gallery img').wait_for()
         second.locator('#minute-photo').set_input_files({'name':'second-minute.png','mimeType':'image/png','buffer':base64.b64decode(photo_b64)})
+        approve_file(second)
         second.wait_for_function("() => document.querySelector('#minute-image-count')?.textContent==='2'")
         second.locator('#record-form button[type="submit"]').click()
         second.locator('#draft-password').fill('1')
@@ -729,8 +744,9 @@ try:
         assert second.locator('[data-action="backup-import"]').is_visible()
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
+            approve_file(second)
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.12.1-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.12.2-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -762,15 +778,18 @@ try:
         assert target.locator('#backup-import-file').count()==1
         wrong={**snapshot,'webVersion':'0.9.0'}
         target.locator('#backup-import-file').set_input_files({'name':'wrong-version.json','mimeType':'application/json','buffer':json.dumps(wrong,ensure_ascii=False).encode('utf-8')})
+        approve_file(target)
         assert target.locator('#confirm-form').count()==0
         assert 'File dành cho Web v0.9.0' in target.locator('.toast-stack .toast').last.inner_text()
         # Invalid structure must not prompt for overwrite or alter the source browser data.
         bad=json.loads(backup_bytes)
         bad['data']['catalogs']['position']='INVALID'
         target.locator('#backup-import-file').set_input_files({'name':'bad-content.json','mimeType':'application/json','buffer':json.dumps(bad,ensure_ascii=False).encode('utf-8')})
+        approve_file(target)
         assert target.locator('#confirm-form').count()==0
         assert 'Danh mục position không hợp lệ' in target.locator('.toast-stack .toast').last.inner_text()
         target.locator('#backup-import-file').set_input_files({'name':'pickpack-test.json','mimeType':'application/json','buffer':backup_bytes})
+        approve_file(target)
         assert target.locator('#confirm-form').count()==1
         assert '37 nhân sự và 1 ảnh gốc' in target.locator('#confirm-message').inner_text()
         target.locator('#confirm-password').fill('wrong')
@@ -880,7 +899,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.12.1 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.12.2 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
