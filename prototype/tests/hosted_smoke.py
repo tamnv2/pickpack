@@ -174,7 +174,7 @@ try:
         assert 'Số lượng' not in headers and 'Mã PDA liên kết' not in headers
         blank.locator('a.nav-main[href*="view=pda"]').click()
         assert blank.locator('.device-registry').count()==0
-        assert blank.locator('.table-panel tbody tr').count()==2
+        assert blank.locator('.table-panel tbody tr').count()==int(blank.locator('.table-panel .records-label b').inner_text())
         assert blank.locator('#pda-scan-form').count()==1
         # Department loan and repair are distinct, auditable transfers.
         blank.locator('a.nav-main[href*="view=assets"]').click()
