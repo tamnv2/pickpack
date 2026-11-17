@@ -29,7 +29,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.12.1'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.12.2'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -40,7 +40,7 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.12.1 browser must have no test records or catalogs.
+ # A fresh Web v0.12.2 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -57,7 +57,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.12.1'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.12.2'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -154,6 +154,10 @@ with sync_playwright() as p:
  app.locator('.top-profile').click()
  app.locator('button[data-action="settings"]').click()
  assert app.locator('button[data-accent-choice="green"]').get_attribute('aria-pressed')=='true'
+ assert app.locator('.accent-swatches').is_visible()
+ app.locator('button[data-accent-choice="violet"]').click()
+ assert app.evaluate("document.documentElement.dataset.accent")=='violet'
+ assert app.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()")=='#d2a3f9'
  app.locator('button[data-action="close-modal"]').last.click()
  assert app.locator('.nav-external').count()==0
  assert app.locator('a.nav-main').first.get_attribute('href').startswith('app.html?')
@@ -418,6 +422,12 @@ with sync_playwright() as p:
  # Tiny PNG fixture is fully synthetic; assert local avatar conversion from image.
  png=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aB6YAAAAASUVORK5CYII=')
  app.locator('#staff-photo').set_input_files({'name':'portrait.png','mimeType':'image/png','buffer':png})
+ assert app.locator('#file-confirm-form').count()==1
+ assert app.locator('#crop-dialog').count()==0
+ app.locator('[data-file-cancel]').last.click()
+ assert app.locator('#crop-dialog').count()==0
+ app.locator('#staff-photo').set_input_files({'name':'portrait.png','mimeType':'image/png','buffer':png})
+ app.locator('#file-confirm-form button[type="submit"]').click()
  app.locator('#crop-dialog #crop-canvas').wait_for()
  assert app.locator('#crop-dialog #crop-zoom').input_value()=='125'
  app.locator('#crop-dialog #crop-zoom').evaluate("el=>{el.value='180';el.dispatchEvent(new Event('input',{bubbles:true}))}")
@@ -454,7 +464,10 @@ with sync_playwright() as p:
  authorize()
  assert app.locator('.records-label b').inner_text()=='36'
  print('testing toast queue',flush=True)
- for _ in range(6):app.locator('button[data-action="export"]').click()
+ for _ in range(6):
+  app.locator('button[data-action="export"]').click()
+  assert app.locator('#file-confirm-form').count()==1
+  app.locator('#file-confirm-form button[type="submit"]').click()
  assert app.locator('#toast-stack .toast').count()==5
  app.wait_for_timeout(5200)
  assert app.locator('#toast-stack .toast').count()==0
@@ -542,6 +555,7 @@ with sync_playwright() as p:
  rolecheck.locator('[data-action="settings"]').click()
  assert rolecheck.locator('#personal-photo-preview').count()==1
  rolecheck.locator('#profile-photo').set_input_files({'name':'account.png','mimeType':'image/png','buffer':png})
+ rolecheck.locator('#file-confirm-form button[type="submit"]').click()
  rolecheck.locator('#crop-dialog').wait_for(timeout=10000)
  rolecheck.locator('#crop-dialog [data-action="crop-zoom-in"]').click()
  rolecheck.locator('#crop-dialog [data-action="crop-apply"]').click()
