@@ -150,7 +150,12 @@ python tests/hosted_smoke.py
 
 ## Web v0.11.1 — Chỉnh sửa trước, xác nhận khi lưu; CCDC Excel và ca/PDA
 - Nhấn **Sửa** để chỉnh thông tin trước. Khi nhấn **Lưu**, nhập mật khẩu tài khoản hiện tại; nhập sai không ghi, **Quay lại chỉnh sửa** vẫn giữ nội dung đang nhập. Xóa và thay thế dữ liệu vẫn có xác nhận riêng.
-- Quản lý CCDC → **Tải mẫu Excel** → điền 5 cột: Loại CCDC, Serial / IMEI, Tình trạng vật lý, Trạng thái sử dụng, Ghi chú → **Nhập Excel**. Mỗi dòng là một vật lý, sinh mã tự động; cần khai báo trước Loại CCDC và Tình trạng trong Danh mục; không chấp nhận trùng serial (PDA không trùng 5 ký tự cuối), file sai không ghi dòng nào.
+- Quản lý CCDC → **Tải mẫu Excel** → điền 5 cột: Loại CCDC, Serial / IMEI, Tình trạng vật lý, Trạng thái sử dụng, Ghi chú → **Nhập Excel**. Mỗi dòng là một vật lý, sinh mã tự động; cần khai báo trước Loại CCDC và Tình trạng trong Danh mục; không chấp nhận trùng serial đầy đủ; quy định cũ chặn trùng 5 ký tự cuối đã được thay thế ở v0.11.2. File sai không ghi dòng nào.
 - Chọn ngày tại **một icon lịch** trong thanh trên cùng cạnh danh sách kỳ nhanh; mở được chọn ngày bắt đầu/kết thúc.
 - Quét vào/ra ca có bảng tổng hợp theo **Ca**, **Vị trí chính**, **Nhà thầu** (= danh mục Nhà cung cấp có sẵn) và 3 bộ lọc dữ liệu. Cột PDA đang dùng hiển thị tình trạng mượn hiện tại lấy theo mã nhân viên từ nghiệp vụ mượn/trả CCDC PDA; nhân sự Pick chưa mượn hiện **Chưa mượn**.
 - Đây chỉ là Web kiểm thử offline. Mật khẩu kiểm thử không bảo vệ dữ liệu thật; không nhập dữ liệu nhân sự thật trên CDN công khai. Không được hiểu là đã kết nối service hoặc phát hành.
+
+## Web v0.11.2 — PDA có thể trùng 5 ký tự cuối
+- CCDC cho phép serial PDA **trùng 5 ký tự cuối** khi toàn bộ serial khác nhau. Thêm/sửa thủ công và Excel cùng một quy tắc; serial đầy đủ trùng (không phân biệt chữ hoa/thường) vẫn bị từ chối.
+- Quét mã CCDC/serial đầy đủ: tự xác định nếu duy nhất. Quét 5 ký tự cuối: nếu trùng nhiều máy, hiển thị danh sách serial đầy đủ, mã CCDC và tình trạng; đối chiếu máy thật, nhấn chọn đúng thiết bị, sau đó nhấn **Ghi nhận mượn/trả PDA**. Quét mã trùng mà chưa chọn **không được ghi** bất kỳ lượt nào.
+- Không nhập serial, ảnh và thông tin thiết bị thực trên preview CDN công khai; bản này chỉ có bảo vệ dữ liệu giả lập phía trình duyệt.
