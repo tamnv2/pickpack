@@ -25,7 +25,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.9.9'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.10.0'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -36,7 +36,7 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.9.9 browser must have no test records or catalogs.
+ # A fresh Web v0.10.0 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -53,7 +53,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.9.9'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.10.0'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -482,7 +482,7 @@ with sync_playwright() as p:
  mobile.locator('a.nav-main[href*="view=people"]').click()
  assert mobile.locator('.records-label b').inner_text()=='36'
  assert not mobile.locator('.nav-external').count()
- # v0.9.9: local permission preview, batch catalogs, Vietnamese IME, personal settings.
+ # v0.10.0: local permission preview, batch catalogs, Vietnamese IME, personal settings.
  rolecheck=new_screen()
  rolecheck.locator('a.nav-main[href*="view=access"]').click()
  assert rolecheck.locator('.access-user').count()==5
