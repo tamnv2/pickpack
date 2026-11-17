@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "project_key": "pickpack-1291",
-  "as_of_vn": "2026-11-16",
+  "as_of_vn": "2026-11-17",
   "phase": "OFFICE_UI_V099_DATE_FILTER_AVATAR_CI_VERIFIED",
   "application_code": "WEB_OFFICE_STATIC_V099_CODE_READY_DRAFT_PR",
   "technical_ci": "CI_PASS_ACTIONS_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_BUILD_CHROMIUM_HOSTED_CDN",
@@ -29,11 +29,11 @@
   },
   "pending": [
     "Owner review of Web v0.9.9 avatar/settings and date-filter/export UI",
-    "CCDC schema proposal read-only sourced from DC Hung Yen inventory awaiting explicit Owner approval; not implemented",
+    "CCDC one-physical-item-per-record model APPROVED; item fields/UI and real asset identity import remain PROPOSED, not implemented",
     "Cloudflare static-host feasible; actual service BLOCKED pending approved backend auth/RBAC/shared state/realtime/private portraits",
     "No Production/merge/provider approval; OWNER_PASS FIELD_PASS RELEASE_PASS pending"
   ],
-  "latest_checkpoint": "PP-20261116-033",
+  "latest_checkpoint": "PP-20261117-034",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -138,8 +138,9 @@
     "cloudflare_readiness": "STATIC_FEASIBLE_SERVICE_BLOCKED_CLIENT_ONLY_NO_SHARED_AUTH_DATA_REALTIME_OR_PROVIDER_STAGING",
     "personal_avatar": "LOCAL_MOCK_ACCOUNT_PHOTO_UPLOAD_PASTE_DRAG_ZOOM_CROP_SAVE_ONLY_BROWSER_LOCAL",
     "period_filter": "TODAY_DEFAULT_YESTERDAY_7D_30D_CURRENT_PREVIOUS_MONTH_CUSTOM_ALL_APPLIES_DISPLAY_AND_XLSX_DASHBOARD_SUMMARY_LEGACY_UNDATED_MASTERS_ACCESSIBLE",
-    "ccdc_proposal": "PROPOSED_NOT_IMPLEMENTED_ASSET_DOSSIER_TAG_IDENTITIES_TYPE_UNITS_DEPT_CUSTODIAN_LEDGER_GOOD_BAD_PHYSICAL_VARIANCES_AUDIT_MOVEMENTS",
-    "verification_v099": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_CHROMIUM_HOSTED_XLSX_CDN_BROWSER"
+    "ccdc_proposal": "PROPOSED_ITEM_FIELDS_INTERNAL_UNIQUE_ASSET_ID_OPTIONAL_SOURCE_TAG_SERIAL_MODEL_CATEGORY_DEPARTMENT_LOCATION_CUSTODIAN_STATUS_MOVEMENT_HISTORY",
+    "verification_v099": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_CHROMIUM_HOSTED_XLSX_CDN_BROWSER",
+    "ccdc_model": "APPROVED_ONE_PHYSICAL_UNIT_ONE_UNIQUE_RECORD_NO_MANUAL_TOTAL_AGGREGATED_COUNTS_DERIVED_BY_RECORD_STATUS_DEPARTMENT"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
