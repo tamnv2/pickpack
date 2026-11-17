@@ -503,6 +503,53 @@ function saveDeviceForm(form){if(denyOperation('pda',state.deviceEdit?'edit':'cr
  persist();state.modal='';state.deviceEdit='';state.notice=current?'Đã sửa PDA':'Đã thêm PDA';render();
 }
 
+
+function assetLinkedDevice(asset){return store.pdaDevices.find(d=>d.assetId===asset?.id)||null}
+function pdaAsset(device){return device?.assetId?store.assets.find(a=>a.id===device.assetId)||null:null}
+function assetLinkField(asset){
+ const linked=assetLinkedDevice(asset),options=store.pdaDevices.filter(d=>!d.assetId||d.assetId===asset?.id);
+ return `<label class="asset-pda-link">Liên kết mượn / trả PDA<select name="pdaLink" id="asset-pda-link"><option value="">Không liên kết</option>${options.map(d=>`<option value="${escape(d.id)}" ${linked?.id===d.id?'selected':''}>${escape(d.id)} · ${escape(d.serial)}</option>`).join('')}<option value="__new__">Tạo PDA từ hồ sơ CCDC này</option></select><small>Chỉ dùng cho CCDC loại PDA có serial. Mỗi thiết bị liên kết với tối đa một hồ sơ.</small></label>`;
+}
+function appendAssetHistory(asset,action,detail=''){
+ if(!Array.isArray(asset.history))asset.history=[];
+ asset.history.unshift({at:new Date().toISOString(),action,detail,by:actualUser()?.fullName||'Tài khoản thử'});
+ if(asset.history.length>200)asset.history.length=200;
+}
+function saveAssetForm(fd,editing){
+ const id=String(fd.get('id')||'').trim().toUpperCase();
+ const current=editing?store.assets.find(r=>r.id===state.editId):null;
+ if(!/^[A-Z0-9_-]{2,30}$/.test(id)||(!editing&&store.assets.some(a=>a.id===id))){state.notice='Mã CCDC không hợp lệ hoặc đã tồn tại';render();return}
+ if(editing&&!current)return;
+ const changes={};
+ for(const [key] of ASSET_EDITOR)if(key!=='id')changes[key]=String(fd.get(key)||'').trim();
+ if(changes.name.length<2||!changes.type){state.notice='Cần nhập tên và loại CCDC';render();return}
+ if(changes.startDate&&!periodDate(changes.startDate)){state.notice='Ngày đưa vào sử dụng không hợp lệ';render();return}
+ if(changes.serial&&store.assets.some(a=>a.id!==id&&String(a.serial||'').toUpperCase()===changes.serial.toUpperCase())){state.notice='Serial CCDC đã tồn tại';render();return}
+ if(changes.tag&&store.assets.some(a=>a.id!==id&&String(a.tag||'').toUpperCase()===changes.tag.toUpperCase())){state.notice='Mã tem/QR đã tồn tại';render();return}
+ const link=String(fd.get('pdaLink')||''),oldDevice=assetLinkedDevice(current);
+ const target=link==='__new__'?null:store.pdaDevices.find(d=>d.id===link);
+ if(link&&(!/PDA/i.test(changes.type)||changes.serial.length<5)){state.notice='Liên kết PDA cần chọn loại PDA và serial ít nhất 5 ký tự';render();return}
+ if(link&&link!=='__new__'&&!target){state.notice='Mã PDA liên kết không tồn tại';render();return}
+ if(target&&target.assetId&&target.assetId!==id){state.notice='PDA đã liên kết với CCDC khác';render();return}
+ if(target&&target.serial.toUpperCase()!==changes.serial.toUpperCase()){state.notice='Serial CCDC phải khớp serial của PDA đã chọn';render();return}
+ if(oldDevice&&oldDevice.id!==target?.id&&store.pda.some(p=>p.name===oldDevice.id&&p.state==='Đang mượn')){state.notice='PDA đang được mượn, không thể đổi liên kết';render();return}
+ if(link==='__new__'){
+  const last5=changes.serial.slice(-5);
+  if(store.pdaDevices.some(d=>d.id===id||d.serial.toUpperCase()===changes.serial.toUpperCase()||d.last5===last5)){state.notice='Mã, serial hoặc 5 ký tự cuối PDA đã có trong sổ';render();return}
+ }
+ const opened=target&&store.pda.some(p=>p.name===target.id&&p.state==='Đang mượn');
+ if(opened)changes.state='Đang sử dụng';
+ const row=current||{id,createdAt:vnTodayISO(),history:[]};
+ Object.assign(row,changes,{updatedAt:new Date().toLocaleString('vi-VN',{hour12:false}),updatedBy:actualUser()?.fullName||'Tài khoản thử'});
+ appendAssetHistory(row,editing?'Chỉnh sửa CCDC':'Thêm CCDC');
+ if(oldDevice&&oldDevice!==target){oldDevice.assetId='';appendAssetHistory(row,'Ngắt liên kết PDA',oldDevice.id)}
+ if(target){target.assetId=id;if(target!==oldDevice)appendAssetHistory(row,'Liên kết PDA',target.id)}
+ if(link==='__new__'){store.pdaDevices.push({id,serial:changes.serial,last5:changes.serial.slice(-5),source:'Từ CCDC',note:'',assetId:id});appendAssetHistory(row,'Tạo và liên kết PDA',id)}
+ if(!editing)store.assets.unshift(row);
+ persist();state.modal='';state.editId='';state.search='';state.filter='all';
+ state.notice=editing?'Đã cập nhật CCDC':'Đã thêm một CCDC riêng biệt';render();
+}
+
 function quickLabel(){return state.view==='pda'?'Mượn / trả':state.view==='shifts'?'Quét ca':state.view==='labor'?'Xác nhận công':state.view==='minutes'?'Duyệt biên bản':'Đổi trạng thái'}
 function drawer(){
  if(!state.drawer)return '';
@@ -809,6 +856,7 @@ function saveForm(form){if(denyOperation(state.view,state.modal==='edit'?'edit':
   state.notice='Đã cập nhật công nhật';state.modal='';state.editId='';render();return;
  }
  if(key==='minutes'){void saveMinutesForm(form,editing);return}
+  if(key==='assets'){saveAssetForm(fd,editing);return}
  if(key==='people'){
   const id=String(fd.get('id')||'').trim(),name=String(fd.get('name')||'').trim(),phone=String(fd.get('phone')||'').trim();
   if(!/^[0-9]{2,30}$/.test(id)){state.notice='Mã nhân viên chỉ được chứa chữ số';render();return}
