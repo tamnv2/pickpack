@@ -1554,11 +1554,11 @@ root.addEventListener('paste',async function(e){
  const pictures=[...(e.clipboardData?.items||[])].filter(item=>item.kind==='file'&&item.type.startsWith('image/')).map(item=>item.getAsFile()).filter(Boolean);
  if(!pictures.length)return;
  e.preventDefault();
- try{
-  if(state.modal==='settings')await applyProfilePhoto(pictures[0]);
-  else if(state.view==='people')await applyStaffPhoto(pictures[0]);
-  else await addMinuteDraftImages(pictures);
- }catch(err){state.notice=err?.message||'Không thể dán ảnh';refreshToasts()}
+ const target=state.modal==='settings'?'Ảnh đại diện':state.view==='people'?'Ảnh nhân sự':'Ảnh biên bản';
+ confirmFileAction('upload','Thêm '+pictures.length+' ảnh vào '+target.toLowerCase()+'?',()=>{
+  const work=state.modal==='settings'?applyProfilePhoto(pictures[0]):state.view==='people'?applyStaffPhoto(pictures[0]):addMinuteDraftImages(pictures);
+  void work.catch(err=>{state.notice=err?.message||'Không thể dán ảnh';refreshToasts()});
+ });
 });
 root.addEventListener('change',async function(e){
  if(e.target.id==='transfer-department'){
