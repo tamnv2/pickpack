@@ -751,3 +751,6 @@ html{scrollbar-gutter:stable}
  .topbar-context .date-toolbar-main .btn{width:100%;margin:0}
  .asset-history-item{grid-template-columns:1fr}
 }
+
+.asset-legacy-warning{margin:0 0 10px;padding:9px 12px;border:1px solid var(--border);border-radius:7px;color:var(--warn);background:var(--card);font-size:calc(11px * var(--text-scale))}
+.registry-current-note{color:var(--muted);font-size:calc(10px * var(--text-scale))}
