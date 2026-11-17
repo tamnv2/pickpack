@@ -951,3 +951,5 @@ html{scrollbar-gutter:stable}
  .shift-scan-station .shift-scan-input-row input{flex:1 0 100%}
  .shift-scan-station .shift-scan-input-row .btn{width:100%;justify-content:center}
 }
+
+@media(min-width:1121px){.shift-scan-station .shift-scan-toolbar.shift-scan-exit{grid-template-columns:max-content minmax(300px,1fr)}}
