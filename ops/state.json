@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-17",
-  "phase": "OFFICE_UI_V099_DATE_FILTER_AVATAR_CI_VERIFIED",
-  "application_code": "WEB_OFFICE_STATIC_V099_CODE_READY_DRAFT_PR",
-  "technical_ci": "CI_PASS_ACTIONS_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_BUILD_CHROMIUM_HOSTED_CDN",
+  "phase": "OFFICE_WEB_V0100_CONTEXT_DATE_INDIVIDUAL_CCDC_LINKED_PDA_CI_VERIFIED",
+  "application_code": "WEB_OFFICE_STATIC_V0100_CODE_READY_DRAFT_PR",
+  "technical_ci": "CI_PASS_ACTIONS_44010747068_SOURCE_09c507a74393d73b3aa77d515d69e91c18fb46e9_NODE_BUILD_CHROMIUM_HOSTED_CDN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V099_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V0100_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,12 +28,12 @@
     "realtime": true
   },
   "pending": [
-    "Owner review of Web v0.9.9 avatar/settings and date-filter/export UI",
-    "CCDC one-physical-item-per-record model APPROVED; item fields/UI and real asset identity import remain PROPOSED, not implemented",
-    "Cloudflare static-host feasible; actual service BLOCKED pending approved backend auth/RBAC/shared state/realtime/private portraits",
+    "Owner review Web v0.10.0 contextual topbar date filter and detailed per-item CCDC linked PDA workflows",
+    "Legacy grouped CCDC quantity rows require physical item identification before individual migration; no synthetic serial generated",
+    "Cloudflare production service BLOCKED pending approved backend shared Auth/RBAC/data/realtime/private photos and staging verification",
     "No Production/merge/provider approval; OWNER_PASS FIELD_PASS RELEASE_PASS pending"
   ],
-  "latest_checkpoint": "PP-20261117-034",
+  "latest_checkpoint": "PP-20261117-035",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -49,7 +49,7 @@
     "provider_usage": "ZERO_FIREBASE_CLOUDFLARE_OPSCORE_BUSINESS_API_CALLS_STATIC_CDN_NETWORK_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.9.9",
+    "version": "0.10.0",
     "login": "FIVE_MOCK_USERS_PASSWORD_1_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -71,7 +71,7 @@
     "personnel_fields": "EMPLOYEE_CODE_NAME_PHONE_POSITION_SUPPLIER_DEPARTMENT_SITE_WAREHOUSE_START_DATE_NOTE_UPDATE_AUDIT_PLUS_DEMO_ASSIGNED_SHIFT_WORK_USER",
     "avatar": "BROWSER_LOCAL_FILE_TO_JPEG_192PX_NO_REAL_PHOTOS",
     "shift_scan": "PERSISTENT_IN_OUT_SCAN_MODE_BARCODE_ENTER_EXACT_EMPLOYEE_LOOKUP",
-    "pda_inventory": "SERIAL_LAST5_SOURCE_STATUS_NOTES_SYNTHETIC",
+    "pda_inventory": "PDA_REGISTRY_MANUAL_OR_FROM_CCDC_UNIQUE_LINK_BY_ASSETID_SCAN_PDA_ID_SERIAL_LAST5_CCDC_ID_TAG_SYNC_BORROW_RETURN_CCDC_STATUS_HISTORY_BLOCK_BAD_CONDITION",
     "light_accent_colors": [
       "red",
       "orange",
@@ -137,17 +137,18 @@
     "verification_v098": "CODE_READY_CI_PASS_PREVIEW_PASS_SOURCE_325b5555394b0cd81c547853df24955bba1eada1_RUN_43856876485_BUILD_7_FILES_290188_BYTES_CENTERED_DETAIL_CROP_FROM_VIEW_SCAN_ZOOM_OUT_ORIGINAL_PRESERVED_HOSTED_AND_CDN_BROWSER_ZERO_API",
     "cloudflare_readiness": "STATIC_FEASIBLE_SERVICE_BLOCKED_CLIENT_ONLY_NO_SHARED_AUTH_DATA_REALTIME_OR_PROVIDER_STAGING",
     "personal_avatar": "LOCAL_MOCK_ACCOUNT_PHOTO_UPLOAD_PASTE_DRAG_ZOOM_CROP_SAVE_ONLY_BROWSER_LOCAL",
-    "period_filter": "TODAY_DEFAULT_YESTERDAY_7D_30D_CURRENT_PREVIOUS_MONTH_CUSTOM_ALL_APPLIES_DISPLAY_AND_XLSX_DASHBOARD_SUMMARY_LEGACY_UNDATED_MASTERS_ACCESSIBLE",
-    "ccdc_proposal": "PROPOSED_ITEM_FIELDS_INTERNAL_UNIQUE_ASSET_ID_OPTIONAL_SOURCE_TAG_SERIAL_MODEL_CATEGORY_DEPARTMENT_LOCATION_CUSTODIAN_STATUS_MOVEMENT_HISTORY",
+    "period_filter": "COMPACT_CONTEXTUAL_STICKY_TOPBAR_ONLY_DASHBOARD_AND_SIX_OPERATIONAL_MODULES_TODAY_DEFAULT_YESTERDAY_7D_30D_MONTH_CUSTOM_ALL_DISPLAY_AND_XLSX",
+    "ccdc_proposal": "DONE_ITEM_EDITOR_DETAIL_MODEL_ASSET_CODE_TAG_SERIAL_DEPARTMENT_LOCATION_CUSTODIAN_START_DATE_USE_AND_PHYSICAL_CONDITION_STATUS_NOTE_HISTORY_ONE_TO_ONE_PDA_LINK",
     "verification_v099": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_CHROMIUM_HOSTED_XLSX_CDN_BROWSER",
-    "ccdc_model": "APPROVED_ONE_PHYSICAL_UNIT_ONE_UNIQUE_RECORD_NO_MANUAL_TOTAL_AGGREGATED_COUNTS_DERIVED_BY_RECORD_STATUS_DEPARTMENT"
+    "ccdc_model": "APPROVED_IMPLEMENTED_ONE_PHYSICAL_UNIT_ONE_UNIQUE_CCDC_RECORD_AUTO_AGGREGATED_COUNTS_NO_MANUAL_TOTAL",
+    "verification_v0100": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_44010747068_SOURCE_09c507a74393d73b3aa77d515d69e91c18fb46e9_CHROMIUM_HOSTED_CCDC_LINK_SCAN_GUARDS_XLSX_CDN_BROWSER"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8/prototype/index.html",
-    "verified_commit": "dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8",
-    "verified_run": "43894690079",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/09c507a74393d73b3aa77d515d69e91c18fb46e9/prototype/index.html",
+    "verified_commit": "09c507a74393d73b3aa77d515d69e91c18fb46e9",
+    "verified_run": "44010747068",
     "public_access": true,
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
