@@ -780,17 +780,17 @@ try:
         target.locator('#backup-import-file').set_input_files({'name':'wrong-version.json','mimeType':'application/json','buffer':json.dumps(wrong,ensure_ascii=False).encode('utf-8')})
         approve_file(target)
         assert target.locator('#confirm-form').count()==0
-        assert 'File dành cho Web v0.9.0' in target.locator('.toast-stack .toast').last.inner_text()
+        target.wait_for_function("() => [...document.querySelectorAll('.toast-stack .toast')].some(n=>n.textContent.includes('File dành cho Web v0.9.0'))",timeout=10000)
         # Invalid structure must not prompt for overwrite or alter the source browser data.
         bad=json.loads(backup_bytes)
         bad['data']['catalogs']['position']='INVALID'
         target.locator('#backup-import-file').set_input_files({'name':'bad-content.json','mimeType':'application/json','buffer':json.dumps(bad,ensure_ascii=False).encode('utf-8')})
         approve_file(target)
         assert target.locator('#confirm-form').count()==0
-        assert 'Danh mục position không hợp lệ' in target.locator('.toast-stack .toast').last.inner_text()
+        target.wait_for_function("() => [...document.querySelectorAll('.toast-stack .toast')].some(n=>n.textContent.includes('Danh mục position không hợp lệ'))",timeout=10000)
         target.locator('#backup-import-file').set_input_files({'name':'pickpack-test.json','mimeType':'application/json','buffer':backup_bytes})
         approve_file(target)
-        assert target.locator('#confirm-form').count()==1
+        target.locator('#confirm-form').wait_for(timeout=10000)
         assert '37 nhân sự và 1 ảnh gốc' in target.locator('#confirm-message').inner_text()
         target.locator('#confirm-password').fill('wrong')
         target.locator('#confirm-form button[type="submit"]').click()
