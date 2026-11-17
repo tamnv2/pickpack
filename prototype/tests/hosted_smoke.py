@@ -64,7 +64,7 @@ try:
         assert blank.locator('.asset-dashboard .asset-kpi').count()==4
         assert blank.locator('.asset-type-card').count()==1
         assert blank.locator('.asset-dashboard-group').count()==2
-        assert blank.locator('.asset-dashboard-head').get_by_text('không phụ thuộc khoảng ngày lọc',exact=False).count()==1
+        assert blank.locator('.asset-dashboard-head small').inner_text()=='Hiện trạng CCDC'
         assert blank.locator('.asset-kpi').first.locator('strong').inner_text()=='0'
         blank.locator('[data-action="add"]').click()
         assert [el.get_attribute('name') for el in blank.locator('#record-form [name]').all()]==['type','serial','condition','state','note']
