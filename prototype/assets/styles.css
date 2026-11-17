@@ -832,3 +832,15 @@ html{scrollbar-gutter:stable}
  .shift-summary-head{align-items:flex-start;flex-direction:column}
 }
 @media(max-width:480px){.shift-table-filters select{max-width:110px}}
+
+
+/* Shared PDA serial suffix: distinct full serials must be verified before recording a loan. */
+.pda-collision{min-width:0;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--card)}
+.pda-collision>strong{display:block;font-size:calc(12px * var(--text-scale));color:var(--text)}
+.pda-collision>p{margin:6px 0 11px;font-size:calc(11px * var(--text-scale));color:var(--muted);line-height:1.55}
+.pda-collision-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:7px}
+.pda-collision-option{min-width:0;border:1px solid var(--border);border-radius:8px;background:var(--control);color:var(--text);padding:11px 12px;text-align:left}
+.pda-collision-option:hover,.pda-collision-option:focus-visible{border-color:var(--primary);background:var(--primary-soft)}
+.pda-collision-option strong{display:block;overflow-wrap:anywhere;font-size:calc(12px * var(--text-scale))}
+.pda-collision-option small{display:block;color:var(--muted);overflow-wrap:anywhere;margin-top:5px;font-size:calc(10px * var(--text-scale))}
+#pda-scan-ambiguity[hidden]{display:none}
