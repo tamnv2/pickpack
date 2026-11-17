@@ -300,10 +300,10 @@ with sync_playwright() as p:
  app.locator('.table-panel tbody tr').filter(has_text='90000001').first.locator('[data-shift-undo]').click()
  assert app.locator('#confirm-form').count()==1
  app.locator('#confirm-password').fill('bad')
- app.locator('#confirm-form button[type="submit"]').click()
+ app.locator('#confirm-form button[type="submit"]').click(timeout=10000)
  assert 'Mật khẩu không đúng' in app.locator('#confirm-error').inner_text()
  app.locator('#confirm-password').fill('1')
- app.locator('#confirm-form button[type="submit"]').click()
+ app.locator('#confirm-form button[type="submit"]').click(timeout=10000)
  assert app.evaluate("(id)=>{const x=JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts.find(r=>r.id===id);return x.checkout==='—'&&x.state==='Trong ca'&&x.corrections.length===2}",newest)
  app.locator('#shift-code').fill('90000001')
  app.locator('#shift-code').press('Enter')
