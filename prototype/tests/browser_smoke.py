@@ -530,7 +530,7 @@ with sync_playwright() as p:
  rolecheck.locator('[data-action="settings"]').click()
  assert rolecheck.locator('#personal-photo-preview').count()==1
  rolecheck.locator('#profile-photo').set_input_files({'name':'account.png','mimeType':'image/png','buffer':png})
- assert rolecheck.locator('#crop-dialog').count()==1
+ rolecheck.locator('#crop-dialog').wait_for(timeout=10000)
  rolecheck.locator('#crop-dialog [data-action="crop-zoom-in"]').click()
  rolecheck.locator('#crop-dialog [data-action="crop-apply"]').click()
  assert rolecheck.locator('#personal-photo-preview img').count()==1
