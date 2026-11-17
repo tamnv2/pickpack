@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-17",
-  "phase": "OFFICE_WEB_V0112_CODE_READY_CI_PASS_DRAFT_PR",
-  "application_code": "WEB_OFFICE_STATIC_V0112_CODE_READY_CI_PASS",
-  "technical_ci": "CI_PASS_ACTIONS_44070812282_SOURCE_af3777ac2a98cc0606de82ad26edd6ceac31e147_JS_BUILD_CHROMIUM_HOSTED_CDN",
+  "phase": "OFFICE_WEB_V0120_CODE_READY_CI_PASS_DRAFT_PR",
+  "application_code": "WEB_OFFICE_STATIC_V0120_CODE_READY_CI_PASS",
+  "technical_ci": "CI_PASS_ACTIONS_44085533665_SOURCE_59c01151d1aaee6fb60a71e64b6c127a5ada72f3_JS_BUILD_CHROMIUM_HOSTED_CDN",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V0112_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V0120_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,10 +28,10 @@
     "realtime": true
   },
   "pending": [
-    "Owner review Web v0.11.2 PDA serial shared-5-suffix selection and confirm UI",
-    "Production/RBAC/realtime/provider deployment remains BLOCKED pending separate explicit Owner approval and verified backend integration; PR #2 remains unmerged"
+    "Owner review v0.12.0 CCDC dashboard/table sizing/department loans/repair/archive form on immutable public-test preview with synthetic data only",
+    "Production still requires explicit Owner authorization and verified Auth/RBAC/OpsCore/realtime/cloud staging gates; Draft PR #2 not merged"
   ],
-  "latest_checkpoint": "PP-20261117-039",
+  "latest_checkpoint": "PP-20261117-040",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -47,7 +47,7 @@
     "provider_usage": "ZERO_FIREBASE_CLOUDFLARE_OPSCORE_BUSINESS_API_CALLS_STATIC_CDN_NETWORK_ONLY",
     "authenticated_horilla_demo": "NOT_VERIFIED",
     "popup_field_test": "NOT_VERIFIED_SANDBOX_BLOCK",
-    "version": "0.11.2",
+    "version": "0.12.0",
     "login": "FIVE_MOCK_USERS_PASSWORD_1_CLIENT_ONLY",
     "fixtures": {
       "people": 36,
@@ -126,7 +126,7 @@
     "local_cleanup": "CONFIRMED_DEMO_PASSWORD_ERASES_BROWSER_ONLY_V093_AND_V094_LOCALSTORAGE_AND_PORTRAITS_NOT_REMOTE",
     "pda_registry": "ADD_EDIT_DELETE_DEVICES_MANUAL_PDA_TESTS_NO_SEED",
     "verification_v094": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_e2cd2de93b4300868b7e33fa6c8c494587dc9622_RUN_43730107051_BUILD_7_FILES_234386_BYTES_BLANK_BOOTSTRAP_MANUAL_EMPLOYEE_PDA_CATALOGS_LOAN_RETURN_FULL_SNAPSHOT_SEPARATE_CONTEXT_RESET_CONFIRM_PASSWORD_ZERO_EXTERNAL_API",
-    "minutes": "TEXT_AND_ORIGINAL_IMAGES_MULTIPLE_8_X_5MB_UPLOADED_OR_CLIPBOARD_GALLERY_ZOOM_INDEXEDDB",
+    "minutes": "ARCHIVE_TYPE_DATE_DEFAULT_VN_TODAY_NOTE_IMAGES_NO_APPROVAL_FIELDS_LEGACY_METADATA_PRESERVED",
     "resource_icon": "LIST_SVG_REGISTERED_FIXED_UNDEFINED",
     "modal_actions": "CATALOG_AND_DEVICE_SAVE_CANCEL_BOTTOM_PADDING_FIXED",
     "verification_v095": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_649fc4d8a721bf9adf742741672561de2f42887f_RUN_43733235316_7_FILES_255077_BYTES_CHROMIUM_HOSTED_PERSONNEL_CLIPBOARD_XLSX_TEMPLATE_IMPORT_COMPRESSED_ZIP_ID_LEADING_ZERO_DUPLICATES_MINUTES_IMAGE_PASTE_UPLOAD_ZOOM_JSON_BACKUP_IMPORTED_TWO_BLOBS_PUBLIC_CDN_NO_PROVIDER_REQUESTS",
@@ -145,17 +145,20 @@
     "asset_excel": "FIVE_COLUMN_TEMPLATE_APPEND_ONLY_VALIDATE_FULL_SERIAL_ONLY_IGNORE_SUFFIX_DUPLICATES_ATOMIC_CONFIRM",
     "shift_breakdown": "PERIOD_SCOPED_CA_POSITION_SUPPLIER_GROUPS_WITH_TABLE_FILTERS",
     "picker_pda": "DERIVED_OPEN_LOAN_BY_STAFF_ID_FROM_CCDC_PDA_NO_DUPLICATED_STATE",
-    "ci": "PASS source_sha=af3777ac2a98cc0606de82ad26edd6ceac31e147 run=44070812282; build+chromium+hosted+real_public_cdn_browser",
+    "ci": "PASS source_sha=59c01151d1aaee6fb60a71e64b6c127a5ada72f3 run=44085533665; JS+static+Chromium+hosted+public-CDN-browser",
     "code_status": "CODE_READY",
     "release_status": "NOT_APPROVED_NO_PRODUCTION",
-    "pda_serial_identity": "FULL_SERIAL_UNIQUE_CASE_INSENSITIVE_TRIM_ALL_CCDC;LAST_5_SUFFIX_MAY_DUPLICATE"
+    "pda_serial_identity": "FULL_SERIAL_UNIQUE_CASE_INSENSITIVE_TRIM_ALL_CCDC;LAST_5_SUFFIX_MAY_DUPLICATE",
+    "table_width": "AUTO_CONTENT_SIZED_CONSISTENT_PADDING_SCROLL_OVERFLOW",
+    "asset_dashboard": "PHYSICAL_UNIT_KPIS_8_AND_GROUPS_3_LIVE_INVENTORY_NOT_PERIOD_COUNT",
+    "asset_transfers": "SHARED_PEOPLE_DEPARTMENT_SELECT_OR_OTHER_MANDATORY_NOTE;REPAIR_REASON;RECEIPT_CONDITION_USAGE_AUDIT;ONE_OPEN_TRANSFER"
   },
   "test_preview": {
     "status": "WEB_TEST_PREVIEW_PASS",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/af3777ac2a98cc0606de82ad26edd6ceac31e147/prototype/index.html",
-    "verified_commit": "af3777ac2a98cc0606de82ad26edd6ceac31e147",
-    "verified_run": "44070812282",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/59c01151d1aaee6fb60a71e64b6c127a5ada72f3/prototype/index.html",
+    "verified_commit": "59c01151d1aaee6fb60a71e64b6c127a5ada72f3",
+    "verified_run": "44085533665",
     "public_access": true,
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
