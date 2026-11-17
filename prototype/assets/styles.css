@@ -797,3 +797,38 @@ html{scrollbar-gutter:stable}
 }
 
 @media(max-width:440px){.topbar .date-popover{position:fixed;left:10px;right:10px;top:57px;width:auto;min-width:0}}
+
+
+/* Web v0.11.1: one calendar control, compact shift breakdown and safe save confirmation. */
+.topbar .date-calendar-trigger{height:32px;width:29px;flex:none;display:inline-grid;place-items:center;border:0;border-radius:7px;background:transparent;color:var(--muted)}
+.topbar .date-calendar-trigger:hover,.topbar .date-calendar-trigger[aria-expanded=true]{background:var(--chip);color:var(--primary)}
+.shift-summary{margin:0 0 12px;overflow:hidden}
+.shift-summary-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--border)}
+.shift-summary-head strong{font-size:calc(12px * var(--text-scale))}
+.shift-summary-head small{font-size:calc(10px * var(--text-scale));color:var(--muted)}
+.shift-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.shift-summary-group{min-width:0;padding:12px 14px}
+.shift-summary-group+.shift-summary-group{border-left:1px solid var(--border)}
+.shift-summary-group h3{margin:0 0 10px;font-size:calc(12px * var(--text-scale));font-weight:700}
+.shift-summary-line{display:grid;grid-template-columns:minmax(75px,1fr) minmax(35px,1.4fr) 25px;gap:8px;align-items:center;margin:7px 0;font-size:calc(10.5px * var(--text-scale))}
+.shift-summary-line span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shift-summary-line b{text-align:right}
+.shift-summary-track{height:6px;border-radius:8px;background:var(--chip);overflow:hidden}
+.shift-summary-track i{display:block;height:100%;border-radius:8px;background:var(--primary)}
+.shift-summary-empty{font-size:calc(10px * var(--text-scale));color:var(--muted);margin:5px 0}
+.shift-table-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-left:9px;border-left:1px solid var(--border)}
+.shift-table-filters label{display:inline-flex;gap:5px;align-items:center;white-space:nowrap;font-size:calc(10px * var(--text-scale));color:var(--muted)}
+.shift-table-filters select{height:32px;max-width:125px;min-width:85px;padding:3px 7px;background:var(--control);border:1px solid var(--border);color:var(--text);border-radius:7px}
+.table-controls:has(.shift-table-filters){flex-wrap:wrap}
+.draft-confirm-overlay{z-index:135}
+.draft-confirm-overlay .confirmation-dialog{max-width:440px}
+@media(max-width:1050px){
+ .shift-summary-grid{grid-template-columns:1fr}
+ .shift-summary-group+.shift-summary-group{border-left:0;border-top:1px solid var(--border)}
+}
+@media(max-width:780px){
+ .topbar .date-calendar-trigger .ui-svg{display:block}
+ .shift-table-filters{border-left:0;padding-left:0;width:100%}
+ .shift-summary-head{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:480px){.shift-table-filters select{max-width:110px}}
