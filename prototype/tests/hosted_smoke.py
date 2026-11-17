@@ -237,6 +237,8 @@ try:
         sheet=workbook.active
         assert [v.value for v in sheet[1]]==['Loại CCDC','Serial / IMEI','Tình trạng vật lý','Trạng thái sử dụng','Ghi chú']
         sheet.append(['PDA','TEST-CCDC-67890','Tốt','Có sử dụng','PDA từ Excel giả lập'])
+        sheet.append(['PDA','SYNTH-ALPHA-00228','Tốt','Có sử dụng','Máy thử A'])
+        sheet.append(['PDA','SYNTH-BETA-00228','Tốt','Có sử dụng','Máy thử B'])
         sample=BytesIO();workbook.save(sample)
         blank.locator('#assets-excel-file').set_input_files({'name':'assets.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
         assert blank.locator('#confirm-form').count()==1
@@ -246,10 +248,57 @@ try:
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==2
         blank.locator('#confirm-password').fill('1')
         blank.locator('#confirm-form button[type="submit"]').click()
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==3
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==5
         blank.locator('#assets-excel-file').set_input_files({'name':'duplicate.xlsx','mimeType':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','buffer':sample.getvalue()})
         assert blank.locator('#confirm-form').count()==0
-        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==3
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==5
+        # Manual CCDC creation must allow another distinct full serial with the same last 5 characters.
+        blank.locator('[data-action="add"]').click()
+        blank.locator('#record-form [name="type"]').select_option('PDA')
+        blank.locator('#record-form [name="serial"]').fill('SYNTH-GAMMA-00228')
+        blank.locator('#record-form button[type="submit"]').click()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==6
+        # Full duplicate still forbidden even if its case changes.
+        blank.locator('[data-action="add"]').click()
+        blank.locator('#record-form [name="type"]').select_option('PDA')
+        blank.locator('#record-form [name="serial"]').fill('synth-beta-00228')
+        blank.locator('#record-form button[type="submit"]').click()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==6
+        assert 'Serial / IMEI đã tồn tại' in blank.locator('.toast-stack .toast').last.inner_text()
+        blank.locator('#record-form [data-action="close-modal"]').click()
+        blank.locator('a.nav-main[href*="view=pda"]').click()
+        blank.locator('[data-pda-mode="borrow"]').click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').fill('00228')
+        assert blank.locator('[data-pda-choose]').count()==3
+        assert 'SYNTH-ALPHA-00228' in blank.locator('#pda-device-preview').inner_text()
+        assert 'SYNTH-BETA-00228' in blank.locator('#pda-device-preview').inner_text()
+        # Enter on an ambiguous suffix cannot create a loan and must preserve both scanned inputs.
+        before_loans=blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.length")
+        blank.locator('#pda-device-code').press('Enter')
+        assert 'Có 3 PDA khớp' in blank.locator('#pda-scan-ambiguity').inner_text()
+        assert blank.locator('#pda-staff-code').input_value()=='98765432'
+        assert blank.locator('#pda-device-code').input_value()=='00228'
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.length")==before_loans
+        blank.locator('[data-pda-choose]').filter(has_text='SYNTH-BETA-00228').click()
+        assert blank.locator('#pda-device-code').input_value()=='SYNTH-BETA-00228'
+        assert blank.locator('[data-pda-choose]').count()==0
+        blank.locator('#pda-scan-form button[type="submit"]').click()
+        assert 'Đã mượn' in blank.locator('.scan-outcome').inner_text()
+        assert blank.evaluate("() => {const s=JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')); const a=s.assets.find(x=>x.serial==='SYNTH-BETA-00228');return s.pda.filter(x=>x.state==='Đang mượn').length===1 && s.pda.some(x=>x.state==='Đang mượn'&&x.assetId===a.id&&x.staff==='98765432')}") is True
+        blank.locator('[data-pda-mode="return"]').click()
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').fill('00228')
+        assert blank.locator('[data-pda-choose]').count()==3
+        blank.locator('[data-pda-choose]').filter(has_text='SYNTH-BETA-00228').click()
+        blank.locator('#pda-scan-form button[type="submit"]').click()
+        assert 'Đã trả' in blank.locator('.scan-outcome').inner_text()
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pda.some(x=>x.state==='Đang mượn')") is False
+        # Exact full serial or internal CCDC code still resolves without a candidate list.
+        blank.locator('#pda-staff-code').fill('98765432')
+        blank.locator('#pda-device-code').fill('SYNTH-ALPHA-00228')
+        assert blank.locator('[data-pda-choose]').count()==0
+        assert 'SYNTH-ALPHA-00228' in blank.locator('#pda-device-preview').inner_text()
         blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
         # Regression fixtures live in tests/, never in the public app's initialization.
