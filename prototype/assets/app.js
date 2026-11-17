@@ -1096,7 +1096,7 @@ function decodeBackupPortrait(item){
 }
 function validateOfflineBackup(snapshot){
  if(!snapshot||snapshot.format!==BACKUP_FORMAT||snapshot.schema!==BACKUP_SCHEMA)throw Error('File không phải bản sao lưu PickPack hợp lệ');
- if(!['0.9.7','0.9.8','0.9.9','0.10.0','0.11.0','0.11.1','0.11.2',WEB_VERSION].includes(snapshot.webVersion))throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở Web v'+WEB_VERSION+' để nhập');
+ if(!['0.9.7','0.9.8','0.9.9','0.10.0','0.11.0','0.11.1','0.11.2','0.12.0',WEB_VERSION].includes(snapshot.webVersion))throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở Web v'+WEB_VERSION+' để nhập');
  const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits,minutePictures=data.minuteImages;
  if(!records||!catalogData||!Array.isArray(pictures)||!Array.isArray(minutePictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
  if(!Object.hasOwn(catalogData,'assetsCondition')&&snapshot.webVersion!==WEB_VERSION)catalogData.assetsCondition=[...RESOURCE_DEFAULTS.assetsCondition];
