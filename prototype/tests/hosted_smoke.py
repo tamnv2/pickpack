@@ -24,7 +24,7 @@ fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encodi
 for i,device in enumerate(fixture['records']['pdaDevices']):
  fixture['records']['assets'][-(i+1)]={'id':device['id'],'name':'PDA','type':'PDA','serial':device['serial'],'condition':'Tốt','state':'Có sử dụng','note':'Mẫu thử nghiệm','createdAt':'2026-11-16','history':[]}
 
-assert version=='0.12.0'
+assert version=='0.12.1'
 
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
@@ -53,12 +53,14 @@ try:
         blank.locator('a.nav-main[href*="view=resources"]').click()
         assert blank.locator('.catalog-panel tbody tr').count()==0
         blank.locator('a.nav-main[href*="view=pda"]').click()
-        assert blank.locator('.device-registry tbody tr').count()==0
+        assert blank.locator('.device-registry').count()==0
+        assert blank.locator('#pda-scan-form').count()==1
         assert blank.locator('[data-action="device-add"],#device-form').count()==0
         blank.locator('a.nav-main[href*="view=assets"]').click()
-        assert blank.locator('.asset-dashboard .asset-kpi').count()==8
-        assert blank.locator('.asset-dashboard-group').count()==3
-        assert blank.locator('.asset-dashboard-head').get_by_text('không phụ thuộc bộ lọc ngày',exact=False).count()==1
+        assert blank.locator('.asset-dashboard .asset-kpi').count()==4
+        assert blank.locator('.asset-type-card').count()==1
+        assert blank.locator('.asset-dashboard-group').count()==2
+        assert blank.locator('.asset-dashboard-head').get_by_text('không phụ thuộc khoảng ngày lọc',exact=False).count()==1
         assert blank.locator('.asset-kpi').first.locator('strong').inner_text()=='0'
         blank.locator('[data-action="add"]').click()
         assert [el.get_attribute('name') for el in blank.locator('#record-form [name]').all()]==['type','serial','condition','state','note']
@@ -69,8 +71,9 @@ try:
         first_pda=blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets[0].id")
         assert blank.locator('.module-table tbody tr').count()==1
         blank.locator('a.nav-main[href*="view=pda"]').click()
-        assert blank.locator('.device-registry tbody tr').count()==1
-        assert first_pda in blank.locator('.device-registry tbody tr').first.inner_text()
+        assert blank.locator('.device-registry').count()==0
+        assert blank.locator('#pda-scan-form').count()==1
+        assert blank.locator('.table-panel tbody tr').count()==0
         assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).pdaDevices.length")==0
         blank.locator('a.nav-main[href*="view=people"]').click()
         blank.locator('[data-catalog-scope="people"]').click()
@@ -170,7 +173,8 @@ try:
         assert 'Loại CCDC' in headers and 'Tình trạng vật lý' in headers and 'Trạng thái sử dụng' in headers
         assert 'Số lượng' not in headers and 'Mã PDA liên kết' not in headers
         blank.locator('a.nav-main[href*="view=pda"]').click()
-        assert blank.locator('.device-registry tbody tr').count()==2
+        assert blank.locator('.device-registry').count()==0
+        assert blank.locator('.table-panel tbody tr').count()==2
         assert blank.locator('#pda-scan-form').count()==1
         # Department loan and repair are distinct, auditable transfers.
         blank.locator('a.nav-main[href*="view=assets"]').click()
@@ -329,6 +333,28 @@ try:
         blank.locator('#pda-device-code').fill('SYNTH-ALPHA-00228')
         assert blank.locator('[data-pda-choose]').count()==0
         assert 'SYNTH-ALPHA-00228' in blank.locator('#pda-device-preview').inner_text()
+        # Dashboard reads every registered CCDC type, including categories without an asset.
+        blank.locator('a.nav-main[href*="view=assets"]').click()
+        blank.locator('[data-catalog-scope="assets"]').click()
+        blank.locator('[data-category-tab="assetsType"]').click()
+        blank.locator('[data-action="category-add"]').click()
+        blank.locator('#catalog-form [name="value"]').fill('Máy in tem')
+        blank.locator('[data-action="catalog-input-add"]').click()
+        blank.locator('#catalog-form [name="value"]').nth(1).fill('Cân điện tử')
+        blank.locator('#catalog-form button[type="submit"]').click()
+        blank.locator('.catalog-heading a[data-nav="assets"]').click()
+        assert blank.locator('[data-asset-type]').count()==3
+        assert '0 CCDC' in blank.locator('[data-asset-type="Cân điện tử"]').inner_text()
+        blank.locator('[data-action="add"]').click()
+        blank.locator('#record-form [name="type"]').select_option('Máy in tem')
+        blank.locator('#record-form [name="serial"]').fill('PRN-DEMO-001')
+        blank.locator('#record-form button[type="submit"]').click()
+        assert blank.locator('[data-asset-type]').count()==3
+        assert '1 CCDC' in blank.locator('[data-asset-type="Máy in tem"]').inner_text()
+        assert '6 CCDC' in blank.locator('[data-asset-type="PDA"]').inner_text()
+        assert blank.locator('.asset-kpi').first.locator('strong').inner_text()=='7'
+        assert blank.locator('.asset-kpi').nth(1).locator('strong').inner_text()=='3'
+        assert blank.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.length")==7
         blank_context.close()
         context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
         # Regression fixtures live in tests/, never in the public app's initialization.
@@ -351,7 +377,8 @@ try:
         assert page.locator('#period-preset').input_value()=='today'
         page.locator('#period-preset').select_option('all')
         page.locator('a.nav-main[href*="view=shifts"]').click()
-        assert page.locator('.shift-summary-group').count()==3
+        assert page.locator('.shift-summary,.shift-summary-group').count()==0
+        assert page.locator('.shift-scan-toolbar').evaluate("el=>{const a=el.querySelectorAll('.shift-scan-choice'),b=el.querySelector('.shift-scan-entry'),x=a[0].getBoundingClientRect(),y=a[1].getBoundingClientRect(),z=b.getBoundingClientRect();return Math.abs(x.bottom-y.bottom)<3&&Math.abs(y.bottom-z.bottom)<3&&z.left>y.right}")
         assert page.locator('[data-shift-filter]').count()==3
         page.locator('[data-shift-filter="shift"]').select_option('Ca 1')
         assert 0 < page.locator('.table-panel tbody tr').count() <= 42
@@ -404,7 +431,7 @@ try:
         assert page.locator('.corporate-brand span').all_inner_texts() == ['CÔNG TY CỔ PHẦN THE SUPRA','DC HƯNG YÊN']
         assert page.locator('.shortcut-panel').count() == 0
         assert page.locator('.overview-page [data-action="add"]').count() == 0
-        assert page.locator('.topbar .period-export').count() == 1
+        assert page.locator('.topbar .period-export,.topbar [data-action="export"]').count() == 0
         page.locator('[data-theme-choice="auto"]').click()
         assert page.evaluate("localStorage.getItem('pickpack1291_office_theme_v06')") == 'auto'
         page.locator('[data-theme-choice="light"]').click()
@@ -703,7 +730,7 @@ try:
         with second.expect_download() as backed_up:
             second.locator('[data-action="backup-export"]').click()
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.12.0-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.12.1-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -853,7 +880,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.12.0 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.12.1 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
