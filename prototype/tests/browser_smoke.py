@@ -166,6 +166,12 @@ with sync_playwright() as p:
   assert all(abs(a-b)<1 for x,y in zip(overview_slots,header_slots()) for a,b in zip(x,y)),module
   assert app.locator('.table-panel').last.locator('.records-label b').inner_text()==str(n),(module,app.locator('.table-panel').last.locator('.records-label b').inner_text())
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
+  assert app.locator('.table-panel .records-table').count()==1
+  assert app.locator('.table-panel .records-table').evaluate("el=>{const th=el.querySelector('th[data-col]'),td=el.querySelector('td[data-col]');return getComputedStyle(el).tableLayout==='auto'&&parseFloat(getComputedStyle(th).paddingLeft)>=10&&parseFloat(getComputedStyle(td).paddingRight)>=10}"),module
+  if module=='assets':
+   assert app.locator('.asset-dashboard .asset-kpi').count()==8
+   assert app.locator('.asset-dashboard-group').count()==3
+   assert app.locator('.asset-dashboard .asset-kpi').first.locator('strong').inner_text()==str(n)
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}'),(module,app.locator('a.cell-record-link').first.get_attribute('href'))
   assert app.locator('.table-panel').last.locator('button[data-action="export"]').inner_text().strip().endswith('Xuất Excel')
   assert app.locator('.record-card').count()==0
