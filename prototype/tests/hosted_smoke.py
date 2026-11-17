@@ -180,7 +180,7 @@ try:
         blank.locator('#asset-transfer-form [name="note"]').fill('Phiếu mẫu 01')
         blank.locator('#asset-transfer-form button[type="submit"]').click()
         assert blank.evaluate("(id)=>JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).activeTransfer.kind",first_pda)=='lend'
-        blank.locator('[data-asset-loan]').first.click()
+        blank.locator(f'[data-asset-loan="{first_pda}"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
         blank.locator('#pda-device-code').press('Enter')
         assert 'đang bàn giao' in blank.locator('.scan-outcome').inner_text()
@@ -208,7 +208,7 @@ try:
         blank.locator('#asset-transfer-form [name="condition"]').select_option('Hư hỏng')
         blank.locator('#asset-transfer-form button[type="submit"]').click()
         assert blank.evaluate("(id)=>JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.find(a=>a.id===id).history.length",first_pda)>=6
-        blank.locator('[data-asset-loan]').first.click()
+        blank.locator(f'[data-asset-loan="{first_pda}"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
         blank.locator('#pda-device-code').press('Enter')
         assert 'không đủ điều kiện sử dụng' in blank.locator('.scan-outcome').inner_text()
@@ -218,7 +218,7 @@ try:
         blank.locator('#confirm-form button[type="submit"]').click()
         blank.locator('#record-form [name="condition"]').select_option('Tốt')
         blank.locator('#record-form button[type="submit"]').click()
-        blank.locator('[data-asset-loan]').first.click()
+        blank.locator(f'[data-asset-loan="{first_pda}"]').click()
         blank.locator('#pda-staff-code').fill('98765432')
         blank.locator('#pda-device-code').press('Enter')
         assert f'Đã mượn {first_pda}' in blank.locator('.scan-outcome').inner_text()
