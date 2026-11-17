@@ -171,7 +171,7 @@ with sync_playwright() as p:
   if module=='assets':
    assert app.locator('.asset-dashboard .asset-kpi').count()==8
    assert app.locator('.asset-dashboard-group').count()==3
-   assert app.locator('.asset-dashboard .asset-kpi').first.locator('strong').inner_text()==str(n)
+   assert int(app.locator('.asset-dashboard .asset-kpi').first.locator('strong').inner_text())==app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).assets.filter(a=>!(Number(a.qty)>1)).length")
   assert app.locator('a.cell-record-link').first.get_attribute('href').startswith(f'app.html?view={module}'),(module,app.locator('a.cell-record-link').first.get_attribute('href'))
   assert app.locator('.table-panel').last.locator('button[data-action="export"]').inner_text().strip().endswith('Xuất Excel')
   assert app.locator('.record-card').count()==0
