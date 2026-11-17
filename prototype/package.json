@@ -1,6 +1,6 @@
 {
   "name": "pickpack-horilla-inspired-ui-review",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "type": "module",
   "description": "Static PickPack 1291 Office UI with seven palettes, system dashboard, offline XLSX exports and barcode attendance",
