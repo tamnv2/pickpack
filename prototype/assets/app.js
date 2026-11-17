@@ -743,13 +743,10 @@ function photoEditor(person){
 function startPhotoEdit(id){
  if(denyOperation('people','edit'))return;
  const person=store.people.find(x=>x.id===id);if(!person)return;
- confirmDialog('Căn chỉnh ảnh nhân sự','Nhập mật khẩu trước khi chỉnh ảnh của '+person.name,()=>{
-  state.view='people';state.drawer='';state.editId=id;state.photoDraft=person.photo||'';
-  state.photoOriginalFile=null;state.photoRemoveOriginal=false;state.modal='edit';
-  state.minuteDraftFiles=[];state.minuteRemoved=[];
-  safeHistory('replaceState',href('people'));
-  requestAnimationFrame(()=>{void adjustExistingPhoto().catch(err=>{state.notice=err.message||'Không thể mở ảnh';refreshToasts()})});
- });
+ state.view='people';state.drawer='';state.editId=id;state.photoDraft=person.photo||'';
+ state.photoOriginalFile=null;state.photoRemoveOriginal=false;state.modal='edit';
+ state.minuteDraftFiles=[];state.minuteRemoved=[];safeHistory('replaceState',href('people'));render();
+ requestAnimationFrame(()=>{void adjustExistingPhoto().catch(err=>{state.notice=err.message||'Không thể mở ảnh';refreshToasts()})});
 }
 function closeCrop(){
  if(!cropSession)return;
@@ -858,6 +855,31 @@ function prefsModal(){
 }
 function noticesModal(){const notices=notificationItems();return `<div class="modal-overlay" data-action="close-modal"><section class="modal preferences-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-head"><div><span>TRUNG TÂM THÔNG BÁO</span><h2 id="modal-title">Thông báo</h2></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><div class="notification-list">${notices.length?notices.map(i=>`<a class="notification-item" href="${href(i.view)}" data-nav="${i.view}"><span class="notification-icon">${icon(i.ic,18)}</span><span><strong>${i.title}</strong><small>${i.count} mục cần xử lý</small></span><span>›</span></a>`).join(''):'<div class="notification-empty">Không có thông báo cần xử lý</div>'}</div></section></div>`}
 
+
+let draftConfirmation=null;
+function askDraftPassword(title,perform){
+ if(draftConfirmation)return;
+ const layer=document.createElement('div');layer.className='modal-overlay draft-confirm-overlay';
+ layer.setAttribute('data-action','draft-confirm-cancel');
+ layer.innerHTML=`<section class="modal confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="draft-confirm-title"><div class="modal-head"><h2 id="draft-confirm-title">${escape(title)}</h2><button type="button" class="icon-button" data-action="draft-confirm-cancel" aria-label="Đóng">×</button></div><form id="draft-confirm-form" autocomplete="off"><p>Xác nhận mật khẩu để lưu thao tác vừa nhập. Chưa có dữ liệu nào được thay đổi.</p><label class="confirm-password">Mật khẩu xác nhận<input id="draft-password" name="password" type="password" required autocomplete="off" placeholder="Mật khẩu tài khoản hiện tại"></label><div id="draft-confirm-error" class="confirm-error" role="alert"></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="draft-confirm-cancel">Quay lại chỉnh sửa</button><button type="submit" class="btn primary">Xác nhận và lưu</button></div></form></section>`;
+ draftConfirmation={layer,perform};root.appendChild(layer);layer.querySelector('#draft-password')?.focus();
+}
+function cancelDraftPassword(){draftConfirmation?.layer.remove();draftConfirmation=null}
+function finishDraftPassword(form){
+ if(!draftConfirmation)return;
+ if(new FormData(form).get('password')!==actualUser()?.password){
+  const error=draftConfirmation.layer.querySelector('#draft-confirm-error');if(error)error.textContent='Mật khẩu không đúng';return;
+ }
+ const action=draftConfirmation.perform;cancelDraftPassword();action();
+}
+function submitRecordDraft(form){
+ if(state.modal==='edit')askDraftPassword('Xác nhận lưu bản ghi',()=>saveForm(form));
+ else saveForm(form);
+}
+function submitCatalogDraft(form){
+ if(state.modal==='category-edit')askDraftPassword('Xác nhận lưu danh mục',()=>saveCatalog(form));
+ else saveCatalog(form);
+}
 let pendingConfirmation=null;
 function confirmDialog(title,message,onApprove,requiresPassword=true){
  pendingConfirmation=onApprove;
@@ -1259,30 +1281,32 @@ root.addEventListener('submit',function(e){
  }
  if(e.target.id==='labor-scan-form'){e.preventDefault();const values=new FormData(e.target);scanLabor(values.get('employeeCode'),values.get('work'));return}
  if(e.target.id==='pda-scan-form'){e.preventDefault();const fd=new FormData(e.target);scanPda(fd.get('employeeCode'),fd.get('deviceCode'));return}
- if(e.target.id==='confirm-form'){e.preventDefault();finishConfirmation(e.target);return}
- if(e.target.id==='account-form'){e.preventDefault();saveAccount(e.target);return}
+ if(e.target.id==='draft-confirm-form'){e.preventDefault();finishDraftPassword(e.target);return}
+  if(e.target.id==='confirm-form'){e.preventDefault();finishConfirmation(e.target);return}
+ if(e.target.id==='account-form'){e.preventDefault();const form=e.target;if(state.accountEdit)askDraftPassword('Xác nhận lưu tài khoản',()=>saveAccount(form));else saveAccount(form);return}
  if(e.target.id==='personal-settings-form'){e.preventDefault();savePersonalSettings(e.target);return}
- if(e.target.getAttribute('id')==='record-form'){e.preventDefault();saveForm(e.target)}
- if(e.target.id==='catalog-form'){e.preventDefault();saveCatalog(e.target)}
- if(e.target.id==='asset-transfer-form'){e.preventDefault();saveAssetTransfer(e.target)}
+ if(e.target.getAttribute('id')==='record-form'){e.preventDefault();submitRecordDraft(e.target)}
+ if(e.target.id==='catalog-form'){e.preventDefault();submitCatalogDraft(e.target)}
+ if(e.target.id==='asset-transfer-form'){e.preventDefault();const form=e.target;askDraftPassword('Xác nhận bàn giao CCDC',()=>saveAssetTransfer(form))}
 });
 root.addEventListener('click',e=>{
+  const draftClose=e.target.closest('[data-action="draft-confirm-cancel"]');if(draftClose){if(draftClose.classList.contains('draft-confirm-overlay')&&e.target.closest('.confirmation-dialog'))return;cancelDraftPassword();return}
  const closeToast=e.target.closest('[data-toast-close]');if(closeToast){const i=notices.findIndex(x=>x.id===Number(closeToast.dataset.toastClose));if(i>=0)notices.splice(i,1);refreshToasts();return}
- const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())saveForm(form);else form.querySelectorAll('input,select').forEach(el=>{el.dataset.touched='1';markField(el)});return}
- const submitCategory=e.target.closest('#catalog-form button[type="submit"]');if(submitCategory){e.preventDefault();const form=submitCategory.form;if(form?.reportValidity())saveCatalog(form);else form.querySelectorAll('input').forEach(el=>{el.dataset.touched='1';markField(el)});return}
+ const submitRecord=e.target.closest('#record-form button[type="submit"]');if(submitRecord){e.preventDefault();const form=submitRecord.form;if(form?.reportValidity())submitRecordDraft(form);else form.querySelectorAll('input,select').forEach(el=>{el.dataset.touched='1';markField(el)});return}
+ const submitCategory=e.target.closest('#catalog-form button[type="submit"]');if(submitCategory){e.preventDefault();const form=submitCategory.form;if(form?.reportValidity())submitCatalogDraft(form);else form.querySelectorAll('input').forEach(el=>{el.dataset.touched='1';markField(el)});return}
  const removeMinute=e.target.closest('[data-minute-remove]');if(removeMinute){const id=removeMinute.dataset.minuteRemove;const draft=state.minuteDraftFiles.findIndex(([key])=>key===id);if(draft>=0)state.minuteDraftFiles.splice(draft,1);else if(!state.minuteRemoved.includes(id))state.minuteRemoved.push(id);void renderMinuteImages();return}
  const openMinute=e.target.closest('[data-minute-open]');if(openMinute){const id=openMinute.dataset.minuteOpen;const pending=state.minuteDraftFiles.find(([key])=>key===id)?.[1];void (async()=>{try{const blob=pending||await minuteGet(id);if(!(blob instanceof Blob))return;if(state.minuteZoomUrl)URL.revokeObjectURL(state.minuteZoomUrl);state.minuteZoomUrl=URL.createObjectURL(blob);state.modal='minute-zoom';render()}catch{state.notice='Không đọc được ảnh biên bản';refreshToasts()}})();return}
  const categoryTab=e.target.closest('[data-category-tab]');if(categoryTab){state.categoryTab=categoryTab.dataset.categoryTab;state.notice='';render();return}
- const categoryEdit=e.target.closest('[data-category-edit]');if(categoryEdit){if(denyOperation(state.catalogScope,'edit'))return;const value=catalogs[state.categoryTab]?.[Number(categoryEdit.dataset.categoryEdit)]||'';confirmDialog('Xác nhận sửa danh mục',`Nhập mật khẩu trước khi sửa ${value}`,()=>{state.categoryEdit=value;state.modal='category-edit'});return}
+ const categoryEdit=e.target.closest('[data-category-edit]');if(categoryEdit){if(denyOperation(state.catalogScope,'edit'))return;const value=catalogs[state.categoryTab]?.[Number(categoryEdit.dataset.categoryEdit)]||'';state.categoryEdit=value;state.modal='category-edit';render();return}
  const categoryDelete=e.target.closest('[data-category-delete]');if(categoryDelete){if(denyOperation(state.catalogScope,'delete'))return;deleteCatalog(Number(categoryDelete.dataset.categoryDelete));return}
  const pickUser=e.target.closest('[data-account-pick]');if(pickUser){if(denyOperation('access'))return;state.accessUser=pickUser.dataset.accountPick;render();return}
  const editAccount=e.target.closest('[data-account-edit]');if(editAccount){if(denyOperation('access'))return;state.accountEdit=editAccount.dataset.accountEdit;state.modal='account';render();return}
  const nav=e.target.closest('a[data-nav]');if(nav){if(e.button===0&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(nav.dataset.nav==='categories'||nav.dataset.nav==='resources'){state.catalogScope=nav.dataset.nav==='resources'?'resources':nav.dataset.catalogScope||'people';state.categoryTab=catalogFields(state.catalogScope)[0][0]}setView(nav.dataset.nav)}return}
  const photoEdit=e.target.closest('[data-photo-edit]');if(photoEdit){startPhotoEdit(photoEdit.dataset.photoEdit);return}
  const assetLoan=e.target.closest('[data-asset-loan]');if(assetLoan){if(denyOperation('pda','view'))return;const asset=store.assets.find(a=>a.id===assetLoan.dataset.assetLoan);if(!isPdaAsset(asset))return;setView('pda');state.pdaMode=assetLoanOpen(asset)?'return':'borrow';state.pdaPrefill=asset.id;render();root.querySelector('#pda-staff-code')?.focus();return}
- const transfer=e.target.closest('[data-asset-transfer]');if(transfer){if(denyOperation('assets','edit'))return;const id=transfer.dataset.assetId||state.drawer,action=transfer.dataset.assetTransfer;const asset=store.assets.find(a=>a.id===id);if(!asset||!['lend','repair','receive'].includes(action))return;confirmDialog('Xác nhận thao tác CCDC','Nhập mật khẩu trước khi ghi nhận bàn giao '+id,()=>{state.transferId=id;state.transferAction=action;state.drawer='';state.modal='transfer'});return}
+ const transfer=e.target.closest('[data-asset-transfer]');if(transfer){if(denyOperation('assets','edit'))return;const id=transfer.dataset.assetId||state.drawer,action=transfer.dataset.assetTransfer;const asset=store.assets.find(a=>a.id===id);if(!asset||!['lend','repair','receive'].includes(action))return;state.transferId=id;state.transferAction=action;state.drawer='';state.modal='transfer';render();return}
   const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
- const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;if(state.view==='shifts')return;const record=edit.dataset.edit;confirmDialog('Xác nhận sửa dữ liệu',`Nhập mật khẩu trước khi sửa bản ghi ${record}`,()=>{state.drawer='';safeHistory('replaceState',href(state.view));state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit'});return}
+ const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;if(state.view==='shifts')return;const record=edit.dataset.edit;state.drawer='';safeHistory('replaceState',href(state.view));state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit';render();return}
  const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
  const quick=e.target.closest('[data-quick]');if(quick){if(denyOperation(state.view,'edit'))return;const id=quick.dataset.quick;confirmDialog('Xác nhận thay đổi',`Nhập mật khẩu trước khi thay đổi bản ghi ${id}`,()=>quickChange(id));return}
  const scanMode=e.target.closest('[data-scan-mode]');if(scanMode){state.scanMode=scanMode.dataset.scanMode==='exit'?'exit':'enter';state.scanOutcome=null;state.scanCurrentStaff='';state.scanUser='';state.scanDesk='';render();root.querySelector('#shift-code')?.focus();return}
@@ -1407,7 +1431,7 @@ window.addEventListener('storage',e=>{if(e.key===CATALOG_KEY){Object.assign(cata
 window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);state.view=PAGES[p.get('view')]?p.get('view'):'dashboard';state.catalogScope=['people','labor','minutes','assets','resources'].includes(p.get('scope'))?p.get('scope'):'people';state.categoryTab=catalogFields(state.catalogScope)[0][0];if(state.view==='resources'){state.catalogScope='resources';state.categoryTab='userTypes'}state.theme=resolveTheme(state.themeMode);state.drawer=p.get('record')||'';state.search='';state.filter='all';state.selected.clear();render()});
 function markField(el){if(!el?.matches('#record-form input:not([type=file]),#record-form select,#catalog-form input'))return;const touched=el.dataset.touched==='1'||String(el.value||'').trim().length>0;const valid=el.checkValidity();el.classList.toggle('is-valid',touched&&valid);el.classList.toggle('is-invalid',touched&&!valid)}
 root.addEventListener('focusout',e=>{if(e.target.matches('#record-form input,#record-form select,#catalog-form input')){e.target.dataset.touched='1';markField(e.target)}});
-window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(cropSession){e.preventDefault();closeCrop();return}closeStuff();render()}});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(draftConfirmation){cancelDraftPassword();return}if(cropSession){e.preventDefault();closeCrop();return}closeStuff();render()}});
 window.addEventListener('focus',tickClock);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tickClock()});
 render();
