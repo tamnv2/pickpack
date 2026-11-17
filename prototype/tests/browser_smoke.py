@@ -111,7 +111,7 @@ with sync_playwright() as p:
  assert app.get_by_text('Trạng thái toàn hệ thống').count()==1
  assert app.locator('.shortcut-panel').count()==0
  assert app.locator('.overview-page button[data-action="add"]').count()==0
- assert app.locator('.overview-page button[data-action="export"]').count()==1
+ assert app.locator('.topbar-context button[data-action="export"]').count()==1
  assert app.locator('.demo-note').count()==0
  assert app.locator('button[data-action="settings"]').count()==0
  assert app.locator('.location-chip,.group-title').count()==0
