@@ -380,7 +380,7 @@ try:
         assert second.locator('#period-preset').input_value()=='today'
         second.locator('#period-preset').select_option('all')
         assert second.locator('.records-label b').inner_text() == '36'
-        assert second.locator('.people-table thead th').all_inner_texts()[-3:]==['Ngày nhận việc','Cập nhật bởi','Thao tác']
+        assert second.locator('.people-table thead th').all_inner_texts()[-4:]==['Ngày nhận việc','Cập nhật bởi','PDA đang dùng','Thao tác']
         assert second.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
         second.evaluate('window.scrollTo(0, 600)')
         assert abs(second.locator('.topbar').bounding_box()['y'])<2
