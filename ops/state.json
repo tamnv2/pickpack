@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "project_key": "pickpack-1291",
-  "as_of_vn": "2026-11-23",
+  "as_of_vn": "2026-11-24",
   "phase": "OFFICE_WEB_V0122_CODE_READY_CI_PASS_DRAFT_PR",
-  "application_code": "WEB_OFFICE_STATIC_V0122_CODE_READY_CI_PASS_20261123",
-  "technical_ci": "CI_PASS_ACTIONS_45209980261_SOURCE_74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5_JS_BUILD_CHROMIUM_HOSTED_CDN_HTTP_BROWSER",
+  "application_code": "WEB_OFFICE_STATIC_V0122_20261124_CODE_READY_CI_PASS",
+  "technical_ci": "CI_PASS_ACTIONS_45282466417_SOURCE_b60d98a5133f68edfe80f6e8511b8091805c2de6_JS_BUILD_CHROMIUM_HOSTED_CDN_HTTP_BROWSER",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V0122_20261123_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V0122_20261124_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner review Web v0.12.2 daily personnel filter, same-day linking, overdue checkout alerts, and three administrative shifts on immutable preview",
-    "Production Auth/RBAC/realtime/provider requires separate explicit Owner approval; PR #2 Draft/unmerged",
-    "Third-party CDN preview is point-in-time verified, has no uptime guarantee; no staging/Production deployment authorized"
+    "Owner review staged labor single/batch scanning and selected-row bulk edit; validate labor end vs shift exit and full-shift deletion on Web v0.12.2",
+    "Production shared Auth/RBAC, realtime and provider changes need explicit Owner approval; PR #2 remains Draft/unmerged",
+    "CDN test preview was verified in CI; third-party availability is not guaranteed and is not a Production staging service"
   ],
-  "latest_checkpoint": "PP-20261123-046",
+  "latest_checkpoint": "PP-20261124-047",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -91,7 +91,7 @@
     "version_label": "WEB_V0_8_10_SIDEBAR_BOTTOM_AND_LOGIN",
     "verification_v081": "CODE_READY_CI_PASS_PREVIEW_PASS_ACTIONS_43587655812_BUILD_7_FILES_161451_BYTES_LOCAL_CHROMIUM_HTTP_HOSTED_AND_REMOTE_CDN_BROWSER_PASS",
     "layout": "TABLE_ONLY_NO_CARD_TOGGLE",
-    "labor_scan": "QR_EMPLOYEE_CODE_SAME_DAY_SHIFT_ID_VN_DATE_WORK_JOB_START_END",
+    "labor_scan": "SINGLE_STAGED_START_SCAN_TIME_END_OPTIONAL_SAVE_ONLY;GROUP_STAGED_LIST_CONFIRM_ATOMIC",
     "pda_scan": "EXACT_CCDC_OR_FULL_SERIAL_OR_TAG_FIRST;LAST5_MATCH_ONE_AUTO_MATCH_MULTIPLE_REQUIRE_FULL_SERIAL_MANUAL_CHOICE_THEN_SEPARATE_CONFIRM_NO_AUTO_LOAN_RETURN",
     "verification_v082": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_99ed047b963dbaee81d54711acae3485d5313e98_RUN_43590709932_BUILD_7_FILES_171953_BYTES_CHROMIUM_HOSTED_REMOTE",
     "personnel_catalogs": "FIVE_LOCALSTORAGE_LISTS_SELECT_CRUD_CASE_INSENSITIVE_DUPLICATE_GUARD_RENAME_REFERENCES_DELETE_IN_USE_BLOCK",
@@ -99,7 +99,7 @@
     "verification_v083": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_97f05c01625a787659bb6e6fbc292b20d97ad47d_RUN_43595501602_BUILD_7_FILES_186106_BYTES_CHROMIUM_HOSTED_REMOTE",
     "verification_v084": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_7f379b28c16b8fa273ff6634478550eb5695e61d_RUN_43599665168_BUILD_7_FILES_187603_BYTES_CHROMIUM_1440_1024_390_HOSTED_REMOTE",
     "theme_schedule": "AUTO_HO_CHI_MINH_06_TO_17_59_LIGHT_18_TO_05_59_DARK_MANUAL_OVERRIDE_PERSISTENT",
-    "personnel_table": "EXISTING_STARTDATE_UPDATEDBY_COLUMNS_AUTO_WIDTH_HORIZONTAL_SCROLL_NATIVE_DATE_INPUT_DMY",
+    "personnel_table": "NO_PDA_IN_USE_COLUMN;UPDATED_AT_AS_LAST_COLUMN",
     "topbar": "STICKY_SHARED_FIXED_SEARCH_NOTIF_CLOCK_SLOTS_ALL_VIEWS_RESPONSIVE_WITH_STABLE_SCROLLBAR",
     "verification_v085": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_0cdc1a07372015ead7f62f43c014891765760c13_RUN_43604203541_7_FILES_192767_BYTES_CHROMIUM_HOSTED_TIMEBOUNDARY_18H_XLSX_MOBILE_NO_EXTERNAL_CALLS",
     "dashboard_search": "VISIBLE_CROSS_SIX_SYNTHETIC_MODULES_TOTAL_COUNT_UP_TO_12_LINKS_LIVE_RESULTS_NO_KPI_FILTER_NO_FULL_RENDER",
@@ -112,8 +112,8 @@
     "verification_v0810": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_a754fb5c5537915ef8bea99c4f74f3e609976214_RUN_43621678902_BUILD_7_FILES_196582_BYTES_CHROMIUM_HOSTED_LIVE_MINUTE_ROLLOVER_NO_FLIP_DESKTOP_MOBILE_CDN_BROWSER",
     "password": "CURRENT_MOCK_USER_PASSWORD_AT_SAVE_FOR_EDITS_TRANSFER_CATALOG_ACCOUNT;_DESTRUCTIVE_CONFIRM_AT_COMMIT;CLIENT_ONLY",
     "personnel_portrait": "LOCAL_INDEXEDDB_FULL_ORIGINAL_ASPECT_RATIO_CAPPED_HEIGHT_LEFT_OF_SCAN_DETAILS_PUBLIC_DEMO_ONLY",
-    "labor": "CATALOG_JOB_TWO_SCANS_ONE_ROW_START_END_NO_HOURS_STATUS_USER_COLUMNS",
-    "shifts": "INLINE_ACTION_AND_CA1_CA2_CAHC_BUTTONS_PERSIST_FOCUS_STAFF_CODE_POST_SCAN_PICK_PACK_USER_FROM_RESOURCES_OPTIONAL_PACK_DESK_NO_DUPLICATE",
+    "labor": "SELECTIVE_BATCH_WORK_START_END_EDIT_WITH_MOCK_PASSWORD_ATOMIC;VALIDATE_TIME_VS_SHIFT_CHECKOUT",
+    "shifts": "FULL_SHIFT_DELETE_CHECKIN_ONLY_OR_COMPLETE_WITH_MOCK_PASSWORD_AUDIT;BLOCK_IF_LABOR_OPEN;EXIT_BLOCK_IF_LABOR_UNCLOSED_OR_END_AFTER_EXIT",
     "catalogs": "PEOPLE_LABOR_WORK_MINUTES_TYPE_CCDC_TYPE_CRUD_SELECTS_INLINE_EXCEL_ACTIONS",
     "verification_v090": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_SOURCE_07220190e06049a7fe168e8d19308ea34395a240_RUN_43626063941_BUILD_7_FILES_213255_BYTES_CHROMIUM_HOSTED_INDEXEDDB_480X640_QR_XLSX_MOBILE_NO_EXTERNAL_REQUESTS",
     "personnel": "NUMERIC_EMPLOYEE_PHONE_UNICODE_NAME_TODAY_VN_DATE_IMAGE_FILE_OR_CLIPBOARD_PASTE_EXCEL_TEMPLATE_IMPORT_VALIDATED_APPEND_ONLY",
@@ -146,7 +146,7 @@
     "asset_excel": "FIVE_COLUMN_TEMPLATE_APPEND_ONLY_VALIDATE_FULL_SERIAL_ONLY_IGNORE_SUFFIX_DUPLICATES_ATOMIC_CONFIRM",
     "shift_breakdown": "REMOVED_SCAN_DASHBOARD;TABLE_FILTERS_KEEP_SHIFT_POSITION_SUPPLIER",
     "picker_pda": "DERIVED_OPEN_LOAN_BY_STAFF_ID_FROM_CCDC_PDA_NO_DUPLICATED_STATE",
-    "ci": "PASS source_sha=74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5 run=45209980261; JS+static+Chromium+hosted+public-CDN-browser",
+    "ci": "PASS source_sha=b60d98a5133f68edfe80f6e8511b8091805c2de6 run=45282466417; JS+static+Chromium+hosted+public-CDN-browser",
     "code_status": "CODE_READY",
     "release_status": "NOT_APPROVED_NO_PRODUCTION",
     "pda_serial_identity": "FULL_SERIAL_UNIQUE_CASE_INSENSITIVE_TRIM_ALL_CCDC;LAST_5_SUFFIX_MAY_DUPLICATE",
@@ -160,19 +160,19 @@
     "ui_copy": "PRODUCT_BUSINESS_LANGUAGE_REMOVE_OWNER_AI_DEMO_INSTRUCTION"
   },
   "test_preview": {
-    "status": "VERIFIED_PASS_20261123_ACTIONS_45209980261_HTTP_CHROMIUM",
+    "status": "VERIFIED_PASS_20261124_ACTIONS_45282466417_HTTP_CHROMIUM",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5/prototype/index.html",
-    "verified_commit": "74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5",
-    "verified_run": "45209980261",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/b60d98a5133f68edfe80f6e8511b8091805c2de6/prototype/index.html",
+    "verified_commit": "b60d98a5133f68edfe80f6e8511b8091805c2de6",
+    "verified_run": "45282466417",
     "public_access": true,
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
     "production": false,
     "provider_resources_created": false,
-    "current_access": "CI_HTTP_AND_CHROMIUM_PASS_2026-11-23T15:54:23Z_NOT_UPTIME_GUARANTEE",
-    "current_access_checked_on": "2026-11-23",
+    "current_access": "CI_HTTP_AND_CHROMIUM_PASS_2026-11-23T22:46:37Z_NOT_UPTIME_GUARANTEE",
+    "current_access_checked_on": "2026-11-24",
     "origin_attribution": "PREVIOUS_USER_SCREENSHOT_503_ORIGIN_UNVERIFIED_NEW_CI_CDN_PASS",
-    "last_verified_run": "45209980261"
+    "last_verified_run": "45282466417"
   }
 }
