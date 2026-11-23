@@ -535,7 +535,7 @@ function scanLabor(code,work){if(denyOperation('labor','create'))return false;
  const existing=store.labor.find(r=>r.staff===staff&&periodDate(r.date)===day&&(!r.endTime||r.endTime==='—'));
  if(existing){
   if(state.laborBatch)return result(false,'Nhân viên có công nhật đang mở. Hãy chốt riêng trước khi thêm vào danh sách.');
-  state.laborDraft={id:existing.id,staff,date:existing.date,name:person.name,work:existing.work,startTime:existing.startTime,endTime:time,shift:existing.shift,shiftId:existing.shiftId};
+  state.laborDraft={id:existing.id,staff,date:existing.date,name:person.name,work:existing.work,startTime:existing.startTime,endTime:time,shift:activeShift.shift,shiftId:activeShift.id};
   return result(true,'Kiểm tra giờ kết thúc trước khi lưu.','#labor-entry-end');
  }
  work=state.laborBatch&&state.laborQueue.length?state.laborWork:work;
@@ -564,7 +564,7 @@ function saveLaborDraft(form){
  if(!catalogs.laborWork.includes(next.work)){state.notice='Công việc công nhật không hợp lệ.';refreshToasts();return}
  const problem=validateLaborRow(next);if(problem){state.notice=problem;refreshToasts();return}
  if(!draft.id&&store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&(!r.endTime||r.endTime==='—'))){state.notice='Nhân viên đã có công nhật đang mở.';refreshToasts();return}
- if(original)Object.assign(original,{startTime,endTime});
+ if(original)Object.assign(original,{startTime,endTime,shift:activeShift.shift,shiftId:activeShift.id});
  else store.labor.unshift({...next,id:`CN-${Date.now().toString(36).toUpperCase()}`});
  persist();state.laborDraft=null;state.laborScan={ok:true,code:draft.staff,message:(original?'Đã cập nhật':'Đã ghi nhận')+' công nhật · '+draft.name};render();root.querySelector('#labor-staff-code')?.focus();
 }
