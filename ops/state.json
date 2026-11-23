@@ -2,9 +2,9 @@
   "schema_version": 1,
   "project_key": "pickpack-1291",
   "as_of_vn": "2026-11-23",
-  "phase": "OFFICE_WEB_V0122_UPDATE_CODE_ONLY_CI_PENDING_DRAFT_PR",
-  "application_code": "WEB_OFFICE_STATIC_V0122_20261123_CI_PENDING",
-  "technical_ci": "LATEST_PREVIOUS_CI_PASS_ACTIONS_44124998483_SOURCE_9952728337d435f7f831eefb3960fdc12e91a8a9; NEW_CHANGES_ACTIONS_45208165747_PENDING",
+  "phase": "OFFICE_WEB_V0122_CODE_READY_CI_PASS_DRAFT_PR",
+  "application_code": "WEB_OFFICE_STATIC_V0122_CODE_READY_CI_PASS_20261123",
+  "technical_ci": "CI_PASS_ACTIONS_45209980261_SOURCE_74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5_JS_BUILD_CHROMIUM_HOSTED_CDN_HTTP_BROWSER",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
   "owner_business_acceptance": "V0122_20261123_OWNER_REVIEW_PENDING",
@@ -28,9 +28,9 @@
     "realtime": true
   },
   "pending": [
-    "Verify Web v0.12.2 dated personnel, same-day shift/labor/PDA linkage, overdue scan alerts and 3 HC hours with Chromium+hosted regression on current source",
-    "Production backend Auth/RBAC/realtime and provider changes require separate explicit Owner approval; PR #2 remains Draft/unmerged",
-    "Previously reported third-party rawcdn HTTP 503 remains unverified; no deployment without approval"
+    "Owner review Web v0.12.2 daily personnel filter, same-day linking, overdue checkout alerts, and three administrative shifts on immutable preview",
+    "Production Auth/RBAC/realtime/provider requires separate explicit Owner approval; PR #2 Draft/unmerged",
+    "Third-party CDN preview is point-in-time verified, has no uptime guarantee; no staging/Production deployment authorized"
   ],
   "latest_checkpoint": "PP-20261123-046",
   "ui_prototype": {
@@ -69,7 +69,7 @@
     "source_reference": "OWNER_COMMON_DATA_GOOGLE_SHEET_READ_ONLY_HEADER_SCHEMA_ONLY_NO_PERSONAL_DATA_COPIED",
     "personnel_fields": "EMPLOYEE_CODE_NAME_PHONE_POSITION_SUPPLIER_DEPARTMENT_SITE_WAREHOUSE_START_DATE_NOTE_UPDATE_AUDIT_PLUS_DEMO_ASSIGNED_SHIFT_WORK_USER",
     "avatar": "BROWSER_LOCAL_FILE_TO_JPEG_192PX_NO_REAL_PHOTOS",
-    "shift_scan": "RIGHT_ALIGNED_SINGLE_DESKTOP_ROW_CONSISTENT_LABEL_SPACING",
+    "shift_scan": "THREE_HC_PRESETS_08_17_09_18_10_19_CA1_14_CA2_22_END_WARNINGS_VN_CALENDAR_SAME_DAY_USER_LINK",
     "pda_inventory": "CCDC_TYPE_PDA_IS_CANONICAL_DEVICE;PDA_VIEW_SCAN_LOAN_RETURN_HISTORY_ONLY_NO_DEVICE_RESOURCE_TABLE",
     "light_accent_colors": [
       "red",
@@ -83,7 +83,7 @@
     "brand": "CÔNG TY CỔ PHẦN THE SUPRA\nDC HƯNG YÊN",
     "admin_identity": "TOPBAR_ONLY_SIDEBAR_LOGOUT",
     "density": "COMPACT_SHARED_SPACING_ALL_MODULES_SINGLE_PAGE_TITLE",
-    "dashboard": "READ_ONLY_8_KPIS_6_MODULE_STATUS_PENDING_TREND_SCAN_NO_CRUD_NO_SHORTCUT",
+    "dashboard": "TODAY_DEFAULT_OPERATIONS;PHYSICAL_STOCK_COUNTS_ALL_TIME",
     "export": "NATIVE_EXCEL_XLSX_STORED_ZIP_OOXML_STYLE_FILTER_FROZEN_HEADER_NO_EXTERNAL_REQUESTS",
     "verification_v08": "CODE_READY_CI_PASS_SOURCE_741503bd12a7528f68546880ffd8ee97204bd8a8_RUN_43586461064_NODE_BUILD_7_FILES_160367_BYTES_CHROMIUM_DOM_HOSTED_XLSX_OPENPYXL_PASS",
     "footer": "Phát triển hệ thống - tamnv2 | Pick Pack 1291",
@@ -91,7 +91,7 @@
     "version_label": "WEB_V0_8_10_SIDEBAR_BOTTOM_AND_LOGIN",
     "verification_v081": "CODE_READY_CI_PASS_PREVIEW_PASS_ACTIONS_43587655812_BUILD_7_FILES_161451_BYTES_LOCAL_CHROMIUM_HTTP_HOSTED_AND_REMOTE_CDN_BROWSER_PASS",
     "layout": "TABLE_ONLY_NO_CARD_TOGGLE",
-    "labor_scan": "EMPLOYEE_CODE_QR_KEYBOARD_EXACT_PROFILE_SHIFT_USER_DATE_TIME_TEMP_NO_GUESSED_HOURS_WORK_ONE_PER_DAY",
+    "labor_scan": "QR_EMPLOYEE_CODE_SAME_DAY_SHIFT_ID_VN_DATE_WORK_JOB_START_END",
     "pda_scan": "EXACT_CCDC_OR_FULL_SERIAL_OR_TAG_FIRST;LAST5_MATCH_ONE_AUTO_MATCH_MULTIPLE_REQUIRE_FULL_SERIAL_MANUAL_CHOICE_THEN_SEPARATE_CONFIRM_NO_AUTO_LOAN_RETURN",
     "verification_v082": "CODE_READY_CI_PASS_PUBLIC_PREVIEW_PASS_SOURCE_99ed047b963dbaee81d54711acae3485d5313e98_RUN_43590709932_BUILD_7_FILES_171953_BYTES_CHROMIUM_HOSTED_REMOTE",
     "personnel_catalogs": "FIVE_LOCALSTORAGE_LISTS_SELECT_CRUD_CASE_INSENSITIVE_DUPLICATE_GUARD_RENAME_REFERENCES_DELETE_IN_USE_BLOCK",
@@ -136,7 +136,7 @@
     "verification_v098": "CODE_READY_CI_PASS_PREVIEW_PASS_SOURCE_325b5555394b0cd81c547853df24955bba1eada1_RUN_43856876485_BUILD_7_FILES_290188_BYTES_CENTERED_DETAIL_CROP_FROM_VIEW_SCAN_ZOOM_OUT_ORIGINAL_PRESERVED_HOSTED_AND_CDN_BROWSER_ZERO_API",
     "cloudflare_readiness": "STATIC_FEASIBLE_SERVICE_BLOCKED_CLIENT_ONLY_NO_SHARED_AUTH_DATA_REALTIME_OR_PROVIDER_STAGING",
     "personal_avatar": "LOCAL_MOCK_ACCOUNT_PHOTO_UPLOAD_PASTE_DRAG_ZOOM_CROP_SAVE_ONLY_BROWSER_LOCAL",
-    "period_filter": "ONE_CLICKABLE_CALENDAR_ICON_IN_EXISTING_STICKY_TOPBAR_WITH_PRESET_SELECT",
+    "period_filter": "PEOPLE_ALL_DEFAULT_FILTER_CREATION_DATE_OTHER_OPERATIONAL_VIEWS_TODAY_DEFAULT",
     "ccdc_proposal": "DONE_TYPE_AND_PHYSICAL_CONDITION_BOTH_LOCAL_EDITABLE_CATALOGS_USAGE_ONLY_CO_SU_DUNG_KHONG_SU_DUNG",
     "verification_v099": "CODE_READY_CI_PASS_WEB_TEST_PREVIEW_PASS_RUN_43894690079_SOURCE_dec1d3770d1844b7ea42754ddf98a69b9d2fa7c8_CHROMIUM_HOSTED_XLSX_CDN_BROWSER",
     "ccdc_model": "ONE_PHYSICAL_UNIT_ONE_AUTO_GENERATED_ID_FIVE_EDIT_FIELDS_TYPE_SERIAL_CONDITION_USAGE_NOTE_NO_MANUAL_QUANTITY",
@@ -146,7 +146,7 @@
     "asset_excel": "FIVE_COLUMN_TEMPLATE_APPEND_ONLY_VALIDATE_FULL_SERIAL_ONLY_IGNORE_SUFFIX_DUPLICATES_ATOMIC_CONFIRM",
     "shift_breakdown": "REMOVED_SCAN_DASHBOARD;TABLE_FILTERS_KEEP_SHIFT_POSITION_SUPPLIER",
     "picker_pda": "DERIVED_OPEN_LOAN_BY_STAFF_ID_FROM_CCDC_PDA_NO_DUPLICATED_STATE",
-    "ci": "PASS source_sha=9952728337d435f7f831eefb3960fdc12e91a8a9 run=44124998483; JS+static+Chromium+hosted+public-CDN-browser",
+    "ci": "PASS source_sha=74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5 run=45209980261; JS+static+Chromium+hosted+public-CDN-browser",
     "code_status": "CODE_READY",
     "release_status": "NOT_APPROVED_NO_PRODUCTION",
     "pda_serial_identity": "FULL_SERIAL_UNIQUE_CASE_INSENSITIVE_TRIM_ALL_CCDC;LAST_5_SUFFIX_MAY_DUPLICATE",
@@ -160,19 +160,19 @@
     "ui_copy": "PRODUCT_BUSINESS_LANGUAGE_REMOVE_OWNER_AI_DEMO_INSTRUCTION"
   },
   "test_preview": {
-    "status": "PREVIOUSLY_VERIFIED_PASS_CURRENT_ACCESS_UNVERIFIED",
+    "status": "VERIFIED_PASS_20261123_ACTIONS_45209980261_HTTP_CHROMIUM",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
-    "url": "https://rawcdn.githack.com/tamnv2/pickpack/9952728337d435f7f831eefb3960fdc12e91a8a9/prototype/index.html",
-    "verified_commit": "9952728337d435f7f831eefb3960fdc12e91a8a9",
-    "verified_run": "44124998483",
+    "url": "https://rawcdn.githack.com/tamnv2/pickpack/74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5/prototype/index.html",
+    "verified_commit": "74e22d338e2db5ea5d2d1cda2cae8dc13eb412a5",
+    "verified_run": "45209980261",
     "public_access": true,
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
     "production": false,
     "provider_resources_created": false,
-    "current_access": "BLOCKED_USER_REPORTED_HTTP_503_NOT_INDEPENDENTLY_REPRODUCED",
+    "current_access": "CI_HTTP_AND_CHROMIUM_PASS_2026-11-23T15:54:23Z_NOT_UPTIME_GUARANTEE",
     "current_access_checked_on": "2026-11-23",
-    "origin_attribution": "UNVERIFIED_SCREENSHOT_WITHOUT_ADDRESS_BAR_GITHACK_SUSPECTED",
-    "last_verified_run": "44124998483"
+    "origin_attribution": "PREVIOUS_USER_SCREENSHOT_503_ORIGIN_UNVERIFIED_NEW_CI_CDN_PASS",
+    "last_verified_run": "45209980261"
   }
 }
