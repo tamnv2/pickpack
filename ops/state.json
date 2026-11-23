@@ -29,9 +29,10 @@
   },
   "pending": [
     "Owner review Web v0.12.2 concise copy/scan label layout, shift correction and undo with password, file confirmations, dark accents",
-    "Production backend Auth/RBAC/realtime and provider changes require separate explicit Owner approval; PR #2 remains Draft/unmerged"
+    "Production backend Auth/RBAC/realtime and provider changes require separate explicit Owner approval; PR #2 remains Draft/unmerged",
+    "Investigate/replace unreliable external rawcdn Web preview; no provider deployment without Owner approval"
   ],
-  "latest_checkpoint": "PP-20261117-042",
+  "latest_checkpoint": "PP-20261123-045",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
@@ -159,7 +160,7 @@
     "ui_copy": "PRODUCT_BUSINESS_LANGUAGE_REMOVE_OWNER_AI_DEMO_INSTRUCTION"
   },
   "test_preview": {
-    "status": "WEB_TEST_PREVIEW_PASS",
+    "status": "PREVIOUSLY_VERIFIED_PASS_CURRENT_ACCESS_UNVERIFIED",
     "hosting": "IMMUTABLE_THIRD_PARTY_STATIC_CDN",
     "url": "https://rawcdn.githack.com/tamnv2/pickpack/9952728337d435f7f831eefb3960fdc12e91a8a9/prototype/index.html",
     "verified_commit": "9952728337d435f7f831eefb3960fdc12e91a8a9",
@@ -168,6 +169,10 @@
     "credentials": "superadmin/1;admin1/1;admin2/1;dieuphoile/1;dieuphoichan/1_CLIENT_MOCK_ONLY",
     "initial_html_confirmation": "MAY_BE_REQUIRED_BY_CDN",
     "production": false,
-    "provider_resources_created": false
+    "provider_resources_created": false,
+    "current_access": "BLOCKED_USER_REPORTED_HTTP_503_NOT_INDEPENDENTLY_REPRODUCED",
+    "current_access_checked_on": "2026-11-23",
+    "origin_attribution": "UNVERIFIED_SCREENSHOT_WITHOUT_ADDRESS_BAR_GITHACK_SUSPECTED",
+    "last_verified_run": "44124998483"
   }
 }
