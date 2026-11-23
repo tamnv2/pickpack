@@ -219,7 +219,7 @@ function datedRows(view){
  return rows.filter(row=>{
   const raw=view==="people"||view==="assets"?(row.createdAt||row.recordedAt||""):view==="pda"?(row.date||row.borrowAt||""):(row.date||"");
   const day=periodDate(raw);
-  if(!day)return view==="people"||view==="assets";
+  if(!day)return view==="assets";
   return day>=state.periodFrom&&day<=state.periodTo;
  });
 }
@@ -256,11 +256,11 @@ function coveragePanel(){
  const total=(x)=>x.length,confirmed=(x,s)=>x.filter(r=>r.state===s).length;
  const sets=[
  ['Nhân sự',total(store.people),store.people.filter(r=>r.shift).length,'Đã phân ca'],
- ['Ra / vào ca',total(store.shifts),confirmed(store.shifts,'Trong ca'),'Trong ca'],
- ['Công nhật',total(store.labor),confirmed(store.labor,'Đã xác nhận'),'Đã xác nhận'],
- ['Biên bản',total(store.minutes),total(store.minutes),'Đã lưu trữ'],
+ ['Ra / vào ca',total(datedRows('shifts')),confirmed(datedRows('shifts'),'Trong ca'),'Trong ca'],
+ ['Công nhật',total(datedRows('labor')),confirmed(datedRows('labor'),'Đã xác nhận'),'Đã xác nhận'],
+ ['Biên bản',total(datedRows('minutes')),total(datedRows('minutes')),'Đã lưu trữ'],
  ['Công cụ dụng cụ',total(store.assets),store.assets.filter(r=>assetUse(r)==='Có sử dụng').length,'Có sử dụng'],
- ['Mượn / trả PDA',total(pdaAssets()),new Set(store.pda.filter(r=>r.state==='Đang mượn').map(r=>r.name)).size,'Đang mượn']
+ ['Mượn / trả PDA',total(datedRows('pda')),new Set(datedRows('pda').filter(r=>r.state==='Đang mượn').map(r=>r.name)).size,'Đang mượn']
  ];
  return `<section class="panel coverage-panel"><div class="panel-title"><div><h2>Trạng thái toàn hệ thống</h2></div></div><div class="coverage-list">${sets.map(([name,total,part,desc])=>`<div class="coverage-row"><strong>${escape(name)}</strong><span>${escape(desc)}</span><b>${part} / ${total}</b><div class="coverage-track"><span style="width:${total?Math.min(100,Math.round(part/total*100)):0}%"></span></div></div>`).join('')}</div></section>`;
 }
@@ -903,7 +903,7 @@ async function adjustProfilePhoto(){
  await beginCrop(new Blob([bytes],{type:'image/jpeg'}),false,'personal');
 }
 function notificationItems(){return [
- {view:'labor',title:'Công nhật chưa kết thúc',count:store.labor.filter(r=>!r.endTime||r.endTime==='—').length,ic:'calendar'},
+ {view:'labor',title:'Công nhật chưa kết thúc',count:datedRows('labor').filter(r=>!r.endTime||r.endTime==='—').length,ic:'calendar'},
 {view:'assets',title:'CCDC cần kiểm tra',count:store.assets.filter(r=>r.state==='Cần kiểm tra').length,ic:'boxes'},
 {view:'shifts',title:'Thiếu quét ra quá giờ',count:datedRows('shifts').filter(r=>shiftIsOverdue(r)).length,ic:'clock'},
  {view:'shifts',title:'Nhân sự chờ vào ca',count:datedRows('shifts').filter(r=>r.state==='Chờ vào ca').length,ic:'clock'}
@@ -1365,7 +1365,7 @@ async function parsePersonnelExcel(file){
   for(const [key,label] of CATEGORY_FIELDS)if(!record[key]||record[key].length>80)throw Error('Dòng '+line+': Cần nhập '+label+' (tối đa 80 ký tự)');
   if(seen.has(record.id)||store.people.some(p=>p.id===record.id))throw Error('Dòng '+line+': Mã nhân viên '+record.id+' đã tồn tại. Chưa nhập dòng nào');
   seen.add(record.id);record.startDate=parseExcelDate(record.startDate);record.initial=record.name.split(' ').at(-1).slice(0,2);
-  record.photo='';record.updatedBy='Quản trị viên';record.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});
+  record.photo='';record.createdAt=vnTodayISO();record.updatedBy=actualUser()?.fullName||'Người dùng';record.updatedAt=new Date().toLocaleString('vi-VN',{hour12:false});
   output.push(record);if(output.length+store.people.length>=500)throw Error('Tối đa 499 hồ sơ nhân sự');
  }
  if(!output.length)throw Error('File chưa có dữ liệu. Hãy điền từ dòng 2');
