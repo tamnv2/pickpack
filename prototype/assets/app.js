@@ -212,6 +212,7 @@ function shiftIsOverdue(row,now=new Date()){
  const end=SHIFT_END_TIMES[row.shift],stamp=end?shiftStamp(row.date,end):null;
  return !!stamp&&now.getTime()>new Date(stamp.iso).getTime();
 }
+lastOverdueCount=store.shifts.filter(r=>shiftIsOverdue(r)).length;
 function datedRows(view){
  const rows=store[view]||[];
  if(state.periodPreset==="all")return rows;
