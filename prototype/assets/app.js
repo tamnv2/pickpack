@@ -200,6 +200,15 @@ function periodDate(raw){
  const test=new Date(iso+"T00:00:00Z");
  return !Number.isNaN(+test)&&test.toISOString().slice(0,10)===iso?iso:"";
 }
+const VN_SCAN_TIME=new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+const vnScanDate=(now)=>vnTodayISO(now).split('-').reverse().join('/');
+const vnScanTime=(now)=>VN_SCAN_TIME.format(now);
+const SHIFT_END_TIMES={'Ca 1':'14:00','Ca 2':'22:00','Ca HC':'17:00','HC 09–18':'18:00','HC 10–19':'19:00'};
+function shiftIsOverdue(row,now=new Date()){
+ if(row.state!=='Trong ca'||!row.checkin||row.checkin==='—'||(row.checkout&&row.checkout!=='—'))return false;
+ const end=SHIFT_END_TIMES[row.shift],stamp=end?shiftStamp(row.date,end):null;
+ return !!stamp&&now.getTime()>new Date(stamp.iso).getTime();
+}
 function datedRows(view){
  const rows=store[view]||[];
  if(state.periodPreset==="all")return rows;
@@ -439,13 +448,12 @@ function scanAssignment(person){
 }
 function shiftScanPanel(){
  const result=state.scanOutcome,person=result?.code?store.people.find(p=>p.id===result.code):null,mode=state.scanMode;
- return `<section class="panel scan-station shift-scan-station"><form id="shift-scan-form" autocomplete="off"><div class="shift-scan-toolbar ${mode==='exit'?'shift-scan-exit':''}"><div class="shift-scan-choice"><span class="scan-code-label">Loại thao tác</span><div class="scan-mode" role="group" aria-label="Loại thao tác quét"><button type="button" class="${mode==='enter'?'active':''}" data-scan-mode="enter" aria-pressed="${mode==='enter'}">Vào ca</button><button type="button" class="${mode==='exit'?'active':''}" data-scan-mode="exit" aria-pressed="${mode==='exit'}">Ra ca</button></div></div>${mode==='enter'?`<div class="shift-scan-choice"><span class="scan-code-label">Ca làm việc</span><div class="scan-mode" role="group" aria-label="Ca làm việc">${['Ca 1','Ca 2','Ca HC'].map(v=>`<button type="button" data-scan-shift="${v}" class="${state.scanShift===v?'active':''}" aria-pressed="${state.scanShift===v}">${v}</button>`).join('')}</div></div>`:''}<div class="shift-scan-entry"><label class="scan-code-label" for="shift-code">Quét mã nhân viên</label><div class="shift-scan-input-row"><span class="qr-input"><span class="qr-mark">${icon('qr',18)}</span><input id="shift-code" name="employeeCode" placeholder="Nhập / quét mã nhân viên" inputmode="numeric" maxlength="30" required autocomplete="off" autocapitalize="off" spellcheck="false"></span><button class="btn primary" type="submit" value="${mode}">${icon('clock',16)} Ghi nhận ${mode==='enter'?'vào':'ra'} ca</button></div></div></div><div id="scan-allocation">${scanAssignment(state.scanCurrentStaff?store.people.find(p=>p.id===state.scanCurrentStaff):null)}</div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="scan-preview">${scanPreview(person)}</div></section>`;
+ return `<section class="panel scan-station shift-scan-station"><form id="shift-scan-form" autocomplete="off"><div class="shift-scan-toolbar ${mode==='exit'?'shift-scan-exit':''}"><div class="shift-scan-choice"><span class="scan-code-label">Loại thao tác</span><div class="scan-mode" role="group" aria-label="Loại thao tác quét"><button type="button" class="${mode==='enter'?'active':''}" data-scan-mode="enter" aria-pressed="${mode==='enter'}">Vào ca</button><button type="button" class="${mode==='exit'?'active':''}" data-scan-mode="exit" aria-pressed="${mode==='exit'}">Ra ca</button></div></div>${mode==='enter'?`<div class="shift-scan-choice"><span class="scan-code-label">Ca làm việc</span><div class="scan-mode" role="group" aria-label="Ca làm việc">${[['Ca 1','Ca 1'],['Ca 2','Ca 2'],['Ca HC','HC 08–17'],['HC 09–18','HC 09–18'],['HC 10–19','HC 10–19']].map(([v,label])=>`<button type="button" data-scan-shift="${v}" class="${state.scanShift===v?'active':''}" aria-pressed="${state.scanShift===v}">${label}</button>`).join('')}</div></div>`:''}<div class="shift-scan-entry"><label class="scan-code-label" for="shift-code">Quét mã nhân viên</label><div class="shift-scan-input-row"><span class="qr-input"><span class="qr-mark">${icon('qr',18)}</span><input id="shift-code" name="employeeCode" placeholder="Nhập / quét mã nhân viên" inputmode="numeric" maxlength="30" required autocomplete="off" autocapitalize="off" spellcheck="false"></span><button class="btn primary" type="submit" value="${mode}">${icon('clock',16)} Ghi nhận ${mode==='enter'?'vào':'ra'} ca</button></div></div></div><div id="scan-allocation">${scanAssignment(state.scanCurrentStaff?store.people.find(p=>p.id===state.scanCurrentStaff):null)}</div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="scan-preview">${scanPreview(person)}</div></section>`;
 }
 
 function scanShift(code,operation,selectedShift,workUser,workDesk){if(denyOperation('shifts','create'))return false;
  const staff=String(code||'').trim(),p=store.people.find(x=>x.id===staff),now=new Date();
- const date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
- const time=now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+ const date=vnScanDate(now),time=vnScanTime(now),day=vnTodayISO(now);
  const outcome=(ok,message)=>{
   state.scanOutcome={ok,code:staff,message};
   if(ok){state.scanCurrentStaff='';state.scanUser='';state.scanDesk=''}
@@ -453,15 +461,15 @@ function scanShift(code,operation,selectedShift,workUser,workDesk){if(denyOperat
   render();root.querySelector('#shift-code')?.focus();return ok;
  };
  if(!p)return outcome(false,'Không tìm thấy mã nhân viên. Vui lòng kiểm tra hoặc bổ sung hồ sơ.');
- const current=store.shifts.find(x=>x.staff===p.id&&x.state==='Trong ca');
+ const current=store.shifts.find(x=>x.staff===p.id&&x.state==='Trong ca'&&periodDate(x.date)===day);
  if(operation==='enter'){
-  if(!['Ca 1','Ca 2','Ca HC'].includes(selectedShift))return outcome(false,'Chọn ca hợp lệ trước khi vào ca.');
+  if(!Object.hasOwn(SHIFT_END_TIMES,selectedShift))return outcome(false,'Chọn ca hợp lệ trước khi vào ca.');
   if(current)return outcome(false,`Nhân viên ${p.name} đang trong ca, không ghi nhận vào ca lần hai.`);
   const role=workRole(p.position),list=role==='Pick'?catalogs.pickUsers:role==='Pack'?catalogs.packUsers:[];
   if(role&&(!workUser||!list.includes(workUser)))return outcome(false,`Chọn User ${role} từ Quản lý tài nguyên trước khi vào ca.`);
-  if(workUser&&store.shifts.some(x=>x.state==='Trong ca'&&x.user===workUser))return outcome(false,`User ${workUser} đang được sử dụng trong ca khác.`);
+  if(workUser&&store.shifts.some(x=>x.state==='Trong ca'&&periodDate(x.date)===day&&x.user===workUser))return outcome(false,`User ${workUser} đang được sử dụng trong ca khác.`);
   if(role==='Pack'&&workDesk&&!catalogs.packDesks.includes(workDesk))return outcome(false,'Bàn Pack không hợp lệ.');
-  if(role==='Pack'&&workDesk&&store.shifts.some(x=>x.state==='Trong ca'&&x.desk===workDesk))return outcome(false,`Bàn ${workDesk} đang được sử dụng.`);
+  if(role==='Pack'&&workDesk&&store.shifts.some(x=>x.state==='Trong ca'&&periodDate(x.date)===day&&x.desk===workDesk))return outcome(false,`Bàn ${workDesk} đang được sử dụng.`);
   const assigned=role?workUser:'—',desk=role==='Pack'&&workDesk?workDesk:'—';
   store.shifts.unshift({id:`CA-${Date.now().toString(36).toUpperCase()}`,staff:p.id,name:p.name,date,shift:selectedShift,position:p.position||'—',supplier:p.supplier||'—',checkin:time,checkout:'—',user:assigned,userType:role||'—',desk,state:'Trong ca',checkinAt:now.toISOString(),checkoutAt:''});
   persist();return outcome(true,`Đã vào ca · ${p.name} · ${selectedShift} · ${assigned} · ${date} ${time}`);
@@ -477,7 +485,7 @@ function scanShift(code,operation,selectedShift,workUser,workDesk){if(denyOperat
 
 function compactPersonPreview(person){
  if(!person)return '<div class="scan-empty">Chưa xác định nhân viên.</div>';
- const active=store.shifts.find(x=>x.staff===person.id&&x.state==='Trong ca');
+ const active=store.shifts.find(x=>x.staff===person.id&&x.state==='Trong ca'&&periodDate(x.date)===vnTodayISO());
  const detail=active?`${active.shift} · User: ${active.user||'—'}`:'Chưa vào ca';
  return `<div class="scan-identity compact-identity">${avatar(person)}<div><strong>${escape(person.name)} · ${escape(person.id)}</strong><small>${escape(person.position||'Chưa cập nhật')} · ${escape(detail)}</small></div></div>`;
 }
@@ -488,8 +496,7 @@ function laborScanPanel(){
 
 function scanLabor(code,work){if(denyOperation('labor','create'))return false;
  const staff=String(code||'').trim(),person=store.people.find(p=>p.id===staff),now=new Date();if(work)state.laborWork=work;
- const date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
- const time=now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+ const date=vnScanDate(now),time=vnScanTime(now),day=vnTodayISO(now);
  const result=(ok,message)=>{state.laborScan={ok,code:staff,message};render();root.querySelector('#labor-staff-code')?.focus();return ok};
  if(!person)return result(false,'Không tìm thấy mã nhân viên.');
  const existing=store.labor.find(r=>r.staff===staff&&r.date===date&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
@@ -498,8 +505,8 @@ function scanLabor(code,work){if(denyOperation('labor','create'))return false;
   return result(true,`Đã kết thúc công nhật · ${person.name} · ${existing.work} · ${time}`);
  }
  if(!catalogs.laborWork.includes(work))return result(false,'Cần chọn Công việc công nhật hợp lệ.');
- const shift=store.shifts.find(r=>r.staff===staff&&r.state==='Trong ca')?.shift||'—';
- store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:person.name,staff,date,shift,work,startTime:time,endTime:'—'});
+ const activeShift=store.shifts.find(r=>r.staff===staff&&r.state==='Trong ca'&&periodDate(r.date)===day),shift=activeShift?.shift||'—';
+ store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:person.name,staff,date,shift,shiftId:activeShift?.id||'',work,startTime:time,endTime:'—'});
  persist();return result(true,`Đã bắt đầu công nhật · ${person.name} · ${work} · ${time}`);
 }
 
@@ -536,8 +543,7 @@ function pdaScanPanel(){
 }
 function scanPda(employeeCode,deviceCode){if(denyOperation('pda','create'))return false;
  const staff=String(employeeCode||'').trim(),deviceInput=String(deviceCode||'').trim();
- const person=store.people.find(x=>x.id===staff),asset=resolvePda(deviceInput),now=new Date(),date=now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});
- const time=now.toLocaleTimeString('vi-VN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const person=store.people.find(x=>x.id===staff),asset=resolvePda(deviceInput),now=new Date(),date=vnScanDate(now),time=vnScanTime(now),day=vnTodayISO(now);
  const out=(ok,message)=>{state.pdaPrefill='';state.pdaScan={ok,staff,device:deviceInput,message};render();root.querySelector('#pda-staff-code')?.focus();return ok};
  if(!person)return out(false,'Không tìm thấy mã nhân viên.');
  const candidates=pdaMatches(deviceInput);
@@ -555,13 +561,13 @@ function scanPda(employeeCode,deviceCode){if(denyOperation('pda','create'))retur
   if(open)return out(false,`${asset.id} đang được mượn bởi ${open.holder}. Không được mượn trùng.`);
   if(asset.activeTransfer)return out(false,`CCDC ${asset.id} đang bàn giao cho ${asset.activeTransfer.target}; không thể cấp cho Picker.`);
   if(assetUse(asset)!=='Có sử dụng'||asset.condition!=='Tốt')return out(false,`CCDC ${asset.id} không đủ điều kiện sử dụng: ${asset.condition||'Chưa rõ'}.`);
-  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:asset.id,staff:person.id,holder:person.name,user:store.shifts.find(x=>x.staff===person.id&&x.state==='Trong ca')?.user||'—',date,borrow:time,borrowAt:now.toISOString(),return:'—',returner:'—',assetId:asset.id,state:'Đang mượn'});
+  store.pda.unshift({id:`MT-${Date.now().toString(36).toUpperCase()}`,name:asset.id,staff:person.id,holder:person.name,user:store.shifts.find(x=>x.staff===person.id&&x.state==='Trong ca'&&periodDate(x.date)===day)?.user||'—',shiftId:store.shifts.find(x=>x.staff===person.id&&x.state==='Trong ca'&&periodDate(x.date)===day)?.id||'',date,borrow:time,borrowAt:now.toISOString(),return:'—',returner:'—',assetId:asset.id,state:'Đang mượn'});
   appendAssetHistory(asset,'Picker mượn PDA',person.id+' · '+person.name,{kind:'picker-borrow',contact:person.name});
   persist();return out(true,`Đã mượn ${asset.id} · ${person.name} · ${date} ${time}`);
  }
  if(state.pdaMode==='return'){
   if(!open)return out(false,`${asset.id} chưa có lượt mượn đang mở.`);
-  updateRecord('pda',open.id,{return:time,returnAt:now.toISOString(),returner:person.name,returnStaff:person.id,state:'Đã trả'});
+  updateRecord('pda',open.id,{return:time,returnAt:now.toISOString(),returnDate:date,returner:person.name,returnStaff:person.id,state:'Đã trả'});
   appendAssetHistory(asset,'Picker trả PDA',person.id+' · '+person.name,{kind:'picker-return',contact:person.name});
   persist();return out(true,`Đã trả ${asset.id} · ${person.name} · ${date} ${time}`);
  }
@@ -895,7 +901,8 @@ async function adjustProfilePhoto(){
 function notificationItems(){return [
  {view:'labor',title:'Công nhật chưa kết thúc',count:store.labor.filter(r=>!r.endTime||r.endTime==='—').length,ic:'calendar'},
 {view:'assets',title:'CCDC cần kiểm tra',count:store.assets.filter(r=>r.state==='Cần kiểm tra').length,ic:'boxes'},
-{view:'shifts',title:'Nhân sự chờ vào ca',count:store.shifts.filter(r=>r.state==='Chờ vào ca').length,ic:'clock'}
+{view:'shifts',title:'Thiếu quét ra quá giờ',count:datedRows('shifts').filter(r=>shiftIsOverdue(r)).length,ic:'clock'},
+ {view:'shifts',title:'Nhân sự chờ vào ca',count:datedRows('shifts').filter(r=>r.state==='Chờ vào ca').length,ic:'clock'}
 ].filter(x=>x.count>0&&canAccess(x.view))}
 function prefsModal(){
  const me=actualUser();
@@ -983,7 +990,7 @@ function saveShiftCorrection(fd){
  const reject=msg=>{state.notice=msg;refreshToasts()};
  if(!start||(tOut&&!end))return reject('Giờ vào / ra ca không hợp lệ');
  if(end&&(new Date(end.iso)-new Date(start.iso))<=0)return reject('Giờ ra ca phải sau giờ vào ca');
- if(!end&&store.shifts.some(x=>x.id!==r.id&&x.staff===r.staff&&x.state==='Trong ca'))return reject('Nhân viên đang có ca khác chưa kết thúc');
+ if(!end&&store.shifts.some(x=>x.id!==r.id&&x.staff===r.staff&&periodDate(x.date)===periodDate(r.date)&&x.state==='Trong ca'))return reject('Nhân viên đang có ca khác chưa kết thúc');
  const before={checkin:r.checkin,checkout:r.checkout,state:r.state},after={checkin:start.time,checkout:end?.time||'—',state:end?'Đã ra ca':'Trong ca'};
  if(!Object.keys(after).every(k=>before[k]===after[k])){
   Object.assign(r,after,{checkinAt:start.iso,checkoutAt:end?.iso||''});
@@ -996,7 +1003,7 @@ function saveShiftCorrection(fd){
 function undoShiftCheckout(id){
  if(denyOperation('shifts','delete'))return;
  const row=store.shifts.find(r=>r.id===id);if(!row||!row.checkout||row.checkout==='—')return;
- if(store.shifts.some(x=>x.id!==id&&x.staff===row.staff&&x.state==='Trong ca')){state.notice='Nhân viên đang có ca khác chưa kết thúc';refreshToasts();return}
+ if(store.shifts.some(x=>x.id!==id&&x.staff===row.staff&&periodDate(x.date)===periodDate(row.date)&&x.state==='Trong ca')){state.notice='Nhân viên đang có ca khác chưa kết thúc';refreshToasts();return}
  confirmDialog('Hủy lượt ra ca','Hủy giờ ra '+row.checkout+' của '+row.name+' ('+row.staff+') ngày '+row.date+'? Lượt vào ca được giữ.',()=>{
   const before={checkin:row.checkin,checkout:row.checkout,state:row.state};
   row.checkout='—';row.checkoutAt='';row.state='Trong ca';
