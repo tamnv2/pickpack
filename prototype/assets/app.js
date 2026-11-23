@@ -1589,6 +1589,8 @@ root.addEventListener('submit',function(e){
   scanShift(fd.get('employeeCode'),op,state.scanShift,state.scanUser,state.scanDesk);return;
  }
  if(e.target.id==='labor-scan-form'){e.preventDefault();const values=new FormData(e.target);scanLabor(values.get('employeeCode'),values.get('work'));return}
+  if(e.target.id==='labor-entry-form'){e.preventDefault();saveLaborDraft(e.target);return}
+  if(e.target.id==='labor-bulk-form'){e.preventDefault();saveLaborBulk(e.target);return}
  if(e.target.id==='pda-scan-form'){e.preventDefault();const fd=new FormData(e.target);scanPda(fd.get('employeeCode'),fd.get('deviceCode'));return}
  if(e.target.id==='draft-confirm-form'){e.preventDefault();finishDraftPassword(e.target);return}
   if(e.target.id==='confirm-form'){e.preventDefault();finishConfirmation(e.target);return}
@@ -1625,6 +1627,7 @@ root.addEventListener('click',e=>{
  const transfer=e.target.closest('[data-asset-transfer]');if(transfer){if(denyOperation('assets','edit'))return;const id=transfer.dataset.assetId||state.drawer,action=transfer.dataset.assetTransfer;const asset=store.assets.find(a=>a.id===id);if(!asset||!['lend','repair','receive'].includes(action))return;state.transferId=id;state.transferAction=action;state.drawer='';state.modal='transfer';render();return}
   const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
  const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;const record=edit.dataset.edit;state.drawer='';safeHistory('replaceState',href(state.view));state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit';render();return}
+ const queuedRemove=e.target.closest('[data-labor-queue-remove]');if(queuedRemove){state.laborQueue=state.laborQueue.filter(r=>r.staff!==queuedRemove.dataset.laborQueueRemove);render();return}
  const undoShift=e.target.closest('[data-shift-undo]');if(undoShift){undoShiftCheckout(undoShift.dataset.shiftUndo);return}
  const deleteShift=e.target.closest('[data-shift-delete]');if(deleteShift){deleteShiftRecord(deleteShift.dataset.shiftDelete);return}
   const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
@@ -1652,6 +1655,10 @@ root.addEventListener('click',e=>{
  case'show-password':{const form=root.querySelector('#login-form');const username=form?.querySelector('#demo-user')?.value||'';const password=form?.querySelector('#demo-password')?.value||'';state.loginVisible=!state.loginVisible;render();root.querySelector('#demo-user').value=username;root.querySelector('#demo-password').value=password;return}
  case'logout':document.body.classList.add('is-logging-out');setTimeout(()=>{storageRemove(SESSION_KEY);location.href='index.html'},180);return;
  case'bulk-delete':deleteIds([...state.selected]);return;
+  case'labor-bulk-edit':if(denyOperation('labor','edit')||!state.selected.size)return;state.modal='labor-bulk';break;
+  case'labor-draft-cancel':state.laborDraft=null;state.laborScan=null;render();root.querySelector('#labor-staff-code')?.focus();return;
+  case'labor-queue-save':saveLaborQueue();return;
+  case'labor-queue-clear':if(!state.laborQueue.length)return;confirmDialog('Xóa danh sách chờ','Bỏ toàn bộ '+state.laborQueue.length+' nhân viên chưa ghi nhận?',()=>{state.laborQueue=[];state.laborScan=null},false);return;
  
  case'backup-reset':if(denyOperation('access'))return;confirmDialog('Xóa toàn bộ dữ liệu','Toàn bộ dữ liệu nghiệp vụ, danh mục, user làm việc và ảnh trong trình duyệt này sẽ bị xóa. Không thể hoàn tác.',()=>{void resetOfflineTestData()});return;
  case'assets-excel-template':confirmFileAction('download','Tải file mẫu CCDC (Excel) về thiết bị?',downloadAssetTemplate);return;case'assets-excel-import':if(denyOperation('assets','create'))return;root.querySelector('#assets-excel-file')?.click();return;case'excel-template':confirmFileAction('download','Tải file mẫu nhân sự (Excel) về thiết bị?',downloadPersonnelTemplate);return;
@@ -1684,7 +1691,8 @@ root.addEventListener('input',function(e){
   if(person)void renderScanPortrait(person);
   return;
  }
- if(e.target.id==='labor-staff-code'){
+ if(e.target.matches('[data-labor-time]')){const r=state.laborQueue.find(x=>x.staff===e.target.dataset.laborId);if(r)r[e.target.dataset.laborTime]=e.target.value;return}
+  if(e.target.id==='labor-staff-code'){
   const code=e.target.value.trim(),preview=root.querySelector('#labor-scan-preview'),person=store.people.find(p=>p.id===code);
   if(preview)preview.innerHTML=compactPersonPreview(person);return;
  }
@@ -1739,7 +1747,12 @@ root.addEventListener('change',async function(e){
   return;
  }
  markField(e.target);
- if(e.target.id==='labor-work'){state.laborWork=e.target.value;return}
+ if(e.target.id==='labor-batch-mode'){
+   if(state.laborDraft||state.laborQueue.length){state.notice='Hoàn tất hoặc hủy các bản ghi đang chờ trước khi đổi chế độ.';render();return}
+   state.laborBatch=e.target.checked;state.laborScan=null;render();root.querySelector('#labor-staff-code')?.focus();return;
+  }
+  if(e.target.matches('[data-bulk-field]')){const target=root.querySelector('#labor-bulk-'+({work:'work',startTime:'start',endTime:'end'}[e.target.dataset.bulkField]));if(target)target.disabled=!e.target.checked;return}
+  if(e.target.id==='labor-work'){state.laborWork=e.target.value;return}
  if(e.target.id==='scan-user-choice'){state.scanUser=e.target.value;return}
  if(e.target.id==='scan-desk-choice'){state.scanDesk=e.target.value;return}
  if(e.target.id==='role-preview'&&actualUser()?.role==='superadmin'){state.previewUser=e.target.value;state.view=firstAllowed();state.accessUser='dieuphoile';state.modal='';render();return}
