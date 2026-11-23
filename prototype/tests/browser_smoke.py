@@ -268,6 +268,7 @@ with sync_playwright() as p:
  app.locator('#labor-bulk-form button[type="submit"]').click()
  assert 'Giờ kết thúc' in app.locator('#labor-bulk-error').inner_text()
  assert app.locator('#draft-confirm-form').count()==0
+ assert app.locator('.records-label b').inner_text()=='43'  # Validation failed: queue was not committed.
  app.locator('#labor-bulk-end').fill('07:05:00')
  app.locator('#labor-bulk-form button[type="submit"]').click()
  authorize('wrong')
@@ -673,7 +674,7 @@ with sync_playwright() as p:
   const yesterday=prev.toISOString().slice(0,10);
   const vn=x=>x.split('-').reverse().join('/');
   const person=(id,name,position,createdAt)=>({id,name,position,createdAt,supplier:'Nhà thầu thử'});
-  const shift=(id,staff,date,kind,user)=>({id,staff,name:staff==='99000001'?'Nguyễn Văn Một':'Nguyễn Văn Hai',date:vn(date),shift:kind,user,position:staff==='99000001'?'Pick':'Điều phối',supplier:'Nhà thầu thử',checkin:'06:00:00',checkout:'—',state:'Trong ca'});
+  const shift=(id,staff,date,kind,user)=>({id,staff,name:staff==='99000001'?'Nguyễn Văn Một':'Nguyễn Văn Hai',date:vn(date),shift:kind,user,position:staff==='99000001'?'Pick':'Điều phối',supplier:'Nhà thầu thử',checkin:'00:00:00',checkout:'—',state:'Trong ca'});
   const labor=(id,date,work)=>({id,staff:'99000001',date:vn(date),work,startTime:'00:10:00',endTime:'—'});
   const loan=(id,date,device)=>({id,staff:'99000001',name:device,assetId:device,date:vn(date),state:'Đang mượn'});
   const asset=id=>({id,type:'PDA',serial:id+'-SERIAL',state:'Có sử dụng',condition:'Tốt'});
@@ -709,6 +710,11 @@ with sync_playwright() as p:
  daycheck.locator('#shift-code').press('Enter')
  assert 'Đã vào ca' in daycheck.locator('.scan-outcome').inner_text()
  assert daycheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].shift")=='HC 10–19'
+ daycheck.locator('.module-table tbody tr').filter(has_text='99000002').first.locator('[data-shift-delete]').click()
+ assert 'Xóa lượt vào' in daycheck.locator('#confirm-message').inner_text()
+ daycheck.locator('#confirm-password').fill('1')
+ daycheck.locator('#confirm-form button[type="submit"]').click()
+ assert daycheck.evaluate("(()=>{const d=JSON.parse(localStorage.getItem('pickpack1291_office_records_v094'));return d.shiftDeletions.some(r=>r.staff==='99000002'&&r.checkout==='—')&&!d.shifts.some(r=>r.staff==='99000002'&&r.date===new Date().toLocaleDateString('en-GB',{timeZone:'Asia/Ho_Chi_Minh'}))})()")
  daycheck.locator('[data-scan-mode="exit"]').click()
  daycheck.locator('#shift-code').fill('99000001')
  daycheck.locator('#shift-code').press('Enter')
@@ -726,6 +732,13 @@ with sync_playwright() as p:
  daycheck.locator('#shift-code').fill('99000001')
  daycheck.locator('#shift-code').press('Enter')
  assert 'Đã ra ca' in daycheck.locator('.scan-outcome').inner_text()
+ daycheck.locator('.module-table tbody tr').filter(has_text='99000001').first.locator('[data-edit]').click()
+ daycheck.locator('#record-form [name="checkout"]').fill('00:15:00')
+ daycheck.locator('#record-form button[type="submit"]').click()
+ daycheck.locator('#draft-password').fill('1')
+ daycheck.locator('#draft-confirm-form button[type="submit"]').click()
+ assert 'công nhật có giờ kết thúc sau giờ ra ca' in daycheck.locator('#toast-stack').inner_text()
+ daycheck.locator('button[data-action="close-modal"]').last.click()
  daycheck.locator('a.nav-main[href*="view=labor"]').click()
  daycheck.locator('.table-panel tbody tr').filter(has_text='99000001').first.locator('[data-edit]').click()
  daycheck.locator('#record-form [name="endTime"]').fill('23:59:00')
