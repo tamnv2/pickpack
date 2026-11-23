@@ -515,6 +515,7 @@ with sync_playwright() as p:
  assert app.locator('.records-label b').inner_text()=='35'
  print('testing PDA',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
+ app.locator('#period-preset').select_option('all')  # Historical fixture totals are not today's totals.
  assert app.locator('.device-registry').count()==0
  assert app.locator('#pda-scan-form').count()==1
  assert app.locator('.table-panel table tbody tr').count()==int(app.locator('.table-panel .records-label b').inner_text())
