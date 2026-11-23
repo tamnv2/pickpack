@@ -1124,7 +1124,7 @@ function undoShiftCheckout(id){
 function laborBulkModal(){
  const ids=store.labor.filter(r=>state.selected.has(r.id)).map(r=>r.id);
  if(!ids.length)return '';
- return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide labor-bulk-modal" role="dialog" aria-modal="true" aria-labelledby="labor-bulk-title"><div class="modal-head"><div><h2 id="labor-bulk-title">Sửa công nhật hàng loạt</h2><small>${ids.length} nhân viên đã chọn</small></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="labor-bulk-form" autocomplete="off"><div class="labor-bulk-fields"><div class="labor-bulk-field"><label><input type="checkbox" name="bulkWork" data-bulk-field="work"> Sửa loại công nhật</label><select name="work" id="labor-bulk-work" disabled><option value="">— Chọn công việc —</option>${catalogs.laborWork.map(w=>`<option value="${escape(w)}">${escape(w)}</option>`).join('')}</select></div><div class="labor-bulk-field"><label><input type="checkbox" name="bulkStart" data-bulk-field="startTime"> Sửa giờ bắt đầu</label><input type="time" name="startTime" id="labor-bulk-start" step="1" disabled></div><div class="labor-bulk-field"><label><input type="checkbox" name="bulkEnd" data-bulk-field="endTime"> Sửa giờ kết thúc</label><input type="time" name="endTime" id="labor-bulk-end" step="1" disabled><small>Để trống giờ kết thúc nếu muốn chuyển về chưa chốt.</small></div></div><div id="labor-bulk-error" role="alert" class="confirm-error"></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn primary">Lưu ${ids.length} bản ghi</button></div></form></section></div>`;
+ return `<div class="modal-overlay" data-action="close-modal"><section class="modal modal-wide labor-bulk-modal" role="dialog" aria-modal="true" aria-labelledby="labor-bulk-title"><div class="modal-head"><div><h2 id="labor-bulk-title">Sửa công nhật hàng loạt</h2><small>${ids.length} nhân viên đã chọn</small></div><button class="icon-button" data-action="close-modal" aria-label="Đóng">×</button></div><form id="labor-bulk-form" autocomplete="off"><div class="labor-bulk-fields"><div class="labor-bulk-field"><label><input type="checkbox" name="bulkWork" data-bulk-field="work"> Sửa loại công nhật</label><select name="work" id="labor-bulk-work" disabled><option value="">— Chọn công việc —</option>${catalogs.laborWork.map(w=>`<option value="${escape(w)}">${escape(w)}</option>`).join('')}</select></div><div class="labor-bulk-field"><label><input type="checkbox" name="bulkStart" data-bulk-field="startTime"> Sửa giờ bắt đầu</label><input type="time" name="startTime" id="labor-bulk-start" step="1" disabled></div><div class="labor-bulk-field"><label><input type="checkbox" name="bulkEnd" data-bulk-field="endTime"> Sửa giờ kết thúc</label><input type="time" name="endTime" id="labor-bulk-end" step="1" disabled></div></div><p class="labor-bulk-hint">Để trống giờ kết thúc nếu muốn chuyển về chưa chốt.</p><div id="labor-bulk-error" role="alert" class="confirm-error"></div><div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">Hủy</button><button type="submit" class="btn primary">Lưu ${ids.length} bản ghi</button></div></form></section></div>`;
 }
 function saveLaborBulk(form){
  if(denyOperation('labor','edit'))return;
@@ -1643,7 +1643,7 @@ root.addEventListener('click',e=>{
  const transfer=e.target.closest('[data-asset-transfer]');if(transfer){if(denyOperation('assets','edit'))return;const id=transfer.dataset.assetId||state.drawer,action=transfer.dataset.assetTransfer;const asset=store.assets.find(a=>a.id===id);if(!asset||!['lend','repair','receive'].includes(action))return;state.transferId=id;state.transferAction=action;state.drawer='';state.modal='transfer';render();return}
   const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
  const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;const record=edit.dataset.edit;state.drawer='';safeHistory('replaceState',href(state.view));state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit';render();return}
- const queuedRemove=e.target.closest('[data-labor-queue-remove]');if(queuedRemove){state.laborQueue=state.laborQueue.filter(r=>r.staff!==queuedRemove.dataset.laborQueueRemove);render();return}
+ const queuedRemove=e.target.closest('[data-labor-queue-remove]');if(queuedRemove){state.laborQueue=state.laborQueue.filter(r=>r.staff!==queuedRemove.dataset.laborQueueRemove);if(!state.laborQueue.length){state.laborCopyStart=false;state.laborCopyEnd=false}render();return}
  const undoShift=e.target.closest('[data-shift-undo]');if(undoShift){undoShiftCheckout(undoShift.dataset.shiftUndo);return}
  const deleteShift=e.target.closest('[data-shift-delete]');if(deleteShift){deleteShiftRecord(deleteShift.dataset.shiftDelete);return}
   const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
@@ -1707,7 +1707,17 @@ root.addEventListener('input',function(e){
   if(person)void renderScanPortrait(person);
   return;
  }
- if(e.target.matches('[data-labor-time]')){const r=state.laborQueue.find(x=>x.staff===e.target.dataset.laborId);if(r)r[e.target.dataset.laborTime]=e.target.value;return}
+ if(e.target.matches('[data-labor-time]')){
+   const r=state.laborQueue.find(x=>x.staff===e.target.dataset.laborId),field=e.target.dataset.laborTime;
+   if(!r)return;
+   r[field]=e.target.value;
+   const share=field==='startTime'?state.laborCopyStart:state.laborCopyEnd;
+   if(share&&r===state.laborQueue[0]){
+    for(const item of state.laborQueue)item[field]=e.target.value;
+    root.querySelectorAll('[data-labor-time="'+field+'"]').forEach(input=>{if(input!==e.target)input.value=e.target.value});
+   }
+   return;
+  }
   if(e.target.id==='labor-staff-code'){
   const code=e.target.value.trim(),preview=root.querySelector('#labor-scan-preview'),person=store.people.find(p=>p.id===code);
   if(preview)preview.innerHTML=compactPersonPreview(person);return;
@@ -1763,7 +1773,13 @@ root.addEventListener('change',async function(e){
   return;
  }
  markField(e.target);
- if(e.target.id==='labor-batch-mode'){
+ if(e.target.id==='labor-copy-start'||e.target.id==='labor-copy-end'){
+   const key=e.target.id==='labor-copy-start'?'laborCopyStart':'laborCopyEnd',field=key==='laborCopyStart'?'startTime':'endTime';
+   state[key]=e.target.checked;
+   if(state[key]&&state.laborQueue.length){const first=state.laborQueue[0][field];for(const row of state.laborQueue)row[field]=first}
+   render();return;
+  }
+  if(e.target.id==='labor-batch-mode'){
    if(state.laborDraft||state.laborQueue.length){state.notice='Hoàn tất hoặc hủy các bản ghi đang chờ trước khi đổi chế độ.';render();return}
    state.laborBatch=e.target.checked;state.laborScan=null;render();root.querySelector('#labor-staff-code')?.focus();return;
   }
