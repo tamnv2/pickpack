@@ -281,7 +281,7 @@ function coveragePanel(){
 }
 function dashboardSearchResults(){
  const query=state.search.trim().toLocaleLowerCase('vi');if(!query)return '';
- const all=SIDEBAR.filter(([view])=>view!=='dashboard'&&canAccess(view)).flatMap(([view])=>datedRows(view).filter(row=>Object.entries(row).some(([key,value])=>key!=='photo'&&typeof value!=='object'&&String(value??'').toLocaleLowerCase('vi').includes(query))).map(row=>({view,row})));
+ const all=SIDEBAR.filter(([view])=>view!=='dashboard'&&canAccess(view)).flatMap(([view])=>(view==='people'?store.people:datedRows(view)).filter(row=>Object.entries(row).some(([key,value])=>key!=='photo'&&typeof value!=='object'&&String(value??'').toLocaleLowerCase('vi').includes(query))).map(row=>({view,row})));
  const hits=all.slice(0,12);
  return `<section class="panel dashboard-search-panel" aria-label="Kết quả tìm kiếm toàn hệ thống"><div class="dashboard-search-head"><strong>Kết quả tìm kiếm</strong><span>${all.length} bản ghi${all.length>hits.length?' · Hiển thị 12 đầu tiên':''}</span></div>${hits.length?`<div class="dashboard-search-list">${hits.map(({view,row})=>`<a class="dashboard-search-hit" href="${href(view,row.id)}" title="Mở ${escape(PAGES[view].title)}: ${escape(row.name||row.id)}"><span class="search-module">${escape(PAGES[view].title)}</span><strong>${escape(row.name||row.staff||row.id)}</strong><small>${escape(row.staff||row.id)}</small><span class="search-hit-open" aria-hidden="true">›</span></a>`).join('')}</div>`:'<div class="dashboard-no-results">Không tìm thấy bản ghi phù hợp trong 6 phân hệ.</div>'}</section>`;
 }
