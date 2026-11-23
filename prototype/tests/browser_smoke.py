@@ -82,8 +82,7 @@ with sync_playwright() as p:
  assert app.locator('#clock-hours').evaluate("el=>getComputedStyle(el).color")!=app.locator('#clock-seconds').evaluate("el=>getComputedStyle(el).color")
  old_clock=app.locator('#clock-time').inner_text()
  app.evaluate("() => window.__clockNode=document.querySelector('#clock-time')")
- app.wait_for_timeout(1250)
- assert app.locator('#clock-time').inner_text()!=old_clock
+ app.wait_for_function("old => document.querySelector('#clock-time')?.textContent !== old",arg=old_clock,timeout=5000)
  assert app.evaluate("() => window.__clockNode===document.querySelector('#clock-time')")
  app.set_viewport_size({'width':1024,'height':768})
  assert app.locator('#clock-time').evaluate("el=>{const c=el.getBoundingClientRect(),h=el.closest('.header-clock').getBoundingClientRect();return c.left>=h.left-1&&c.right<=h.right+1}")
