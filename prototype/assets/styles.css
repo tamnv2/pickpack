@@ -970,3 +970,19 @@ html{scrollbar-gutter:stable}
 :root[data-theme=dark][data-accent=indigo]{--primary:#afb3ff;--primary-hover:#c4c7ff;--primary-soft:#333551;--focus:#a8aceb;--sidebar-active:#2a2c47}
 :root[data-theme=dark][data-accent=violet]{--primary:#d2a3f9;--primary-hover:#e1bbff;--primary-soft:#3f3050;--focus:#c698e8;--sidebar-active:#352640}
 :root[data-theme=dark] .btn.primary,:root[data-theme=dark] .scan-mode button.active{color:#14202b}
+
+/* Scan QR affordance, multiple administrative shifts, and overdue checkout */
+.qr-input{position:relative;display:block;min-width:0;width:100%}
+.qr-input .qr-mark{position:absolute;left:11px;top:50%;transform:translateY(-50%);z-index:1;color:var(--muted);pointer-events:none;display:flex;align-items:center}
+.qr-input>input{width:100%;padding-left:40px!important}
+.shift-scan-input-row .qr-input{flex:1 1 240px}
+.shift-scan-station .shift-scan-input-row .qr-input input{width:100%;flex:initial}
+.shift-scan-station .shift-scan-choice .scan-mode{flex-wrap:wrap;max-width:100%}
+.row-overdue{background:rgba(208,45,55,.06)}
+.shift-overdue{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;border:1px solid #df5260;background:#ffeaed;color:#a60016;font-weight:800;animation:checkout-warning 1.2s ease-in-out infinite}
+.overdue-bell{color:#d62b3f!important}
+.overdue-bell i{background:#d62b3f!important;animation:checkout-warning-dot 1.2s ease-in-out infinite}
+:root[data-theme=dark] .shift-overdue{background:#4f2430;color:#ffc8cd;border-color:#d46573}
+@keyframes checkout-warning{50%{opacity:.52}}
+@keyframes checkout-warning-dot{50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.shift-overdue,.overdue-bell i{animation:none}}
