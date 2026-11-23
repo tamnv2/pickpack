@@ -986,3 +986,26 @@ html{scrollbar-gutter:stable}
 @keyframes checkout-warning{50%{opacity:.52}}
 @keyframes checkout-warning-dot{50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.shift-overdue,.overdue-bell i{animation:none}}
+
+/* Staged daily labor, atomic group scan and selective bulk edits */
+.labor-batch-toggle{display:inline-flex;align-items:center;gap:9px;font-size:calc(12px * var(--text-scale));font-weight:650;margin-bottom:12px;cursor:pointer}
+.labor-batch-toggle input{width:16px;height:16px;accent-color:var(--primary)}
+.labor-entry-editor,.labor-queue{margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
+.labor-pending-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:11px}
+.labor-pending-head strong{font-size:calc(12px * var(--text-scale));font-weight:750}
+.labor-pending-head span,.labor-entry-actions>span{font-size:calc(11px * var(--text-scale));color:var(--muted)}
+.labor-time-fields{display:grid;grid-template-columns:repeat(2,minmax(0,240px));gap:12px}
+.labor-time-fields label,.labor-bulk-field{display:grid;gap:7px;font-size:calc(11px * var(--text-scale));font-weight:650}
+.labor-time-fields input,.labor-bulk-field>input,.labor-bulk-field>select,.labor-queue-table input{border:1px solid var(--border);border-radius:7px;min-height:39px;min-width:0;padding:8px 10px;background:var(--control);color:var(--text)}
+.labor-entry-actions{display:flex;justify-content:flex-end;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px}
+.labor-entry-actions>span{margin-right:auto}
+.labor-queue-table{border-collapse:collapse;width:100%;min-width:570px}
+.labor-queue-table th,.labor-queue-table td{font-size:calc(11px * var(--text-scale));padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.labor-queue-table input{width:138px}
+#labor-bulk-form{padding:18px 24px 24px}
+.labor-bulk-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.labor-bulk-field>label{display:flex;align-items:center;gap:7px;cursor:pointer}
+.labor-bulk-field>label input{width:16px;height:16px;accent-color:var(--primary)}
+.labor-bulk-field>small{font-size:calc(10px * var(--text-scale));font-weight:450;color:var(--muted)}
+.labor-bulk-field>input:disabled,.labor-bulk-field>select:disabled{opacity:.52}
+@media(max-width:650px){.labor-time-fields,.labor-bulk-fields{grid-template-columns:1fr}.labor-time-fields input{width:100%}.labor-entry-actions{justify-content:flex-start}.labor-entry-actions .btn{flex:1}}
