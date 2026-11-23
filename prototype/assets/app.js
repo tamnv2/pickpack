@@ -184,7 +184,7 @@ const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone',
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 const PERSON_VIEW_DETAILS=[...PERSON_DETAILS,['pdaInUse','PDA đang dùng']];
 
-const state={periodOpen:false,shiftFilter:{shift:'all',position:'all',supplier:'all'},transferId:'',transferAction:'',pdaPrefill:'',profilePhotoDraft:null,periodPreset:'today',periodFrom:vnTodayISO(),periodTo:vnTodayISO(),view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null,previewUser:'',accessUser:'dieuphoile',accountEdit:'',categoryInputs:1};
+const state={periodOpen:false,shiftFilter:{shift:'all',position:'all',supplier:'all'},transferId:'',transferAction:'',pdaPrefill:'',profilePhotoDraft:null,periodPreset:'today',periodFrom:vnTodayISO(),periodTo:vnTodayISO(),view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',laborDraft:null,laborBatch:false,laborQueue:[],pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null,previewUser:'',accessUser:'dieuphoile',accountEdit:'',categoryInputs:1};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -511,24 +511,65 @@ function compactPersonPreview(person){
  return `<div class="scan-identity compact-identity">${avatar(person)}<div><strong>${escape(person.name)} · ${escape(person.id)}</strong><small>${escape(person.position||'Chưa cập nhật')} · ${escape(detail)}</small></div></div>`;
 }
 function laborScanPanel(){
- const result=state.laborScan,person=result?.code?store.people.find(p=>p.id===result.code):null;
- return `<section class="panel scan-station compact-scanner"><form id="labor-scan-form" autocomplete="off"><div class="labor-scan-fields"><label class="scan-code-label">Công việc công nhật<select id="labor-work" name="work" required><option value="">— Chọn công việc —</option>${catalogs.laborWork.map(value=>`<option value="${escape(value)}" ${state.laborWork===value?'selected':''}>${escape(value)}</option>`).join('')}</select></label><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên<span class="qr-input"><span class="qr-mark">${icon('qr',18)}</span><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"></span></label><button class="btn primary" type="submit">Ghi nhận công nhật</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div></section>`;
+ const result=state.laborScan,person=result?.code?store.people.find(p=>p.id===result.code):null,batch=state.laborBatch;
+ const options=catalogs.laborWork.map(value=>`<option value="${escape(value)}" ${state.laborWork===value?'selected':''}>${escape(value)}</option>`).join('');
+ const draft=state.laborDraft;
+ const single=draft?`<form id="labor-entry-form" class="labor-entry-editor" autocomplete="off"><div class="labor-pending-head"><strong>${escape(draft.name)} · ${escape(draft.staff)}</strong><span>${draft.id?'Chốt / sửa công nhật':'Chờ ghi nhận'}</span></div><div class="labor-time-fields"><label>Giờ bắt đầu<input id="labor-entry-start" name="startTime" type="time" step="1" value="${escape(draft.startTime)}" required></label><label>Giờ kết thúc<input id="labor-entry-end" name="endTime" type="time" step="1" value="${escape(draft.endTime||'')}"></label></div><div class="labor-entry-actions"><span>${escape(draft.work)} · ${escape(draft.date)}</span><button class="btn ghost" type="button" data-action="labor-draft-cancel">Hủy</button><button class="btn primary" type="submit">Lưu công nhật</button></div></form>`:'';
+ const list=batch&&state.laborQueue.length?`<div class="labor-queue"><div class="labor-pending-head"><strong>Danh sách chờ ghi nhận · ${state.laborQueue.length} nhân viên</strong><span>${escape(state.laborWork)}</span></div><div class="table-scroll"><table class="labor-queue-table"><thead><tr><th>Mã nhân viên</th><th>Họ và tên</th><th>Giờ bắt đầu</th><th>Giờ kết thúc</th><th>Thao tác</th></tr></thead><tbody>${state.laborQueue.map(r=>`<tr><td>${escape(r.staff)}</td><td>${escape(r.name)}</td><td><input type="time" step="1" data-labor-time="startTime" data-labor-id="${escape(r.staff)}" value="${escape(r.startTime)}" aria-label="Giờ bắt đầu ${escape(r.staff)}"></td><td><input type="time" step="1" data-labor-time="endTime" data-labor-id="${escape(r.staff)}" value="${escape(r.endTime||'')}" aria-label="Giờ kết thúc ${escape(r.staff)}"></td><td><button class="row-open danger-text" type="button" data-labor-queue-remove="${escape(r.staff)}" title="Bỏ khỏi danh sách chờ">${icon('trash',16)}</button></td></tr>`).join('')}</tbody></table></div><div class="labor-entry-actions"><button class="btn ghost" type="button" data-action="labor-queue-clear">Xóa danh sách chờ</button><button class="btn primary" type="button" data-action="labor-queue-save">Xác nhận ghi nhận ${state.laborQueue.length} nhân viên</button></div></div>`:'';
+ return `<section class="panel scan-station compact-scanner labor-scan-station"><label class="labor-batch-toggle"><input id="labor-batch-mode" type="checkbox" ${batch?'checked':''}> Thêm nhiều nhân viên cùng công việc</label><form id="labor-scan-form" autocomplete="off"><div class="labor-scan-fields"><label class="scan-code-label">Công việc công nhật<select id="labor-work" name="work" required ${batch&&state.laborQueue.length?'disabled':''}><option value="">— Chọn công việc —</option>${options}</select></label><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên<span class="qr-input"><span class="qr-mark">${icon('qr',18)}</span><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"></span></label><button class="btn primary" type="submit">${batch?'Thêm vào danh sách':'Tiếp tục'}</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div>${single}${list}</section>`;
 }
-
 function scanLabor(code,work){if(denyOperation('labor','create'))return false;
- const staff=String(code||'').trim(),person=store.people.find(p=>p.id===staff),now=new Date();if(work)state.laborWork=work;
- const date=vnScanDate(now),time=vnScanTime(now),day=vnTodayISO(now);
- const result=(ok,message)=>{state.laborScan={ok,code:staff,message};render();root.querySelector('#labor-staff-code')?.focus();return ok};
+ const staff=String(code||'').trim(),person=store.people.find(p=>p.id===staff),now=new Date(),date=vnScanDate(now),day=vnTodayISO(),time=vnScanTime(now);
+ const result=(ok,message,focus='#labor-staff-code')=>{state.laborScan={ok,code:staff,message};render();root.querySelector(focus)?.focus();return ok};
+ if(state.laborDraft)return result(false,'Hoàn tất hoặc hủy công nhật đang chờ trước khi quét tiếp.');
  if(!person)return result(false,'Không tìm thấy mã nhân viên.');
- const existing=store.labor.find(r=>r.staff===staff&&r.date===date&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
+ const existing=store.labor.find(r=>r.staff===staff&&periodDate(r.date)===day&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
  if(existing){
-  updateRecord('labor',existing.id,{endTime:time});
-  return result(true,`Đã kết thúc công nhật · ${person.name} · ${existing.work} · ${time}`);
+  if(state.laborBatch)return result(false,'Nhân viên có công nhật đang mở. Hãy chốt riêng trước khi thêm vào danh sách.');
+  state.laborDraft={id:existing.id,staff,date:existing.date,name:person.name,work:existing.work,startTime:existing.startTime,endTime:time,shift:existing.shift,shiftId:existing.shiftId};
+  return result(true,'Kiểm tra giờ kết thúc trước khi lưu.','#labor-entry-end');
  }
  if(!catalogs.laborWork.includes(work))return result(false,'Cần chọn Công việc công nhật hợp lệ.');
+ if(state.laborQueue.some(r=>r.staff===staff&&periodDate(r.date)===day))return result(false,'Mã nhân viên đã có trong danh sách chờ.');
  const activeShift=store.shifts.find(r=>r.staff===staff&&r.state==='Trong ca'&&periodDate(r.date)===day),shift=activeShift?.shift||'—';
- store.labor.unshift({id:`CN-${Date.now().toString(36).toUpperCase()}`,name:person.name,staff,date,shift,shiftId:activeShift?.id||'',work,startTime:time,endTime:'—'});
- persist();return result(true,`Đã bắt đầu công nhật · ${person.name} · ${work} · ${time}`);
+ const draft={staff,date,name:person.name,shift,shiftId:activeShift?.id||'',work,startTime:time,endTime:''};
+ if(state.laborBatch){
+  if(state.laborQueue.length>=100)return result(false,'Danh sách chờ tối đa 100 nhân viên.');
+  state.laborQueue.push(draft);
+  return result(true,'Đã thêm '+person.name+' vào danh sách chờ; chưa lưu công nhật.');
+ }
+ state.laborDraft=draft;
+ return result(true,'Kiểm tra giờ bắt đầu và giờ kết thúc trước khi lưu.','#labor-entry-end');
+}
+function saveLaborDraft(form){
+ if(denyOperation('labor','create'))return;
+ const draft=state.laborDraft;if(!draft)return;
+ const fd=new FormData(form),startTime=String(fd.get('startTime')||''),endTime=String(fd.get('endTime')||'')||'—';
+ const original=draft.id?store.labor.find(r=>r.id===draft.id):null;
+ if(draft.id&&!original){state.notice='Bản ghi đang chờ đã thay đổi. Hãy quét lại.';refreshToasts();return}
+ const next={...draft,startTime,endTime};
+ if(!catalogs.laborWork.includes(next.work)){state.notice='Công việc công nhật không hợp lệ.';refreshToasts();return}
+ const problem=validateLaborRow(next);if(problem){state.notice=problem;refreshToasts();return}
+ if(!draft.id&&store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'))){state.notice='Nhân viên đã có công nhật đang mở.';refreshToasts();return}
+ if(original)Object.assign(original,{startTime,endTime});
+ else store.labor.unshift({...next,id:`CN-${Date.now().toString(36).toUpperCase()}`});
+ persist();state.laborDraft=null;state.laborScan={ok:true,code:draft.staff,message:(original?'Đã cập nhật':'Đã ghi nhận')+' công nhật · '+draft.name};render();root.querySelector('#labor-staff-code')?.focus();
+}
+function saveLaborQueue(){
+ if(denyOperation('labor','create'))return;
+ const queue=state.laborQueue;
+ if(!state.laborBatch||!queue.length)return;
+ if(!catalogs.laborWork.includes(state.laborWork)){state.notice='Công việc công nhật không hợp lệ.';refreshToasts();return}
+ if(store.labor.length+queue.length>=500){state.notice='Số bản ghi công nhật vượt giới hạn.';refreshToasts();return}
+ const seen=new Set(),planned=[];
+ for(let i=0;i<queue.length;i++){
+  const draft=queue[i],key=draft.staff+'|'+periodDate(draft.date);
+  if(seen.has(key)||!store.people.some(p=>p.id===draft.staff)||store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'))){state.notice='Danh sách có nhân viên trùng, chưa tồn tại hoặc công nhật đang mở: '+draft.staff;refreshToasts();return}
+  const row={...draft,work:state.laborWork,endTime:draft.endTime||'—',id:`CN-${Date.now().toString(36).toUpperCase()}-${i+1}`};
+  const problem=validateLaborRow(row);if(problem){state.notice=draft.staff+': '+problem;refreshToasts();return}
+  seen.add(key);planned.push(row);
+ }
+ store.labor.unshift(...planned);persist();state.laborQueue=[];state.laborScan={ok:true,code:'',message:'Đã ghi nhận '+planned.length+' nhân viên làm '+state.laborWork};render();root.querySelector('#labor-staff-code')?.focus();
 }
 
 function pdaMatches(code){
