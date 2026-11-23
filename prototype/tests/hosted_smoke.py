@@ -497,7 +497,7 @@ try:
         second.wait_for_load_state()
         assert second.locator('#period-preset').input_value()=='all'  # Personnel history defaults to all.
         assert second.locator('.records-label b').inner_text() == '36'
-        assert second.locator('.people-table thead th').all_inner_texts()[-4:]==['Ngày nhận việc','Cập nhật bởi','PDA đang dùng','Thao tác']
+        assert second.locator('.people-table thead th').all_inner_texts()[-4:]==['Ngày nhận việc','Cập nhật bởi','Thời gian cập nhật','Thao tác']
         assert second.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
         second.evaluate('window.scrollTo(0, 600)')
         assert abs(second.locator('.topbar').bounding_box()['y'])<2
@@ -709,8 +709,12 @@ try:
         second.locator('#labor-work').select_option('Pick')
         second.locator('#labor-staff-code').fill('90000034')
         second.locator('#labor-staff-code').press('Enter')
-        assert 'Đã bắt đầu công nhật' in second.locator('.scan-outcome').inner_text()
+        assert second.locator('#labor-entry-form').count()==1
+        assert second.locator('#labor-entry-end').input_value()==''
+        assert second.locator('.records-label b').inner_text()=='42'  # Scan does not immediately save.
+        second.locator('#labor-entry-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text()=='43'
+        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime==='—'")
         second.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
         assert second.locator('#record-form').is_visible()
         second.locator('#record-form select[name="work"]').select_option('Pick')
@@ -721,8 +725,11 @@ try:
         assert '05:35:00' in second.locator('.table-panel').last.locator('tbody tr').first.inner_text()
         second.locator('#labor-staff-code').fill('90000034')
         second.locator('#labor-staff-code').press('Enter')
-        assert 'Đã kết thúc công nhật' in second.locator('.scan-outcome').inner_text()
+        assert second.locator('#labor-entry-form').count()==1
+        second.locator('#labor-entry-end').fill('06:00:00')
+        second.locator('#labor-entry-form button[type="submit"]').click()
         assert second.locator('.records-label b').inner_text()=='43'
+        assert second.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime==='06:00:00'")
         second.locator('a.nav-main[href*="view=pda"]').click()
         assert second.locator('.table-panel').last.locator('[data-edit]').count()==0
         second.locator('#pda-staff-code').fill('90000034')
