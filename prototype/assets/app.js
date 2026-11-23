@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 const root=document.getElementById('root');
- const WEB_VERSION='0.12.2';
+ const WEB_VERSION='0.12.3';
 const PAGES={dashboard:{title:'Tổng quan'},people:{title:'Nhân sự'},shifts:{title:'Ra / vào ca'},labor:{title:'Công nhật'},minutes:{title:'Biên bản'},assets:{title:'Công cụ dụng cụ'},pda:{title:'Mượn / trả PDA'},categories:{title:'Danh mục nhân sự'},resources:{title:'Quản lý tài nguyên'},access:{title:'Quản lý quyền truy cập'}};
 const NAV_LABELS={dashboard:'Tổng quan vận hành',people:'Quản lý nhân sự',shifts:'Quét vào / ra ca',labor:'Quản lý công nhật',minutes:'Quản lý biên bản',assets:'Quản lý CCDC',pda:'Mượn / trả PDA',resources:'Quản lý tài nguyên',access:'Quản lý quyền truy cập'};
 const SIDEBAR=[['dashboard','grid'],['people','users'],['shifts','clock'],['pda','device'],['labor','calendar'],['minutes','file'],['assets','boxes'],['resources','list'],['access','shield']];
@@ -171,11 +171,11 @@ function persist(){storageSet(STORAGE_KEY,JSON.stringify(store))}
 function updateRecord(key,id,changes){const row=store[key]?.find(r=>r.id===id);if(!row)return false;Object.assign(row,changes);persist();return true}
 const columns={
  people:[['name','Họ và tên'],['id','Mã nhân viên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']],
- shifts:[['date','Ngày'],['shift','Ca'],['name','Họ và tên'],['supplier','Nhà thầu'],['staff','Mã nhân viên'],['position','Vị trí chính'],['currentPosition','Vị trí hiện tại'],['pdaInUse','PDA đang dùng'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['desk','Bàn Pack'],['state','Trạng thái']],
- labor:[['name','Nhân sự'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['work','Công việc công nhật'],['startTime','Giờ bắt đầu'],['endTime','Giờ kết thúc']],
- minutes:[['type','Phân loại'],['date','Ngày biên bản'],['note','Ghi chú'],['images','Số ảnh']],
- assets:[['id','Mã CCDC'],['type','Loại CCDC'],['serial','Serial / IMEI'],['condition','Tình trạng vật lý'],['state','Trạng thái sử dụng'],['custodyLabel','Bàn giao / sửa chữa'],['note','Ghi chú']],
- pda:[['name','Thiết bị'],['holder','Người mượn'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['returner','Người trả'],['state','Trạng thái']]
+ shifts:[['date','Ngày'],['shift','Ca'],['staff','Mã nhân viên'],['name','Họ và tên'],['supplier','Nhà thầu'],['position','Vị trí chính'],['currentPosition','Vị trí hiện tại'],['pdaInUse','PDA đang dùng'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['desk','Bàn Pack'],['state','Trạng thái']],
+ labor:[['date','Ngày'],['shift','Ca'],['staff','Mã nhân viên'],['name','Họ và tên'],['supplier','Nhà thầu'],['work','Công việc công nhật'],['startTime','Giờ bắt đầu'],['endTime','Giờ kết thúc']],
+ minutes:[['date','Ngày biên bản'],['type','Phân loại'],['note','Ghi chú'],['images','Số ảnh']],
+ assets:[['createdAt','Ngày ghi nhận'],['id','Mã CCDC'],['type','Loại CCDC'],['serial','Serial / IMEI'],['condition','Tình trạng vật lý'],['state','Trạng thái sử dụng'],['custodyLabel','Bàn giao / sửa chữa'],['note','Ghi chú']],
+ pda:[['date','Ngày'],['shift','Ca'],['staff','Mã nhân viên'],['holder','Họ và tên'],['supplier','Nhà thầu'],['name','Thiết bị'],['user','User làm việc'],['borrow','Giờ mượn'],['return','Giờ trả'],['returner','Người trả'],['state','Trạng thái']]
 };
 const ASSET_EDITOR=[['type','Loại CCDC'],['serial','Serial / IMEI'],['condition','Tình trạng vật lý'],['state','Trạng thái sử dụng'],['note','Ghi chú']];
 const ASSET_IMPORT_FIELDS=ASSET_EDITOR;
@@ -184,7 +184,7 @@ const PERSON_EDITOR=[['id','Mã nhân viên'],['name','Họ và tên'],['phone',
 const PERSON_DETAILS=[...PERSON_EDITOR,['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']];
 const PERSON_VIEW_DETAILS=[...PERSON_DETAILS,['pdaInUse','PDA đang dùng']];
 
-const state={periodOpen:false,shiftFilter:{shift:'all',position:'all',supplier:'all'},transferId:'',transferAction:'',pdaPrefill:'',profilePhotoDraft:null,periodPreset:'today',periodFrom:vnTodayISO(),periodTo:vnTodayISO(),view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',laborDraft:null,laborBatch:false,laborQueue:[],pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null,previewUser:'',accessUser:'dieuphoile',accountEdit:'',categoryInputs:1};
+const state={periodOpen:false,shiftFilter:{shift:'all',position:'all',supplier:'all'},transferId:'',transferAction:'',pdaPrefill:'',profilePhotoDraft:null,periodPreset:'today',periodFrom:vnTodayISO(),periodTo:vnTodayISO(),view:'dashboard',theme:'light',themeMode:'auto',accent:'blue',fontPct:100,search:'',filter:'all',drawer:'',modal:'',sidebar:false,notice:'',editId:'',selected:new Set(),loginError:'',loginVisible:false,photoDraft:'',photoOriginalFile:null,photoRemoveOriginal:false,scanOutcome:null,scanMode:'enter',scanShift:'Ca 1',scanCurrentStaff:'',scanUser:'',scanDesk:'',laborScan:null,laborWork:'',laborDraft:null,laborBatch:false,laborQueue:[],laborCopyStart:false,laborCopyEnd:false,pdaScan:null,pdaMode:'borrow',profileMenu:false,categoryTab:'position',categoryEdit:'',catalogScope:'people',deviceEdit:'',minuteDraftFiles:[],minuteRemoved:[],minuteSaving:false,minuteZoomUrl:'',confirmData:null,previewUser:'',accessUser:'dieuphoile',accountEdit:'',categoryInputs:1};
 const notices=[];let noticeSerial=0;let currentNotice='';
 function toastItems(){return notices.map(n=>`<div class="toast ${n.error?'toast-error':'toast-success'}" role="${n.error?'alert':'status'}" data-toast="${n.id}"><span class="toast-symbol">${n.error?'!':'✓'}</span><span>${escape(n.text)}</span><button data-toast-close="${n.id}" aria-label="Đóng thông báo">×</button></div>`).join('')}
 function refreshToasts(){const region=root.querySelector('#toast-stack');if(region)region.innerHTML=toastItems()}
@@ -305,6 +305,12 @@ function activePdaLabel(person,day=''){
 }
 function enrichOperationalRow(view,row){
  if(view==='people')return row;
+ if(view==='labor'||view==='pda'){
+  const person=store.people.find(p=>p.id===row.staff);
+  if(view==='labor')return {...row,name:row.name||person?.name||'—',supplier:person?.supplier||'—'};
+  const linked=store.shifts.find(r=>r.id===row.shiftId&&r.staff===row.staff&&periodDate(r.date)===periodDate(row.date));
+  return {...row,date:row.date||(row.borrowAt?vnScanDate(new Date(row.borrowAt)):'—'),shift:linked?displayShift(linked.shift):'—',holder:row.holder||person?.name||'—',supplier:person?.supplier||'—'};
+ }
  if(view==='shifts'){
   const person=store.people.find(p=>p.id===row.staff);
   const day=periodDate(row.date),activeLabor=store.labor.find(r=>r.staff===row.staff&&periodDate(r.date)===day&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
@@ -1309,7 +1315,7 @@ function decodeBackupPortrait(item){
 }
 function validateOfflineBackup(snapshot){
  if(!snapshot||snapshot.format!==BACKUP_FORMAT||snapshot.schema!==BACKUP_SCHEMA)throw Error('File không phải bản sao lưu PickPack hợp lệ');
- if(!['0.9.7','0.9.8','0.9.9','0.10.0','0.11.0','0.11.1','0.11.2','0.12.0',WEB_VERSION].includes(snapshot.webVersion))throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở Web v'+WEB_VERSION+' để nhập');
+ if(!['0.9.7','0.9.8','0.9.9','0.10.0','0.11.0','0.11.1','0.11.2','0.12.0','0.12.2',WEB_VERSION].includes(snapshot.webVersion))throw Error('File dành cho Web v'+String(snapshot.webVersion||'?')+'. Hãy mở Web v'+WEB_VERSION+' để nhập');
  const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits,minutePictures=data.minuteImages;
  if(!records||!catalogData||!Array.isArray(pictures)||!Array.isArray(minutePictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
  if(!Object.hasOwn(catalogData,'assetsCondition')&&snapshot.webVersion!==WEB_VERSION)catalogData.assetsCondition=[...RESOURCE_DEFAULTS.assetsCondition];
