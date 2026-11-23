@@ -29,7 +29,7 @@ with sync_playwright() as p:
   return pg
  login=new_screen('login')
  assert login.locator('form#login-form').count()==1
- assert login.locator('.login-links .web-version').inner_text()=='Web v0.12.2'
+ assert login.locator('.login-links .web-version').inner_text()=='Web v0.12.3'
  login.locator('input[name="username"]').fill('bad')
  login.locator('input[name="password"]').fill('bad')
  login.locator('button[type="submit"]').click()
@@ -40,7 +40,7 @@ with sync_playwright() as p:
  assert login.locator('input[name="password"]').input_value()=='1'
  assert login.locator('input[name="password"]').get_attribute('type')=='text'
  login.screenshot(path=str(root/'preview-login.png'),full_page=True)
- # A fresh Web v0.12.2 browser must have no test records or catalogs.
+ # A fresh Web v0.12.3 browser must have no test records or catalogs.
  clean=new_screen(seed=False)
  assert clean.locator('.metrics .metric-number').first.inner_text()=='0'
  for module in ['people','shifts','labor','minutes','assets','pda','resources']:
@@ -57,7 +57,7 @@ with sync_playwright() as p:
  assert app.locator('a.nav-main').count()==9
  assert 'undefined' not in app.locator('.sidebar').inner_text()
  assert app.locator('a.nav-main[href*="view=resources"] .ui-svg').count()==1
- assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.12.2'
+ assert app.locator('.side-bottom .web-version').inner_text()=='Web v0.12.3'
  assert app.locator('.site-footer').inner_text()=='Phát triển hệ thống - tamnv2 | Pick Pack 1291'
  assert app.locator('.side-bottom .site-footer').count()==1
  assert app.locator('.app-main .site-footer').count()==0
@@ -172,7 +172,14 @@ with sync_playwright() as p:
   assert app.locator('.table-panel').last.locator('table tbody tr').count()==n
   assert app.locator('.table-panel .records-table').count()==1
   assert app.locator('.table-panel .records-table').evaluate("el=>{const th=el.querySelector('th[data-col]'),td=el.querySelector('td[data-col]');return getComputedStyle(el).tableLayout==='auto'&&parseFloat(getComputedStyle(th).paddingLeft)>=10&&parseFloat(getComputedStyle(td).paddingRight)>=10}"),module
+  if module=='labor':
+   assert app.locator('.module-table thead th[data-col]').all_inner_texts()[:5]==['Ngày','Ca','Mã nhân viên','Họ và tên','Nhà thầu']
+  if module=='pda':
+   assert app.locator('.module-table thead th[data-col]').all_inner_texts()[:5]==['Ngày','Ca','Mã nhân viên','Họ và tên','Nhà thầu']
+  if module=='minutes':
+   assert app.locator('.module-table thead th[data-col]').all_inner_texts()[0]=='Ngày biên bản'
   if module=='assets':
+   assert app.locator('.module-table thead th[data-col]').all_inner_texts()[0]=='Ngày ghi nhận'
    assert app.locator('.asset-dashboard .asset-kpi').count()==4
    assert app.locator('.asset-dashboard-group').count()==2
    assert app.locator('.asset-type-card').count()>=1
@@ -184,6 +191,7 @@ with sync_playwright() as p:
   assert app.locator('.page-header h1').count()==0
   assert app.locator('.module-summary').count()==0
   if module=='shifts':
+   assert app.locator('.module-table thead th[data-col]').all_inner_texts()[:5]==['Ngày','Ca','Mã nhân viên','Họ và tên','Nhà thầu']
    assert app.locator('.shift-summary,.shift-summary-group').count()==0
    assert app.locator('.shift-scan-toolbar').evaluate("el=>{const a=el.querySelector('.shift-scan-choice'),b=el.querySelectorAll('.shift-scan-choice')[1],c=el.querySelector('.shift-scan-entry');const x=a.getBoundingClientRect(),y=b.getBoundingClientRect(),z=c.getBoundingClientRect();return Math.abs(x.bottom-y.bottom)<3&&Math.abs(x.bottom-z.bottom)<3&&z.left>y.right}")
  def authorize(password='1'):
@@ -202,6 +210,25 @@ with sync_playwright() as p:
  assert app.locator('button[data-action="add"]').count()==0
  assert ['Giờ bắt đầu','Giờ kết thúc']==app.locator('.table-panel thead th').all_inner_texts()[-3:-1]
  app.locator('#labor-work').select_option('Pick')
+ # No current open shift means neither a single scan nor a batch scan may stage labor.
+ app.locator('#labor-staff-code').fill('90000034')
+ app.locator('#labor-staff-code').press('Enter')
+ assert 'chưa vào ca hoặc đã ra ca' in app.locator('.scan-outcome').inner_text()
+ assert app.locator('#labor-entry-form').count()==0
+ assert app.locator('.records-label b').inner_text()=='42'
+ # Add synthetic same-day shifts only for this labor scenario. Remove them before shift count tests.
+ app.evaluate("""() => {
+  const key='pickpack1291_office_records_v094',d=JSON.parse(localStorage.getItem(key));
+  const date=new Date().toLocaleDateString('en-GB',{timeZone:'Asia/Ho_Chi_Minh'});
+  for(const staff of ['90000034','90000035','90000036']){
+   d.shifts.push({id:'CA-LAB-'+staff.slice(-2),staff,date,shift:'Ca 1',checkin:'00:00:00',checkout:'—',state:'Trong ca',user:'—'});
+  }
+  d.shifts.push({id:'CA-LAB-32',staff:'90000032',date,shift:'Ca 1',checkin:'00:00:00',checkout:'01:00:00',state:'Đã ra ca',user:'—'});
+  localStorage.setItem(key,JSON.stringify(d));dispatchEvent(new StorageEvent('storage',{key}));
+ }""")
+ app.locator('#labor-staff-code').fill('90000032')
+ app.locator('#labor-staff-code').press('Enter')
+ assert 'chưa vào ca hoặc đã ra ca' in app.locator('.scan-outcome').inner_text()
  app.locator('#labor-staff-code').fill('90000034')
  app.locator('#labor-staff-code').press('Enter')
  assert app.locator('#labor-entry-form').count()==1
@@ -239,14 +266,34 @@ with sync_playwright() as p:
  app.locator('#labor-batch-mode').check()
  assert app.locator('#labor-batch-mode').is_checked()
  app.locator('#labor-work').select_option('Pick')
- for code in ['90000035','90000036']:
-  app.locator('#labor-staff-code').fill(code)
-  app.locator('#labor-staff-code').press('Enter')
+ assert app.locator('.labor-batch-toggle').evaluate("el=>el.getBoundingClientRect().top>=document.querySelector('#labor-work').getBoundingClientRect().bottom")
+ app.locator('#labor-staff-code').fill('90000035')
+ app.locator('#labor-staff-code').press('Enter')
+ assert app.locator('.labor-queue-table tbody tr').count()==1
+ app.locator('#labor-copy-start').check()
+ app.locator('#labor-copy-end').check()
+ app.locator('[data-labor-id="90000035"][data-labor-time="startTime"]').fill('06:20:00')
+ app.locator('[data-labor-id="90000035"][data-labor-time="endTime"]').fill('07:00:00')
+ app.locator('#labor-staff-code').fill('90000036')
+ app.locator('#labor-staff-code').press('Enter')
  assert app.locator('.labor-queue-table tbody tr').count()==2
  assert app.locator('.records-label b').inner_text()=='43'
- app.locator('[data-labor-id="90000035"][data-labor-time="startTime"]').fill('06:20:00')
+ assert app.locator('[data-labor-id="90000036"][data-labor-time="startTime"]').input_value()=='06:20:00'
+ assert app.locator('[data-labor-id="90000036"][data-labor-time="endTime"]').input_value()=='07:00:00'
+ assert app.locator('[data-labor-id="90000036"][data-labor-time="startTime"]').is_disabled()
+ assert app.locator('[data-labor-id="90000036"][data-labor-time="endTime"]').is_disabled()
+ app.locator('[data-labor-id="90000035"][data-labor-time="endTime"]').fill('07:05:00')
+ assert app.locator('[data-labor-id="90000036"][data-labor-time="endTime"]').input_value()=='07:05:00'
+ app.locator('#labor-copy-start').uncheck()
  app.locator('[data-labor-id="90000036"][data-labor-time="startTime"]').fill('06:25:00')
- app.locator('[data-labor-id="90000036"][data-labor-time="endTime"]').fill('07:00:00')
+ assert app.locator('[data-labor-id="90000035"][data-labor-time="startTime"]').input_value()=='06:20:00'
+ # If any queued employee leaves their shift before confirmation, nothing is saved.
+ app.evaluate("""() => {const key='pickpack1291_office_records_v094',d=JSON.parse(localStorage.getItem(key)),r=d.shifts.find(x=>x.id==='CA-LAB-36');r.state='Đã ra ca';r.checkout='01:00:00';localStorage.setItem(key,JSON.stringify(d));dispatchEvent(new StorageEvent('storage',{key}));}""")
+ app.locator('[data-action="labor-queue-save"]').click()
+ assert 'đã ra ca' in app.locator('#toast-stack').inner_text()
+ assert app.locator('.records-label b').inner_text()=='43'
+ assert app.locator('.labor-queue-table tbody tr').count()==2
+ app.evaluate("""() => {const key='pickpack1291_office_records_v094',d=JSON.parse(localStorage.getItem(key)),r=d.shifts.find(x=>x.id==='CA-LAB-36');r.state='Trong ca';r.checkout='—';localStorage.setItem(key,JSON.stringify(d));dispatchEvent(new StorageEvent('storage',{key}));}""")
  app.locator('[data-action="labor-queue-save"]').click()
  assert app.locator('.labor-queue-table tbody tr').count()==0
  assert app.locator('.records-label b').inner_text()=='45'
@@ -275,6 +322,8 @@ with sync_playwright() as p:
  authorize()
  assert app.locator('#labor-bulk-form').count()==0
  assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor.filter(r=>['90000035','90000036'].includes(r.staff)&&r.work==='Điều phối'&&r.startTime==='06:30:00'&&r.endTime==='07:05:00').length")==2
+ # Restore the preexisting shift set before the original shift scenarios below.
+ app.evaluate("""() => {const key='pickpack1291_office_records_v094',d=JSON.parse(localStorage.getItem(key));d.shifts=d.shifts.filter(r=>!r.id.startsWith('CA-LAB-'));localStorage.setItem(key,JSON.stringify(d));dispatchEvent(new StorageEvent('storage',{key}));}""")
  print('testing PDA QR borrow-return',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
  app.locator('#period-preset').select_option('all')
@@ -664,7 +713,7 @@ with sync_playwright() as p:
  rolecheck.locator('[data-action="period-custom"]').click()
  assert rolecheck.locator('#period-from').input_value()==rolecheck.locator('#period-to').input_value()
  rolecheck.close()
- # v0.12.2: daily scope and same-day personnel/PDA/labor linkage.
+ # v0.12.3: daily scope and same-day personnel/PDA/labor linkage.
  daycheck=new_screen(seed=False)
  daycheck.evaluate("""() => {
   const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));
@@ -695,7 +744,7 @@ with sync_playwright() as p:
  assert daycheck.locator('#period-preset').input_value()=='today'
  daycheck.locator('a.nav-main[href*="view=shifts"]').click()
  assert daycheck.locator('.module-table tbody tr').count()==1
- assert daycheck.locator('.module-table thead th[data-col]').all_inner_texts()[:7]==['Ngày','Ca','Họ và tên','Nhà thầu','Mã nhân viên','Vị trí chính','Vị trí hiện tại']
+ assert daycheck.locator('.module-table thead th[data-col]').all_inner_texts()[:7]==['Ngày','Ca','Mã nhân viên','Họ và tên','Nhà thầu','Vị trí chính','Vị trí hiện tại']
  assert daycheck.locator('.module-table tbody tr [data-col="currentPosition"]').inner_text()=='Hỗ trợ 1399'
  assert 'PDA-2' in daycheck.locator('.module-table tbody tr [data-col="pdaInUse"]').inner_text()
  assert daycheck.locator('.qr-input #shift-code').count()==1
@@ -762,5 +811,5 @@ with sync_playwright() as p:
  assert daycheck.locator('.catalog-heading strong').count()==0
  daycheck.close()
 
- print('PASS: v0.12.2 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
+ print('PASS: v0.12.3 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
