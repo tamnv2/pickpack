@@ -197,6 +197,7 @@ with sync_playwright() as p:
    app.locator('#confirm-form button[type="submit"]').click()
  print('testing labor QR scan',flush=True)
  app.locator('a.nav-main[href*="view=labor"]').click()
+ app.locator('#period-preset').select_option('all')
  assert app.locator('#labor-scan-form').count()==1
  assert app.locator('[data-catalog-scope="labor"]').count()==1
  assert app.locator('button[data-action="add"]').count()==0
@@ -226,6 +227,7 @@ with sync_playwright() as p:
  assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
  print('testing PDA QR borrow-return',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
+ app.locator('#period-preset').select_option('all')
  assert app.locator('#pda-scan-form').count()==1
  assert app.locator('.table-panel').last.locator('[data-edit]').count()==0
  assert app.locator('button[data-action="add"]').count()==0
@@ -253,6 +255,7 @@ with sync_playwright() as p:
  app.locator('#pda-device-code').press('Enter')
  assert 'chưa có lượt mượn đang mở' in app.locator('.scan-outcome').inner_text()
  app.locator('a.nav-main[href*="view=shifts"]').click()
+ app.locator('#period-preset').select_option('all')
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
  assert app.locator('button[data-scan-mode="enter"]').get_attribute('aria-pressed')=='true'
