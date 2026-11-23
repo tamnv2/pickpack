@@ -267,11 +267,13 @@ with sync_playwright() as p:
  assert app.locator('#labor-batch-mode').is_checked()
  app.locator('#labor-work').select_option('Pick')
  assert app.locator('.labor-batch-toggle').evaluate("el=>el.getBoundingClientRect().top>=document.querySelector('#labor-work').getBoundingClientRect().bottom")
+ assert app.locator('#labor-batch-mode').evaluate("el=>el.getBoundingClientRect().height<=18")
  app.locator('#labor-staff-code').fill('90000035')
  app.locator('#labor-staff-code').press('Enter')
  assert app.locator('.labor-queue-table tbody tr').count()==1
  app.locator('#labor-copy-start').check()
  app.locator('#labor-copy-end').check()
+ assert app.locator('#labor-copy-start').evaluate("el=>el.getBoundingClientRect().height<=18")
  app.locator('[data-labor-id="90000035"][data-labor-time="startTime"]').fill('06:20:00')
  app.locator('[data-labor-id="90000035"][data-labor-time="endTime"]').fill('07:00:00')
  app.locator('#labor-staff-code').fill('90000036')
@@ -303,6 +305,8 @@ with sync_playwright() as p:
   app.locator('.table-panel tbody tr').filter(has_text=code).first.locator('[data-select]').check()
  app.locator('[data-action="labor-bulk-edit"]').click()
  assert app.locator('#labor-bulk-form').count()==1
+ ys=[app.locator('#labor-bulk-'+field).bounding_box()['y'] for field in ['work','start','end']]
+ assert max(ys)-min(ys)<3,ys  # Inputs must align despite the hint below the grid.
  app.locator('#labor-bulk-form button[type="submit"]').click()
  assert 'Chọn ít nhất' in app.locator('#labor-bulk-error').inner_text()
  app.locator('[name="bulkWork"]').check()
