@@ -720,6 +720,9 @@ with sync_playwright() as p:
  daycheck.locator('#shift-code').press('Enter')
  assert 'công nhật chưa chốt giờ kết thúc' in daycheck.locator('.scan-outcome').inner_text()
  assert daycheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts.find(r=>r.id==='CA-NEW').state")=='Trong ca'
+ daycheck.locator('.module-table tbody tr').filter(has_text='99000001').first.locator('[data-shift-delete]').click()
+ assert daycheck.locator('#confirm-form').count()==0  # Open labor also protects full-shift deletion.
+ assert 'Cần chốt công nhật trước khi xóa lượt quét ca' in daycheck.locator('#toast-stack').inner_text()
  daycheck.locator('a.nav-main[href*="view=labor"]').click()
  daycheck.locator('.table-panel tbody tr').filter(has_text='99000001').first.locator('[data-edit]').click()
  daycheck.locator('#record-form [name="endTime"]').fill('00:20:00')
