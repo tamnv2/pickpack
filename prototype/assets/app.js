@@ -304,7 +304,7 @@ function activePdaLabel(person,day=''){
  return asset?.serial?asset.id+' · '+asset.serial:loan.name||'Chưa rõ';
 }
 function enrichOperationalRow(view,row){
- if(view==='people')return {...row,pdaInUse:activePdaLabel(row)};
+ if(view==='people')return row;
  if(view==='shifts'){
   const person=store.people.find(p=>p.id===row.staff);
   const day=periodDate(row.date),activeLabor=store.labor.find(r=>r.staff===row.staff&&periodDate(r.date)===day&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
@@ -523,7 +523,7 @@ function scanLabor(code,work){if(denyOperation('labor','create'))return false;
  const result=(ok,message,focus='#labor-staff-code')=>{state.laborScan={ok,code:staff,message};render();root.querySelector(focus)?.focus();return ok};
  if(state.laborDraft)return result(false,'Hoàn tất hoặc hủy công nhật đang chờ trước khi quét tiếp.');
  if(!person)return result(false,'Không tìm thấy mã nhân viên.');
- const existing=store.labor.find(r=>r.staff===staff&&periodDate(r.date)===day&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
+ const existing=store.labor.find(r=>r.staff===staff&&periodDate(r.date)===day&&(!r.endTime||r.endTime==='—'));
  if(existing){
   if(state.laborBatch)return result(false,'Nhân viên có công nhật đang mở. Hãy chốt riêng trước khi thêm vào danh sách.');
   state.laborDraft={id:existing.id,staff,date:existing.date,name:person.name,work:existing.work,startTime:existing.startTime,endTime:time,shift:existing.shift,shiftId:existing.shiftId};
@@ -551,7 +551,7 @@ function saveLaborDraft(form){
  const next={...draft,startTime,endTime};
  if(!catalogs.laborWork.includes(next.work)){state.notice='Công việc công nhật không hợp lệ.';refreshToasts();return}
  const problem=validateLaborRow(next);if(problem){state.notice=problem;refreshToasts();return}
- if(!draft.id&&store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'))){state.notice='Nhân viên đã có công nhật đang mở.';refreshToasts();return}
+ if(!draft.id&&store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&(!r.endTime||r.endTime==='—'))){state.notice='Nhân viên đã có công nhật đang mở.';refreshToasts();return}
  if(original)Object.assign(original,{startTime,endTime});
  else store.labor.unshift({...next,id:`CN-${Date.now().toString(36).toUpperCase()}`});
  persist();state.laborDraft=null;state.laborScan={ok:true,code:draft.staff,message:(original?'Đã cập nhật':'Đã ghi nhận')+' công nhật · '+draft.name};render();root.querySelector('#labor-staff-code')?.focus();
@@ -565,7 +565,7 @@ function saveLaborQueue(){
  const seen=new Set(),planned=[];
  for(let i=0;i<queue.length;i++){
   const draft=queue[i],key=draft.staff+'|'+periodDate(draft.date);
-  if(seen.has(key)||!store.people.some(p=>p.id===draft.staff)||store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'))){state.notice='Danh sách có nhân viên trùng, chưa tồn tại hoặc công nhật đang mở: '+draft.staff;refreshToasts();return}
+  if(seen.has(key)||!store.people.some(p=>p.id===draft.staff)||store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&(!r.endTime||r.endTime==='—'))){state.notice='Danh sách có nhân viên trùng, chưa tồn tại hoặc công nhật đang mở: '+draft.staff;refreshToasts();return}
   const row={...draft,work:state.laborWork,endTime:draft.endTime||'—',id:`CN-${Date.now().toString(36).toUpperCase()}-${i+1}`};
   const problem=validateLaborRow(row);if(problem){state.notice=draft.staff+': '+problem;refreshToasts();return}
   seen.add(key);planned.push(row);
@@ -1044,11 +1044,13 @@ function shiftStamp(date,time,nextDay=false){
 // Check labor against the shift's calendar date, including overnight work.
 function laborStamps(row){
  const start=shiftStamp(row.date,row.startTime);
- const end=row.endTime&&row.endTime!=='—'?shiftStamp(row.date,row.endTime,!!start&&row.endTime<row.startTime):null;
+ const seconds=time=>{const m=/^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(String(time||''));return m?Number(m[1])*3600+Number(m[2])*60+Number(m[3]||0):null};
+ const startSec=seconds(row.startTime),endSec=seconds(row.endTime);
+ const end=row.endTime&&row.endTime!=='—'?shiftStamp(row.date,row.endTime,startSec!==null&&endSec!==null&&endSec<startSec):null;
  return {start,end};
 }
 function laborExitError(staff,day,checkoutISO){
- const rows=store.labor.filter(r=>r.staff===staff&&periodDate(r.date)===day&&r.startTime&&r.startTime!=='—');
+ const rows=store.labor.filter(r=>r.staff===staff&&periodDate(r.date)===day);
  if(rows.some(r=>!r.endTime||r.endTime==='—'))return 'Chưa thể ra ca: công nhật chưa chốt giờ kết thúc.';
  const limit=new Date(checkoutISO).getTime();
  if(rows.some(r=>{const {end}=laborStamps(r);return !end||new Date(end.iso).getTime()>limit}))return 'Chưa thể ra ca: công nhật có giờ kết thúc sau giờ ra ca.';
@@ -1141,7 +1143,7 @@ function saveLaborBulk(form){
 function deleteShiftRecord(id){
  if(denyOperation('shifts','delete'))return;
  const row=store.shifts.find(r=>r.id===id);if(!row)return;
- const open=store.labor.some(r=>r.staff===row.staff&&periodDate(r.date)===periodDate(row.date)&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
+ const open=store.labor.some(r=>r.staff===row.staff&&periodDate(r.date)===periodDate(row.date)&&(!r.endTime||r.endTime==='—'));
  if(open){state.notice='Cần chốt công nhật trước khi xóa lượt quét ca.';refreshToasts();return}
  confirmDialog('Xóa toàn bộ lượt quét ca','Xóa lượt vào'+(row.checkout&&row.checkout!=='—'?' và ra':'')+' ca của '+(row.name||row.staff)+' ('+row.staff+') ngày '+row.date+'? Không thể hoàn tác.',()=>{
   if(!store.shifts.some(x=>x.id===id))return;
