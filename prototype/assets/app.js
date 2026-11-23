@@ -207,6 +207,7 @@ const VN_SCAN_TIME=new Intl.DateTimeFormat('en-GB',{timeZone:VN_ZONE,hour:'2-dig
 const vnScanDate=(now)=>vnTodayISO(now).split('-').reverse().join('/');
 const vnScanTime=(now)=>VN_SCAN_TIME.format(now);
 const SHIFT_END_TIMES={'Ca 1':'14:00','Ca 2':'22:00','Ca HC':'17:00','HC 09–18':'18:00','HC 10–19':'19:00'};
+const displayShift=(value)=>value==='Ca HC'?'HC 08–17':value;
 function shiftIsOverdue(row,now=new Date()){
  if(row.state!=='Trong ca'||!row.checkin||row.checkin==='—'||(row.checkout&&row.checkout!=='—'))return false;
  const end=SHIFT_END_TIMES[row.shift],stamp=end?shiftStamp(row.date,end):null;
@@ -241,7 +242,7 @@ function pageHead(action='',other=''){return action||other?`<div class="page-hea
 function stat(label,value,small,accent='blue',ic='grid'){return `<div class="metric-card"><div class="metric-top"><span>${label}</span><span class="metric-icon ${accent}">${icon(({'♙':'users','◷':'clock','▯':'device','▤':'file','≡':'list','▦':'grid'})[ic]||ic,20)}</span></div><div class="metric-number">${value}</div><div class="metric-foot">${small}</div></div>`}
 function activity(){
  const entries=datedRows('shifts').slice(0,4);
- return `<section class="panel activity-panel"><div class="panel-title"><div><h2>Ra / vào ca gần đây</h2></div></div><div class="timeline">${entries.length?entries.map((r,i)=>`<div class="timeline-row"><span class="timeline-indicator ${i===0?'current':''}"></span><div><strong>${escape(r.name)}</strong><small>${escape(r.staff)} · ${escape(r.shift)} · ${escape(r.state)}</small></div><time>${escape(r.checkin==='—'?r.date:r.date+' '+r.checkin)}</time></div>`).join(''):'<div class="scan-empty">Chưa có lượt quét</div>'}</div></section>`;
+ return `<section class="panel activity-panel"><div class="panel-title"><div><h2>Ra / vào ca gần đây</h2></div></div><div class="timeline">${entries.length?entries.map((r,i)=>`<div class="timeline-row"><span class="timeline-indicator ${i===0?'current':''}"></span><div><strong>${escape(r.name)}</strong><small>${escape(r.staff)} · ${escape(displayShift(r.shift))} · ${escape(r.state)}</small></div><time>${escape(r.checkin==='—'?r.date:r.date+' '+r.checkin)}</time></div>`).join(''):'<div class="scan-empty">Chưa có lượt quét</div>'}</div></section>`;
 }
 function workload(){const labs=['05h','07h','09h','11h','13h','15h','17h'];
  const today=datedRows('shifts').filter(r=>r.checkin!=='—');
@@ -293,7 +294,7 @@ function enrichOperationalRow(view,row){
  if(view==='shifts'){
   const person=store.people.find(p=>p.id===row.staff);
   const day=periodDate(row.date),activeLabor=store.labor.find(r=>r.staff===row.staff&&periodDate(r.date)===day&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
-  return {...row,position:row.position||person?.position||'—',supplier:row.supplier||person?.supplier||'—',currentPosition:activeLabor?.work||row.position||person?.position||'—',pdaInUse:activePdaLabel(person,day)};
+  return {...row,shift:displayShift(row.shift),position:row.position||person?.position||'—',supplier:row.supplier||person?.supplier||'—',currentPosition:activeLabor?.work||row.position||person?.position||'—',pdaInUse:activePdaLabel(person,day)};
  }
  return row;
 }
