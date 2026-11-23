@@ -205,26 +205,76 @@ with sync_playwright() as p:
  app.locator('#labor-work').select_option('Pick')
  app.locator('#labor-staff-code').fill('90000034')
  app.locator('#labor-staff-code').press('Enter')
- assert 'Đã bắt đầu công nhật' in app.locator('.scan-outcome').inner_text()
- assert app.locator('.records-label b').inner_text()=='43'
+ assert app.locator('#labor-entry-form').count()==1
+ assert 'Kiểm tra giờ bắt đầu' in app.locator('.scan-outcome').inner_text()
+ assert app.locator('.records-label b').inner_text()=='42'  # No persistence on initial scan.
+ assert app.locator('#labor-entry-start').input_value()
+ assert app.locator('#labor-entry-end').input_value()==''
  assert app.locator('#labor-work').input_value()=='Pick'
+ app.locator('#labor-entry-start').fill('06:30:01')
+ app.locator('#labor-entry-form button[type="submit"]').click()
+ assert app.locator('#labor-entry-form').count()==0
+ assert app.locator('.records-label b').inner_text()=='43'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime==='—'")
  app.locator('.table-panel').last.locator('tbody tr').first.locator('[data-edit]').click()
  assert app.locator('#record-form').count()==1
  app.locator('#record-form select[name="work"]').select_option('Pick')
- app.locator('#record-form input[name="startTime"]').fill('06:30:01')
+ app.locator('#record-form input[name="startTime"]').fill('06:31:01')
  app.locator('#record-form button[type="submit"]').click()
  authorize('wrong')
  assert app.locator('#draft-confirm-error').inner_text()=='Mật khẩu không đúng'
  authorize()
- assert '06:30:01' in app.locator('.table-panel').last.locator('tbody tr').first.inner_text()
+ assert '06:31:01' in app.locator('.table-panel').last.locator('tbody tr').first.inner_text()
  app.locator('#labor-staff-code').fill('90000034')
  app.locator('#labor-staff-code').press('Enter')
- assert 'Đã kết thúc công nhật' in app.locator('.scan-outcome').inner_text()
- assert app.locator('.records-label b').inner_text()=='43'
- assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime!='—'")
+ assert app.locator('#labor-entry-form').count()==1
+ assert app.locator('#labor-entry-end').input_value()!=''
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime==='—'")
+ app.locator('#labor-entry-end').fill('07:00:00')
+ app.locator('#labor-entry-form button[type="submit"]').click()
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor[0].endTime==='07:00:00'")
  app.locator('#labor-staff-code').fill('NOT_FOUND')
  app.locator('#labor-staff-code').press('Enter')
  assert 'Không tìm thấy mã nhân viên' in app.locator('.scan-outcome').inner_text()
+ # Batch: scans stay pending until one atomic confirmation.
+ app.locator('#labor-batch-mode').check()
+ assert app.locator('#labor-batch-mode').is_checked()
+ app.locator('#labor-work').select_option('Pick')
+ for code in ['90000035','90000036']:
+  app.locator('#labor-staff-code').fill(code)
+  app.locator('#labor-staff-code').press('Enter')
+ assert app.locator('.labor-queue-table tbody tr').count()==2
+ assert app.locator('.records-label b').inner_text()=='43'
+ app.locator('[data-labor-id="90000035"][data-labor-time="startTime"]').fill('06:20:00')
+ app.locator('[data-labor-id="90000036"][data-labor-time="startTime"]').fill('06:25:00')
+ app.locator('[data-labor-id="90000036"][data-labor-time="endTime"]').fill('07:00:00')
+ app.locator('[data-action="labor-queue-save"]').click()
+ assert app.locator('.labor-queue-table tbody tr').count()==0
+ assert app.locator('.records-label b').inner_text()=='45'
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor.filter(r=>['90000035','90000036'].includes(r.staff)&&r.date===new Date().toLocaleDateString('en-GB',{timeZone:'Asia/Ho_Chi_Minh'})).length")==2
+ # Selected employee records can be edited together with a single authenticated commit.
+ for code in ['90000035','90000036']:
+  app.locator('.table-panel tbody tr').filter(has_text=code).first.locator('[data-select]').check()
+ app.locator('[data-action="labor-bulk-edit"]').click()
+ assert app.locator('#labor-bulk-form').count()==1
+ app.locator('#labor-bulk-form button[type="submit"]').click()
+ assert 'Chọn ít nhất' in app.locator('#labor-bulk-error').inner_text()
+ app.locator('[name="bulkWork"]').check()
+ app.locator('#labor-bulk-work').select_option('Điều phối')
+ app.locator('[name="bulkStart"]').check()
+ app.locator('#labor-bulk-start').fill('06:30:00')
+ app.locator('[name="bulkEnd"]').check()
+ app.locator('#labor-bulk-end').fill('06:30:00')  # Equal times are invalid.
+ app.locator('#labor-bulk-form button[type="submit"]').click()
+ assert 'Giờ kết thúc' in app.locator('#labor-bulk-error').inner_text()
+ assert app.locator('#draft-confirm-form').count()==0
+ app.locator('#labor-bulk-end').fill('07:05:00')
+ app.locator('#labor-bulk-form button[type="submit"]').click()
+ authorize('wrong')
+ assert 'Mật khẩu không đúng' in app.locator('#draft-confirm-error').inner_text()
+ authorize()
+ assert app.locator('#labor-bulk-form').count()==0
+ assert app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor.filter(r=>['90000035','90000036'].includes(r.staff)&&r.work==='Điều phối'&&r.startTime==='06:30:00'&&r.endTime==='07:05:00').length")==2
  print('testing PDA QR borrow-return',flush=True)
  app.locator('a.nav-main[href*="view=pda"]').click()
  app.locator('#period-preset').select_option('all')
@@ -340,6 +390,13 @@ with sync_playwright() as p:
  app.locator('#shift-code').fill('90000002')
  app.locator('#shift-code').press('Enter')
  assert 'Đã ra ca' in app.locator('.scan-outcome').inner_text()
+ # Deleting a check-in or a complete pair requires the current account password and audits the deletion.
+ app.locator('.table-panel tbody tr').filter(has_text='90000001').first.locator('[data-shift-delete]').click()
+ assert app.locator('#confirm-form').count()==1
+ authorize('wrong')
+ assert 'Mật khẩu không đúng' in app.locator('#confirm-error').inner_text()
+ authorize()
+ assert app.evaluate("(id)=>{const r=JSON.parse(localStorage.getItem('pickpack1291_office_records_v094'));return !r.shifts.some(x=>x.id===id)&&r.shiftDeletions.some(x=>x.id===id&&x.by==='superadmin')}",newest)
  app.locator('a.nav-main[href*="view=people"]').click()
  app.screenshot(path=str(root/'preview-people.png'),full_page=True)
  print('testing catalogs',flush=True)
@@ -409,7 +466,7 @@ with sync_playwright() as p:
  app.locator('a.nav-main[href*="view=people"]').click()
  print('testing staff columns',flush=True)
  head=app.locator('.people-table thead th').all_inner_texts()
- assert head[-4:]==['Ngày nhận việc','Cập nhật bởi','PDA đang dùng','Thao tác'],head
+ assert head[-4:]==['Ngày nhận việc','Cập nhật bởi','Thời gian cập nhật','Thao tác'],head
  assert app.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
  assert app.locator('.people-table tbody tr .cell-name small').count()==0
  assert app.locator('#record-form input[name="user"]').count()==0
@@ -617,7 +674,7 @@ with sync_playwright() as p:
   const vn=x=>x.split('-').reverse().join('/');
   const person=(id,name,position,createdAt)=>({id,name,position,createdAt,supplier:'Nhà thầu thử'});
   const shift=(id,staff,date,kind,user)=>({id,staff,name:staff==='99000001'?'Nguyễn Văn Một':'Nguyễn Văn Hai',date:vn(date),shift:kind,user,position:staff==='99000001'?'Pick':'Điều phối',supplier:'Nhà thầu thử',checkin:'06:00:00',checkout:'—',state:'Trong ca'});
-  const labor=(id,date,work)=>({id,staff:'99000001',date:vn(date),work,startTime:'08:00:00',endTime:'—'});
+  const labor=(id,date,work)=>({id,staff:'99000001',date:vn(date),work,startTime:'00:10:00',endTime:'—'});
   const loan=(id,date,device)=>({id,staff:'99000001',name:device,assetId:device,date:vn(date),state:'Đang mượn'});
   const asset=id=>({id,type:'PDA',serial:id+'-SERIAL',state:'Có sử dụng',condition:'Tốt'});
   const records={people:[person('99000001','Nguyễn Văn Một','Pick',today),person('99000002','Nguyễn Văn Hai','Điều phối',yesterday)],
@@ -652,7 +709,32 @@ with sync_playwright() as p:
  daycheck.locator('#shift-code').press('Enter')
  assert 'Đã vào ca' in daycheck.locator('.scan-outcome').inner_text()
  assert daycheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].shift")=='HC 10–19'
+ daycheck.locator('[data-scan-mode="exit"]').click()
+ daycheck.locator('#shift-code').fill('99000001')
+ daycheck.locator('#shift-code').press('Enter')
+ assert 'công nhật chưa chốt giờ kết thúc' in daycheck.locator('.scan-outcome').inner_text()
+ assert daycheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts.find(r=>r.id==='CA-NEW').state")=='Trong ca'
  daycheck.locator('a.nav-main[href*="view=labor"]').click()
+ daycheck.locator('.table-panel tbody tr').filter(has_text='99000001').first.locator('[data-edit]').click()
+ daycheck.locator('#record-form [name="endTime"]').fill('00:20:00')
+ daycheck.locator('#record-form button[type="submit"]').click()
+ daycheck.locator('#draft-password').fill('1')
+ daycheck.locator('#draft-confirm-form button[type="submit"]').click()
+ assert daycheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor.find(r=>r.id==='CN-NEW').endTime")=='00:20:00'
+ daycheck.locator('a.nav-main[href*="view=shifts"]').click()
+ daycheck.locator('[data-scan-mode="exit"]').click()
+ daycheck.locator('#shift-code').fill('99000001')
+ daycheck.locator('#shift-code').press('Enter')
+ assert 'Đã ra ca' in daycheck.locator('.scan-outcome').inner_text()
+ daycheck.locator('a.nav-main[href*="view=labor"]').click()
+ daycheck.locator('.table-panel tbody tr').filter(has_text='99000001').first.locator('[data-edit]').click()
+ daycheck.locator('#record-form [name="endTime"]').fill('23:59:00')
+ daycheck.locator('#record-form button[type="submit"]').click()
+ daycheck.locator('#draft-password').fill('1')
+ daycheck.locator('#draft-confirm-form button[type="submit"]').click()
+ assert 'Giờ kết thúc công nhật không được sau giờ ra ca' in daycheck.locator('#toast-stack').inner_text()
+ assert daycheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).labor.find(r=>r.id==='CN-NEW').endTime")=='00:20:00'
+ daycheck.locator('button[data-action="close-modal"]').last.click()
  assert daycheck.locator('.qr-input #labor-staff-code').count()==1
  assert daycheck.locator('.compact-scanner h2').count()==0
  daycheck.locator('a.nav-main[href*="view=pda"]').click()
