@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "project_key": "pickpack-1291",
-  "as_of_vn": "2026-11-17",
-  "phase": "OFFICE_WEB_V0122_CODE_READY_CI_PASS_DRAFT_PR",
-  "application_code": "WEB_OFFICE_STATIC_V0122_CODE_READY_CI_PASS",
-  "technical_ci": "CI_PASS_ACTIONS_44124998483_SOURCE_9952728337d435f7f831eefb3960fdc12e91a8a9_JS_BUILD_CHROMIUM_HOSTED_CDN",
+  "as_of_vn": "2026-11-23",
+  "phase": "OFFICE_WEB_V0122_UPDATE_CODE_ONLY_CI_PENDING_DRAFT_PR",
+  "application_code": "WEB_OFFICE_STATIC_V0122_20261123_CI_PENDING",
+  "technical_ci": "LATEST_PREVIOUS_CI_PASS_ACTIONS_44124998483_SOURCE_9952728337d435f7f831eefb3960fdc12e91a8a9; NEW_CHANGES_ACTIONS_45208165747_PENDING",
   "production_release": "NOT_AUTHORIZED_NOT_DEPLOYED",
   "field_acceptance": "NOT_TESTED",
-  "owner_business_acceptance": "V0122_OWNER_REVIEW_PENDING",
+  "owner_business_acceptance": "V0122_20261123_OWNER_REVIEW_PENDING",
   "authorized_default": "CODE_ONLY_STOP_AT_CODE_READY",
   "identity_contract": {
     "firebase_auth": "SHARED_WITH_INVENTORY",
@@ -28,11 +28,11 @@
     "realtime": true
   },
   "pending": [
-    "Owner review Web v0.12.2 concise copy/scan label layout, shift correction and undo with password, file confirmations, dark accents",
+    "Verify Web v0.12.2 dated personnel, same-day shift/labor/PDA linkage, overdue scan alerts and 3 HC hours with Chromium+hosted regression on current source",
     "Production backend Auth/RBAC/realtime and provider changes require separate explicit Owner approval; PR #2 remains Draft/unmerged",
-    "Investigate/replace unreliable external rawcdn Web preview; no provider deployment without Owner approval"
+    "Previously reported third-party rawcdn HTTP 503 remains unverified; no deployment without approval"
   ],
-  "latest_checkpoint": "PP-20261123-045",
+  "latest_checkpoint": "PP-20261123-046",
   "ui_prototype": {
     "variants": 1,
     "reference": "HORILLA_PUBLIC_UI_PATTERNS_ONLY",
