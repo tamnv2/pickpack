@@ -269,7 +269,9 @@ try:
         blank.locator('#pda-device-code').press('Enter')
         assert f'Đã trả {first_pda}' in blank.locator('.scan-outcome').inner_text()
         blank.locator('a.nav-main[href*="view=people"]').click()
-        assert 'Chưa mượn' in blank.locator('.people-table tbody tr').filter(has_text='98765432').first.inner_text()
+        assert blank.locator('.people-table tbody tr').filter(has_text='98765432').first.count()==1
+        assert blank.locator('.people-table thead th[data-col="updatedAt"]').count()==1
+        assert blank.locator('.people-table [data-col="pdaInUse"]').count()==0
         blank.locator('a.nav-main[href*="view=assets"]').click()
         assert blank.locator('[data-action="assets-excel-template"]').count()==1
         with blank.expect_download() as template:
