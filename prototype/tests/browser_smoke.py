@@ -606,5 +606,62 @@ with sync_playwright() as p:
  rolecheck.locator('[data-action="period-custom"]').click()
  assert rolecheck.locator('#period-from').input_value()==rolecheck.locator('#period-to').input_value()
  rolecheck.close()
- print('PASS: v0.11.0 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
+ # v0.12.2: daily scope and same-day personnel/PDA/labor linkage.
+ daycheck=new_screen(seed=False)
+ daycheck.evaluate("""() => {
+  const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  const today=p.year+'-'+p.month+'-'+p.day;
+  const prev=new Date(today+'T00:00:00Z');prev.setUTCDate(prev.getUTCDate()-1);
+  const yesterday=prev.toISOString().slice(0,10);
+  const vn=x=>x.split('-').reverse().join('/');
+  const person=(id,name,position,createdAt)=>({id,name,position,createdAt,supplier:'Nhà thầu thử'});
+  const shift=(id,staff,date,kind,user)=>({id,staff,name:staff==='99000001'?'Nguyễn Văn Một':'Nguyễn Văn Hai',date:vn(date),shift:kind,user,position:staff==='99000001'?'Pick':'Điều phối',supplier:'Nhà thầu thử',checkin:'06:00:00',checkout:'—',state:'Trong ca'});
+  const labor=(id,date,work)=>({id,staff:'99000001',date:vn(date),work,startTime:'08:00:00',endTime:'—'});
+  const loan=(id,date,device)=>({id,staff:'99000001',name:device,assetId:device,date:vn(date),state:'Đang mượn'});
+  const asset=id=>({id,type:'PDA',serial:id+'-SERIAL',state:'Có sử dụng',condition:'Tốt'});
+  const records={people:[person('99000001','Nguyễn Văn Một','Pick',today),person('99000002','Nguyễn Văn Hai','Điều phối',yesterday)],
+   shifts:[shift('CA-NEW','99000001',today,'Ca 1','user-new'),shift('CA-OLD','99000001',yesterday,'Ca 1','user-old'),shift('CA-OLD2','99000002',yesterday,'Ca 2','other-old')],
+   labor:[labor('CN-NEW',today,'Hỗ trợ 1399'),labor('CN-OLD',yesterday,'Hỗ trợ 9999')],
+   pda:[loan('MT-NEW',today,'PDA-2'),loan('MT-OLD',yesterday,'PDA-1')],
+   assets:[asset('PDA-1'),asset('PDA-2')],minutes:[],pdaDevices:[]};
+  localStorage.setItem('pickpack1291_office_records_v094',JSON.stringify(records));
+  dispatchEvent(new StorageEvent('storage',{key:'pickpack1291_office_records_v094'}));
+ }""")
+ daycheck.locator('a.nav-main[href*="view=people"]').click()
+ assert daycheck.locator('#period-preset').input_value()=='all'
+ assert daycheck.locator('.people-table tbody tr').count()==2
+ daycheck.locator('#period-preset').select_option('today')
+ assert daycheck.locator('.people-table tbody tr').count()==1
+ daycheck.locator('a.nav-main[href*="view=dashboard"]').click()
+ assert daycheck.locator('#period-preset').input_value()=='today'
+ daycheck.locator('a.nav-main[href*="view=shifts"]').click()
+ assert daycheck.locator('.module-table tbody tr').count()==1
+ assert daycheck.locator('.module-table thead th[data-col]').all_inner_texts()[:7]==['Ngày','Ca','Họ và tên','Nhà thầu','Mã nhân viên','Vị trí chính','Vị trí hiện tại']
+ assert daycheck.locator('.module-table tbody tr [data-col="currentPosition"]').inner_text()=='Hỗ trợ 1399'
+ assert 'PDA-2' in daycheck.locator('.module-table tbody tr [data-col="pdaInUse"]').inner_text()
+ assert daycheck.locator('.qr-input #shift-code').count()==1
+ assert daycheck.locator('[data-scan-shift]').all_inner_texts()==['Ca 1','Ca 2','HC 08–17','HC 09–18','HC 10–19']
+ assert daycheck.locator('.shift-scan-station h2').count()==0
+ daycheck.locator('#period-preset').select_option('all')
+ assert daycheck.locator('.module-table tbody tr').count()==3
+ assert daycheck.locator('.row-overdue .shift-overdue').count()>=1
+ daycheck.locator('#period-preset').select_option('today')
+ daycheck.locator('[data-scan-shift="HC 10–19"]').click()
+ daycheck.locator('#shift-code').fill('99000002')
+ daycheck.locator('#shift-code').press('Enter')
+ assert 'Đã vào ca' in daycheck.locator('.scan-outcome').inner_text()
+ assert daycheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts[0].shift")=='HC 10–19'
+ daycheck.locator('a.nav-main[href*="view=labor"]').click()
+ assert daycheck.locator('.qr-input #labor-staff-code').count()==1
+ assert daycheck.locator('.compact-scanner h2').count()==0
+ daycheck.locator('a.nav-main[href*="view=pda"]').click()
+ assert daycheck.locator('.qr-input #pda-staff-code').count()==1
+ assert daycheck.locator('.compact-scanner h2').count()==0
+ daycheck.locator('a.nav-main[href*="view=access"]').click()
+ assert daycheck.locator('.access-header h2').count()==0
+ daycheck.locator('a.nav-main[href*="view=resources"]').click()
+ assert daycheck.locator('.catalog-heading strong').count()==0
+ daycheck.close()
+
+ print('PASS: v0.12.2 blank bootstrap plus synthetic-fixture regressions, catalog/shift/PDA, offline backup and responsive layout')
  browser.close()
