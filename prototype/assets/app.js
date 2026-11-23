@@ -145,9 +145,9 @@ function canAccess(view,action='view'){
 function firstAllowed(){return PERMISSION_AREAS.find(key=>canAccess(key))||'dashboard'}
 function denyOperation(view=state.view,action='edit'){if(canAccess(view,action))return false;state.notice='Tài khoản không có quyền thực hiện thao tác này';refreshToasts();return true}
 function demoSession(){return !!actualUser()}
-function emptyRecords(){return {people:[],shifts:[],labor:[],minutes:[],assets:[],pda:[],pdaDevices:[]}}
+function emptyRecords(){return {people:[],shifts:[],labor:[],minutes:[],assets:[],pda:[],pdaDevices:[],shiftDeletions:[]}}
 
-function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(emptyRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500)){for(const person of data.people){delete person.user;delete person.shift}return data}}catch{}return emptyRecords()}
+function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(emptyRecords()).filter(k=>k!=='shiftDeletions').every(k=>Array.isArray(data[k])&&data[k].length<500)){data.shiftDeletions=Array.isArray(data.shiftDeletions)?data.shiftDeletions.slice(0,499):[];for(const person of data.people){delete person.user;delete person.shift}return data}}catch{}return emptyRecords()}
 const store=readRecords();
 let lastOverdueCount=-1;
 function readCatalogs(){
@@ -170,7 +170,7 @@ function persistCatalogs(){storageSet(CATALOG_KEY,JSON.stringify(catalogs))}
 function persist(){storageSet(STORAGE_KEY,JSON.stringify(store))}
 function updateRecord(key,id,changes){const row=store[key]?.find(r=>r.id===id);if(!row)return false;Object.assign(row,changes);persist();return true}
 const columns={
- people:[['name','Họ và tên'],['id','Mã nhân viên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['updatedBy','Cập nhật bởi'],['pdaInUse','PDA đang dùng']],
+ people:[['name','Họ và tên'],['id','Mã nhân viên'],['phone','Số điện thoại'],['position','Vị trí chính'],['supplier','Nhà cung cấp'],['department','Bộ phận'],['site','Site'],['warehouse','Kho'],['startDate','Ngày nhận việc'],['updatedBy','Cập nhật bởi'],['updatedAt','Thời gian cập nhật']],
  shifts:[['date','Ngày'],['shift','Ca'],['name','Họ và tên'],['supplier','Nhà thầu'],['staff','Mã nhân viên'],['position','Vị trí chính'],['currentPosition','Vị trí hiện tại'],['pdaInUse','PDA đang dùng'],['checkin','Vào ca'],['checkout','Ra ca'],['user','User làm việc'],['desk','Bàn Pack'],['state','Trạng thái']],
  labor:[['name','Nhân sự'],['staff','Mã nhân viên'],['date','Ngày'],['shift','Ca'],['work','Công việc công nhật'],['startTime','Giờ bắt đầu'],['endTime','Giờ kết thúc']],
  minutes:[['type','Phân loại'],['date','Ngày biên bản'],['note','Ghi chú'],['images','Số ảnh']],
@@ -355,7 +355,7 @@ function controls(){
  return `<div class="table-controls"><div class="table-control-left"><span class="listing-icon">${icon('list',18)}</span><span class="records-label">Danh sách <b>${store[state.view].length}</b></span>${statuses.length?`<span class="separator"></span><label class="filter-label">Trạng thái <select id="status-filter" aria-label="Lọc theo trạng thái"><option value="all">Tất cả</option>${statuses.map(x=>`<option value="${escape(x)}" ${state.filter===x?'selected':''}>${escape(x)}</option>`).join('')}</select></label>`:''}${state.view==='shifts'?shiftFilterControls():''}</div><div class="table-control-right"><button class="btn ghost tiny" data-action="export" title="Xuất bản ghi đang lọc">${icon('download',15)} Xuất Excel</button>${state.view==='assets'&&canAccess(state.view,'create')?`<button type="button" class="btn ghost tiny" data-action="assets-excel-template">${icon('download',15)} Tải mẫu Excel</button><button type="button" class="btn ghost tiny" data-action="assets-excel-import">${icon('plus',15)} Nhập Excel</button><input id="assets-excel-file" hidden type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">`:''}${state.view==='people'&&canAccess(state.view,'create')?`<button type="button" class="btn ghost tiny" data-action="excel-template">${icon('download',15)} Tải mẫu Excel</button><button type="button" class="btn ghost tiny" data-action="excel-import">${icon('plus',15)} Nhập Excel</button><input id="staff-excel-import" hidden type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">`:''}${['people','labor','minutes','assets'].includes(state.view)?`<a class="btn ghost tiny" data-nav="categories" data-catalog-scope="${state.view}" href="${href('categories').replace(/&scope=[^&]*/, '&scope='+state.view)}">${icon('list',15)} Quản lý danh mục</a>`:''}${['people','minutes','assets'].includes(state.view)&&canAccess(state.view,'create')?`<button class="btn primary tiny" data-action="add">${icon('plus',15)} ${state.view==='people'?'Thêm nhân sự':state.view==='minutes'?'Lưu biên bản':'Thêm CCDC'}</button>`:''}${state.view==='shifts'||!canAccess(state.view,'delete')?'':`<button class="btn danger tiny" data-action="bulk-delete" ${state.selected.size?'':'disabled'}>Xóa đã chọn (${state.selected.size})</button>`}</div></div>`;
 }
 function recordActions(r){
- if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button>${canAccess('shifts','edit')?`<button class="row-open" data-edit="${escape(r.id)}" title="Sửa giờ vào / ra ca">${icon('edit',16)}</button>`:''}${r.checkout&&r.checkout!=='—'&&canAccess('shifts','delete')?`<button class="row-open danger-text" data-shift-undo="${escape(r.id)}" title="Hủy lượt ra ca">${icon('trash',16)}</button>`:''}</span>`;
+ if(state.view==='shifts')return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem lượt quét">${icon('eye',16)}</button>${canAccess('shifts','edit')?`<button class="row-open" data-edit="${escape(r.id)}" title="Sửa giờ vào / ra ca">${icon('edit',16)}</button>`:''}${r.checkout&&r.checkout!=='—'&&canAccess('shifts','delete')?`<button class="row-open" data-shift-undo="${escape(r.id)}" title="Hủy riêng giờ ra ca">${icon('minus',16)}</button>`:''}${canAccess('shifts','delete')?`<button class="row-open danger-text" data-shift-delete="${escape(r.id)}" title="Xóa toàn bộ lượt vào / ra ca">${icon('trash',16)}</button>`:''}</span>`;
  return `<span class="row-actions"><button class="row-open" data-record="${escape(r.id)}" title="Xem chi tiết">${icon('eye',16)}</button>${state.view==='assets'&&isPdaAsset(r)&&canAccess('pda')?`<button class="row-open" data-asset-loan="${escape(r.id)}" title="Mượn / trả PDA">${icon('device',16)}</button>`:''}${state.view==='pda'||!canAccess(state.view,'edit')?'':`<button class="row-open" data-edit="${escape(r.id)}" title="Sửa bản ghi">${icon('edit',16)}</button>`}${canAccess(state.view,'delete')?`<button class="row-open danger-text" data-delete="${escape(r.id)}" title="Xóa bản ghi">${icon('trash',16)}</button>`:''}</span>`;
 }
 function table(){
@@ -495,6 +495,8 @@ function scanShift(code,operation,selectedShift,workUser,workDesk){if(denyOperat
  }
  if(operation==='exit'){
   if(!current)return outcome(false,`Không có lượt vào ca đang mở của ${p.name}. Không thể ghi nhận ra ca.`);
+  const problem=laborExitError(staff,day,now.toISOString());
+  if(problem)return outcome(false,problem);
   updateRecord('shifts',current.id,{checkout:time,checkoutAt:now.toISOString(),state:'Đã ra ca'});
   return outcome(true,`Đã ra ca · ${p.name} · ${current.shift} · ${date} ${time}`);
  }
@@ -997,6 +999,35 @@ function shiftStamp(date,time,nextDay=false){
  const ms=(Number(t[1])*3600+Number(t[2])*60+Number(t[3]||0))*1000;
  return {iso:new Date(base.getTime()+ms).toISOString(),time:t[1]+':'+t[2]+':'+(t[3]||'00')};
 }
+// Check labor against the shift's calendar date, including overnight work.
+function laborStamps(row){
+ const start=shiftStamp(row.date,row.startTime);
+ const end=row.endTime&&row.endTime!=='—'?shiftStamp(row.date,row.endTime,!!start&&row.endTime<row.startTime):null;
+ return {start,end};
+}
+function laborExitError(staff,day,checkoutISO){
+ const rows=store.labor.filter(r=>r.staff===staff&&periodDate(r.date)===day&&r.startTime&&r.startTime!=='—');
+ if(rows.some(r=>!r.endTime||r.endTime==='—'))return 'Chưa thể ra ca: công nhật chưa chốt giờ kết thúc.';
+ const limit=new Date(checkoutISO).getTime();
+ if(rows.some(r=>{const {end}=laborStamps(r);return !end||new Date(end.iso).getTime()>limit}))return 'Chưa thể ra ca: công nhật có giờ kết thúc sau giờ ra ca.';
+ return '';
+}
+function validateLaborRow(row){
+ const {start,end}=laborStamps(row);
+ if(!start||(row.endTime&&row.endTime!=='—'&&!end))return 'Giờ công nhật không hợp lệ.';
+ if(end&&new Date(end.iso)<=new Date(start.iso))return 'Giờ kết thúc công nhật phải sau giờ bắt đầu.';
+ const day=periodDate(row.date);
+ const shift=store.shifts.find(r=>r.id===row.shiftId&&r.staff===row.staff&&periodDate(r.date)===day)
+  ||store.shifts.find(r=>r.staff===row.staff&&periodDate(r.date)===day&&r.state==='Trong ca')
+  ||store.shifts.find(r=>r.staff===row.staff&&periodDate(r.date)===day&&r.checkout&&r.checkout!=='—');
+ if(shift&&shift.checkout&&shift.checkout!=='—'){
+  const checkout=shift.checkoutAt||shiftStamp(shift.date,shift.checkout,shift.checkout<shift.checkin)?.iso;
+  if(!checkout||!end)return 'Ca đã kết thúc: cần ghi đủ giờ công nhật trước khi lưu.';
+  if(new Date(end.iso)>new Date(checkout))return 'Giờ kết thúc công nhật không được sau giờ ra ca.';
+  if(new Date(start.iso)>new Date(checkout))return 'Giờ bắt đầu công nhật không được sau giờ ra ca.';
+ }
+ return '';
+}
 function shiftCorrectionModal(){
  const r=store.shifts.find(x=>x.id===state.editId);if(!r)return '';
  const undo=r.checkout&&r.checkout!=='—'&&canAccess('shifts','delete')?'<button type="button" class="btn danger" data-shift-undo="'+escape(r.id)+'">Hủy lượt ra ca</button>':'';
@@ -1009,6 +1040,7 @@ function saveShiftCorrection(fd){
  const reject=msg=>{state.notice=msg;refreshToasts()};
  if(!start||(tOut&&!end))return reject('Giờ vào / ra ca không hợp lệ');
  if(end&&(new Date(end.iso)-new Date(start.iso))<=0)return reject('Giờ ra ca phải sau giờ vào ca');
+ if(end){const problem=laborExitError(r.staff,periodDate(r.date),end.iso);if(problem)return reject(problem)}
  if(!end&&store.shifts.some(x=>x.id!==r.id&&x.staff===r.staff&&periodDate(x.date)===periodDate(r.date)&&x.state==='Trong ca'))return reject('Nhân viên đang có ca khác chưa kết thúc');
  const before={checkin:r.checkin,checkout:r.checkout,state:r.state},after={checkin:start.time,checkout:end?.time||'—',state:end?'Đã ra ca':'Trong ca'};
  if(!Object.keys(after).every(k=>before[k]===after[k])){
@@ -1029,6 +1061,20 @@ function undoShiftCheckout(id){
   row.corrections=Array.isArray(row.corrections)?row.corrections:[];
   row.corrections.push({at:new Date().toISOString(),by:actualUser()?.username||'—',action:'Hủy giờ ra ca',before,after:{checkin:row.checkin,checkout:'—',state:'Trong ca'}});
   persist();state.drawer='';state.editId='';state.notice='Đã hủy lượt ra ca';
+ },true);
+}
+function deleteShiftRecord(id){
+ if(denyOperation('shifts','delete'))return;
+ const row=store.shifts.find(r=>r.id===id);if(!row)return;
+ const open=store.labor.some(r=>r.staff===row.staff&&periodDate(r.date)===periodDate(row.date)&&r.startTime&&r.startTime!=='—'&&(!r.endTime||r.endTime==='—'));
+ if(open){state.notice='Cần chốt công nhật trước khi xóa lượt quét ca.';refreshToasts();return}
+ confirmDialog('Xóa toàn bộ lượt quét ca','Xóa lượt vào'+(row.checkout&&row.checkout!=='—'?' và ra':'')+' ca của '+(row.name||row.staff)+' ('+row.staff+') ngày '+row.date+'? Không thể hoàn tác.',()=>{
+  if(!store.shifts.some(x=>x.id===id))return;
+  store.shiftDeletions.unshift({id:row.id,staff:row.staff,date:row.date,shift:row.shift,checkin:row.checkin,checkout:row.checkout||'—',at:new Date().toISOString(),by:actualUser()?.username||'—',action:'Xóa lượt quét ca'});
+  store.shiftDeletions.length=Math.min(store.shiftDeletions.length,499);
+  store.shifts=store.shifts.filter(x=>x.id!==id);
+  for(const item of [...store.labor,...store.pda])if(item.shiftId===id)item.shiftId='';
+  persist();state.drawer='';state.editId='';state.selected.clear();state.notice='Đã xóa lượt quét ca';
  },true);
 }
 function modal(){
@@ -1187,6 +1233,7 @@ function validateOfflineBackup(snapshot){
  const data=snapshot.data||{},records=data.records,catalogData=data.catalogs,pictures=data.portraits,minutePictures=data.minuteImages;
  if(!records||!catalogData||!Array.isArray(pictures)||!Array.isArray(minutePictures))throw Error('File thiếu dữ liệu nghiệp vụ, danh mục hoặc ảnh');
  if(!Object.hasOwn(catalogData,'assetsCondition')&&snapshot.webVersion!==WEB_VERSION)catalogData.assetsCondition=[...RESOURCE_DEFAULTS.assetsCondition];
+ if(records.shiftDeletions===undefined)records.shiftDeletions=[];
  for(const key of Object.keys(store)){
   const list=records[key];
   if(!Array.isArray(list)||list.length>=500||list.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw Error('Dữ liệu '+key+' không hợp lệ');
@@ -1501,6 +1548,7 @@ root.addEventListener('click',e=>{
   const record=e.target.closest('[data-record]');if(record){state.drawer=record.dataset.record;safeHistory('replaceState',href(state.view,state.drawer));render();return}
  const edit=e.target.closest('[data-edit]');if(edit){if(denyOperation(state.view,'edit'))return;const record=edit.dataset.edit;state.drawer='';safeHistory('replaceState',href(state.view));state.editId=record;state.photoDraft=state.view==='people'?(store.people.find(p=>p.id===record)?.photo||''):'';state.photoOriginalFile=null;if(state.view==='minutes'){state.minuteDraftFiles=[];state.minuteRemoved=[]}state.modal='edit';render();return}
  const undoShift=e.target.closest('[data-shift-undo]');if(undoShift){undoShiftCheckout(undoShift.dataset.shiftUndo);return}
+ const deleteShift=e.target.closest('[data-shift-delete]');if(deleteShift){deleteShiftRecord(deleteShift.dataset.shiftDelete);return}
   const del=e.target.closest('[data-delete]');if(del){deleteIds([del.dataset.delete]);return}
  const quick=e.target.closest('[data-quick]');if(quick){if(denyOperation(state.view,'edit'))return;const id=quick.dataset.quick;confirmDialog('Xác nhận thay đổi',`Nhập mật khẩu trước khi thay đổi bản ghi ${id}`,()=>quickChange(id));return}
  const scanMode=e.target.closest('[data-scan-mode]');if(scanMode){state.scanMode=scanMode.dataset.scanMode==='exit'?'exit':'enter';state.scanOutcome=null;state.scanCurrentStaff='';state.scanUser='';state.scanDesk='';render();root.querySelector('#shift-code')?.focus();return}
