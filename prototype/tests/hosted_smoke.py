@@ -24,7 +24,7 @@ fixture=json.loads((webroot.parent/'tests/legacy_fixture.json').read_text(encodi
 for i,device in enumerate(fixture['records']['pdaDevices']):
  fixture['records']['assets'][-(i+1)]={'id':device['id'],'name':'PDA','type':'PDA','serial':device['serial'],'condition':'Tốt','state':'Có sử dụng','note':'Mẫu thử nghiệm','createdAt':'2026-11-16','history':[]}
 
-assert version=='0.12.2'
+assert version=='0.12.3'
 
 def approve_file(page):
     assert page.locator('#file-confirm-form').count()==1
@@ -711,6 +711,16 @@ try:
         second.locator('#labor-work').select_option('Pick')
         second.locator('#labor-staff-code').fill('90000034')
         second.locator('#labor-staff-code').press('Enter')
+        assert second.locator('#labor-entry-form').count()==0
+        assert 'chưa vào ca hoặc đã ra ca' in second.locator('.scan-outcome').inner_text()
+        second.evaluate("""() => {
+          const key='pickpack1291_office_records_v094',r=JSON.parse(localStorage.getItem(key));
+          const date=new Date().toLocaleDateString('en-GB',{timeZone:'Asia/Ho_Chi_Minh'});
+          r.shifts.unshift({id:'CA-HOSTED-34',staff:'90000034',date,shift:'Ca 1',checkin:'00:00:00',checkout:'—',state:'Trong ca',user:'—'});
+          localStorage.setItem(key,JSON.stringify(r));dispatchEvent(new StorageEvent('storage',{key}));
+        }""")
+        second.locator('#labor-staff-code').fill('90000034')
+        second.locator('#labor-staff-code').press('Enter')
         assert second.locator('#labor-entry-form').count()==1
         assert second.locator('#labor-entry-end').input_value()==''
         assert second.locator('.records-label b').inner_text()=='42'  # Scan does not immediately save.
@@ -756,7 +766,7 @@ try:
             second.locator('[data-action="backup-export"]').click()
             approve_file(second)
         backup=backed_up.value
-        assert backup.suggested_filename.startswith('pickpack-1291-v0.12.2-')
+        assert backup.suggested_filename.startswith('pickpack-1291-v0.12.3-')
         assert backup.suggested_filename.endswith('.json')
         backup_bytes=Path(backup.path()).read_bytes()
         snapshot=json.loads(backup_bytes)
@@ -910,7 +920,7 @@ try:
         page.wait_for_function("() => !!document.querySelector('.auth-required')",timeout=5000)
         assert not errors, errors
         assert not external, external
-        print('HOSTED_SMOKE_PASS: v0.12.2 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
+        print('HOSTED_SMOKE_PASS: v0.12.3 empty startup, fixture regressions, import/export original portrait, confirmed reset/cancel, zero API')
         browser.close()
 finally:
     server.shutdown()
