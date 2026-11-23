@@ -166,6 +166,7 @@ with sync_playwright() as p:
  print('testing modules',flush=True)
  for module,n in expected.items():
   app.locator(f'a.nav-main[href*="view={module}"]').click()
+  app.locator('#period-preset').select_option('all')  # Legacy synthetic fixtures span old dates; module default is today.
   assert not errs,(module,errs)
   assert all(abs(a-b)<1 for x,y in zip(overview_slots,header_slots()) for a,b in zip(x,y)),module
   assert app.locator('.table-panel').last.locator('.records-label b').inner_text()==str(n),(module,app.locator('.table-panel').last.locator('.records-label b').inner_text())
