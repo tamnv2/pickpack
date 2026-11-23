@@ -521,14 +521,17 @@ function laborScanPanel(){
  const options=catalogs.laborWork.map(value=>`<option value="${escape(value)}" ${state.laborWork===value?'selected':''}>${escape(value)}</option>`).join('');
  const draft=state.laborDraft;
  const single=draft?`<form id="labor-entry-form" class="labor-entry-editor" autocomplete="off"><div class="labor-pending-head"><strong>${escape(draft.name)} · ${escape(draft.staff)}</strong><span>${draft.id?'Chốt / sửa công nhật':'Chờ ghi nhận'}</span></div><div class="labor-time-fields"><label>Giờ bắt đầu<input id="labor-entry-start" name="startTime" type="time" step="1" value="${escape(draft.startTime)}" required></label><label>Giờ kết thúc<input id="labor-entry-end" name="endTime" type="time" step="1" value="${escape(draft.endTime||'')}"></label></div><div class="labor-entry-actions"><span>${escape(draft.work)} · ${escape(draft.date)}</span><button class="btn ghost" type="button" data-action="labor-draft-cancel">Hủy</button><button class="btn primary" type="submit">Lưu công nhật</button></div></form>`:'';
- const list=batch&&state.laborQueue.length?`<div class="labor-queue"><div class="labor-pending-head"><strong>Danh sách chờ ghi nhận · ${state.laborQueue.length} nhân viên</strong><span>${escape(state.laborWork)}</span></div><div class="table-scroll"><table class="labor-queue-table"><thead><tr><th>Mã nhân viên</th><th>Họ và tên</th><th>Giờ bắt đầu</th><th>Giờ kết thúc</th><th>Thao tác</th></tr></thead><tbody>${state.laborQueue.map(r=>`<tr><td>${escape(r.staff)}</td><td>${escape(r.name)}</td><td><input type="time" step="1" data-labor-time="startTime" data-labor-id="${escape(r.staff)}" value="${escape(r.startTime)}" aria-label="Giờ bắt đầu ${escape(r.staff)}"></td><td><input type="time" step="1" data-labor-time="endTime" data-labor-id="${escape(r.staff)}" value="${escape(r.endTime||'')}" aria-label="Giờ kết thúc ${escape(r.staff)}"></td><td><button class="row-open danger-text" type="button" data-labor-queue-remove="${escape(r.staff)}" title="Bỏ khỏi danh sách chờ">${icon('trash',16)}</button></td></tr>`).join('')}</tbody></table></div><div class="labor-entry-actions"><button class="btn ghost" type="button" data-action="labor-queue-clear">Xóa danh sách chờ</button><button class="btn primary" type="button" data-action="labor-queue-save">Xác nhận ghi nhận ${state.laborQueue.length} nhân viên</button></div></div>`:'';
- return `<section class="panel scan-station compact-scanner labor-scan-station"><label class="labor-batch-toggle"><input id="labor-batch-mode" type="checkbox" ${batch?'checked':''}> Thêm nhiều nhân viên cùng công việc</label><form id="labor-scan-form" autocomplete="off"><div class="labor-scan-fields"><label class="scan-code-label">Công việc công nhật<select id="labor-work" name="work" required ${batch&&state.laborQueue.length||!!draft?'disabled':''}><option value="">— Chọn công việc —</option>${options}</select></label><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên<span class="qr-input"><span class="qr-mark">${icon('qr',18)}</span><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"></span></label><button class="btn primary" type="submit">${batch?'Thêm vào danh sách':'Tiếp tục'}</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div>${single}${list}</section>`;
+ const list=batch&&state.laborQueue.length?`<div class="labor-queue"><div class="labor-pending-head"><strong>Danh sách chờ ghi nhận · ${state.laborQueue.length} nhân viên</strong><span>${escape(state.laborWork)}</span></div><div class="table-scroll"><table class="labor-queue-table"><thead><tr><th>Mã nhân viên</th><th>Họ và tên</th><th><label class="labor-copy-heading"><input id="labor-copy-start" type="checkbox" ${state.laborCopyStart?'checked':''} aria-label="Dùng chung giờ bắt đầu"> Giờ bắt đầu</label></th><th><label class="labor-copy-heading"><input id="labor-copy-end" type="checkbox" ${state.laborCopyEnd?'checked':''} aria-label="Dùng chung giờ kết thúc"> Giờ kết thúc</label></th><th>Thao tác</th></tr></thead><tbody>${state.laborQueue.map((r,i)=>`<tr><td>${escape(r.staff)}</td><td>${escape(r.name)}</td><td><input type="time" step="1" data-labor-time="startTime" data-labor-id="${escape(r.staff)}" value="${escape(r.startTime)}" ${state.laborCopyStart&&i>0?'disabled':''} aria-label="Giờ bắt đầu ${escape(r.staff)}"></td><td><input type="time" step="1" data-labor-time="endTime" data-labor-id="${escape(r.staff)}" value="${escape(r.endTime||'')}" ${state.laborCopyEnd&&i>0?'disabled':''} aria-label="Giờ kết thúc ${escape(r.staff)}"></td><td><button class="row-open danger-text" type="button" data-labor-queue-remove="${escape(r.staff)}" title="Bỏ khỏi danh sách chờ">${icon('trash',16)}</button></td></tr>`).join('')}</tbody></table></div><div class="labor-entry-actions"><button class="btn ghost" type="button" data-action="labor-queue-clear">Xóa danh sách chờ</button><button class="btn primary" type="button" data-action="labor-queue-save">Xác nhận ghi nhận ${state.laborQueue.length} nhân viên</button></div></div>`:'';
+ return `<section class="panel scan-station compact-scanner labor-scan-station"><form id="labor-scan-form" autocomplete="off"><div class="labor-scan-fields"><div class="labor-work-field"><label class="scan-code-label">Công việc công nhật<select id="labor-work" name="work" required ${batch&&state.laborQueue.length||!!draft?'disabled':''}><option value="">— Chọn công việc —</option>${options}</select></label><label class="labor-batch-toggle"><input id="labor-batch-mode" type="checkbox" ${batch?'checked':''}> Thêm nhiều nhân viên cùng công việc</label></div><label class="scan-code-label" for="labor-staff-code">Mã nhân viên / QR nhân viên<span class="qr-input"><span class="qr-mark">${icon('qr',18)}</span><input id="labor-staff-code" name="employeeCode" placeholder="Quét hoặc nhập mã nhân viên" maxlength="30" required autocomplete="off" spellcheck="false"></span></label><button class="btn primary" type="submit">${batch?'Thêm vào danh sách':'Tiếp tục'}</button></div></form>${result?`<div class="scan-outcome ${result.ok?'scan-success':'scan-error'}" role="status">${escape(result.message)}</div>`:''}<div class="scan-preview" id="labor-scan-preview">${compactPersonPreview(person)}</div>${single}${list}</section>`;
 }
+function activeLaborShift(staff,day){return store.shifts.find(r=>r.staff===staff&&r.state==='Trong ca'&&periodDate(r.date)===day&&r.checkin&&r.checkin!=='—'&&(!r.checkout||r.checkout==='—'))}
 function scanLabor(code,work){if(denyOperation('labor','create'))return false;
  const staff=String(code||'').trim(),person=store.people.find(p=>p.id===staff),now=new Date(),date=vnScanDate(now),day=vnTodayISO(),time=vnScanTime(now);
  const result=(ok,message,focus='#labor-staff-code')=>{state.laborScan={ok,code:staff,message};render();root.querySelector(focus)?.focus();return ok};
  if(state.laborDraft)return result(false,'Hoàn tất hoặc hủy công nhật đang chờ trước khi quét tiếp.');
  if(!person)return result(false,'Không tìm thấy mã nhân viên.');
+ const activeShift=activeLaborShift(staff,day);
+ if(!activeShift)return result(false,'Không thể ghi nhận công nhật: nhân viên chưa vào ca hoặc đã ra ca trong ngày.');
  const existing=store.labor.find(r=>r.staff===staff&&periodDate(r.date)===day&&(!r.endTime||r.endTime==='—'));
  if(existing){
   if(state.laborBatch)return result(false,'Nhân viên có công nhật đang mở. Hãy chốt riêng trước khi thêm vào danh sách.');
@@ -538,10 +541,11 @@ function scanLabor(code,work){if(denyOperation('labor','create'))return false;
  work=state.laborBatch&&state.laborQueue.length?state.laborWork:work;
  if(!catalogs.laborWork.includes(work))return result(false,'Cần chọn Công việc công nhật hợp lệ.');
  if(state.laborQueue.some(r=>r.staff===staff&&periodDate(r.date)===day))return result(false,'Mã nhân viên đã có trong danh sách chờ.');
- const activeShift=store.shifts.find(r=>r.staff===staff&&r.state==='Trong ca'&&periodDate(r.date)===day),shift=activeShift?.shift||'—';
+ const shift=activeShift.shift;
  const draft={staff,date,name:person.name,shift,shiftId:activeShift?.id||'',work,startTime:time,endTime:''};
  if(state.laborBatch){
   if(state.laborQueue.length>=100)return result(false,'Danh sách chờ tối đa 100 nhân viên.');
+  if(state.laborQueue.length){if(state.laborCopyStart)draft.startTime=state.laborQueue[0].startTime;if(state.laborCopyEnd)draft.endTime=state.laborQueue[0].endTime}
   state.laborQueue.push(draft);
   return result(true,'Đã thêm '+person.name+' vào danh sách chờ; chưa lưu công nhật.');
  }
@@ -551,6 +555,8 @@ function scanLabor(code,work){if(denyOperation('labor','create'))return false;
 function saveLaborDraft(form){
  if(denyOperation('labor','create'))return;
  const draft=state.laborDraft;if(!draft)return;
+ const activeShift=activeLaborShift(draft.staff,periodDate(draft.date));
+ if(!activeShift||activeShift.id!==draft.shiftId){state.notice='Nhân viên đã ra ca hoặc lượt vào ca thay đổi; không thể lưu công nhật.';refreshToasts();return}
  const fd=new FormData(form),startTime=String(fd.get('startTime')||''),endTime=String(fd.get('endTime')||'')||'—';
  const original=draft.id?store.labor.find(r=>r.id===draft.id):null;
  if(draft.id&&!original){state.notice='Bản ghi đang chờ đã thay đổi. Hãy quét lại.';refreshToasts();return}
@@ -571,12 +577,14 @@ function saveLaborQueue(){
  const seen=new Set(),planned=[];
  for(let i=0;i<queue.length;i++){
   const draft=queue[i],key=draft.staff+'|'+periodDate(draft.date);
+  const activeShift=activeLaborShift(draft.staff,periodDate(draft.date));
+  if(periodDate(draft.date)!==vnTodayISO()||!activeShift||activeShift.id!==draft.shiftId){state.notice='Nhân viên '+draft.staff+' đã ra ca, chưa vào ca hoặc lượt vào ca thay đổi; danh sách chưa được lưu.';refreshToasts();return}
   if(seen.has(key)||!store.people.some(p=>p.id===draft.staff)||store.labor.some(r=>r.staff===draft.staff&&periodDate(r.date)===periodDate(draft.date)&&(!r.endTime||r.endTime==='—'))){state.notice='Danh sách có nhân viên trùng, chưa tồn tại hoặc công nhật đang mở: '+draft.staff;refreshToasts();return}
   const row={...draft,work:state.laborWork,endTime:draft.endTime||'—',id:`CN-${Date.now().toString(36).toUpperCase()}-${i+1}`};
   const problem=validateLaborRow(row);if(problem){state.notice=draft.staff+': '+problem;refreshToasts();return}
   seen.add(key);planned.push(row);
  }
- store.labor.unshift(...planned);persist();state.laborQueue=[];state.laborScan={ok:true,code:'',message:'Đã ghi nhận '+planned.length+' nhân viên làm '+state.laborWork};render();root.querySelector('#labor-staff-code')?.focus();
+ store.labor.unshift(...planned);persist();state.laborQueue=[];state.laborCopyStart=false;state.laborCopyEnd=false;state.laborScan={ok:true,code:'',message:'Đã ghi nhận '+planned.length+' nhân viên làm '+state.laborWork};render();root.querySelector('#labor-staff-code')?.focus();
 }
 
 function pdaMatches(code){
@@ -1666,7 +1674,7 @@ root.addEventListener('click',e=>{
   case'labor-bulk-edit':if(denyOperation('labor','edit')||!state.selected.size)return;state.modal='labor-bulk';break;
   case'labor-draft-cancel':state.laborDraft=null;state.laborScan=null;render();root.querySelector('#labor-staff-code')?.focus();return;
   case'labor-queue-save':saveLaborQueue();return;
-  case'labor-queue-clear':if(!state.laborQueue.length)return;confirmDialog('Xóa danh sách chờ','Bỏ toàn bộ '+state.laborQueue.length+' nhân viên chưa ghi nhận?',()=>{state.laborQueue=[];state.laborScan=null},false);return;
+  case'labor-queue-clear':if(!state.laborQueue.length)return;confirmDialog('Xóa danh sách chờ','Bỏ toàn bộ '+state.laborQueue.length+' nhân viên chưa ghi nhận?',()=>{state.laborQueue=[];state.laborCopyStart=false;state.laborCopyEnd=false;state.laborScan=null},false);return;
  
  case'backup-reset':if(denyOperation('access'))return;confirmDialog('Xóa toàn bộ dữ liệu','Toàn bộ dữ liệu nghiệp vụ, danh mục, user làm việc và ảnh trong trình duyệt này sẽ bị xóa. Không thể hoàn tác.',()=>{void resetOfflineTestData()});return;
  case'assets-excel-template':confirmFileAction('download','Tải file mẫu CCDC (Excel) về thiết bị?',downloadAssetTemplate);return;case'assets-excel-import':if(denyOperation('assets','create'))return;root.querySelector('#assets-excel-file')?.click();return;case'excel-template':confirmFileAction('download','Tải file mẫu nhân sự (Excel) về thiết bị?',downloadPersonnelTemplate);return;
