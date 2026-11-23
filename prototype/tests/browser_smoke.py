@@ -268,7 +268,7 @@ with sync_playwright() as p:
  app.locator('#labor-bulk-form button[type="submit"]').click()
  assert 'Giờ kết thúc' in app.locator('#labor-bulk-error').inner_text()
  assert app.locator('#draft-confirm-form').count()==0
- assert app.locator('.records-label b').inner_text()=='43'  # Validation failed: queue was not committed.
+ assert app.locator('.records-label b').inner_text()=='45'  # Invalid bulk edit changed no saved rows.
  app.locator('#labor-bulk-end').fill('07:05:00')
  app.locator('#labor-bulk-form button[type="submit"]').click()
  authorize('wrong')
