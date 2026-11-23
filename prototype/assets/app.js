@@ -135,7 +135,7 @@ function emptyRecords(){return {people:[],shifts:[],labor:[],minutes:[],assets:[
 
 function readRecords(){try{const data=JSON.parse(storageGet(STORAGE_KEY)||'null');if(data&&Object.keys(emptyRecords()).every(k=>Array.isArray(data[k])&&data[k].length<500)){for(const person of data.people){delete person.user;delete person.shift}return data}}catch{}return emptyRecords()}
 const store=readRecords();
-let lastOverdueCount=store.shifts.filter(r=>shiftIsOverdue(r)).length;
+let lastOverdueCount=-1;
 function readCatalogs(){
  const fields=[...CATEGORY_FIELDS,...Object.values(EXTRA_CATALOGS).map(x=>[x.key,x.label]),...RESOURCE_FIELDS];
  const defaults=Object.fromEntries(fields.map(([key])=>{
