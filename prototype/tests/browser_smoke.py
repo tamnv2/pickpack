@@ -67,7 +67,7 @@ with sync_playwright() as p:
  assert not app.locator('button.menu-button').is_visible()
  labels=app.locator('.nav-flat .nav-label').all_inner_texts()
  assert len(labels)==9,labels
- assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên','Quản lý quyền truy cập']
+ assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào / ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên','Quản lý quyền truy cập']
  assert app.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
  assert app.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
  assert app.locator('#clock-time').count()==1 and app.locator('#clock-date').count()==0
@@ -255,7 +255,7 @@ with sync_playwright() as p:
  assert app.locator('form#shift-scan-form').count()==1
  assert app.locator('input#shift-code').count()==1
  assert app.locator('button[data-scan-mode="enter"]').get_attribute('aria-pressed')=='true'
- assert app.locator('[data-scan-shift]').count()==3
+ assert app.locator('[data-scan-shift]').count()==5
  app.locator('[data-scan-shift="Ca HC"]').click()
  assert app.locator('[data-scan-shift="Ca HC"]').get_attribute('aria-pressed')=='true'
  assert app.locator('button[data-action="add"]').count()==0
@@ -595,7 +595,7 @@ with sync_playwright() as p:
  assert rolecheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_users_v096')).find(x=>x.username==='superadmin').photo.startsWith('data:image/jpeg;base64,')")
  assert rolecheck.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_users_v096')).find(x=>x.username==='superadmin').password")=='moi'
  rolecheck.locator('a.nav-main[href*="view=shifts"]').click()
- assert rolecheck.locator('#period-preset').input_value()=='all'
+ assert rolecheck.locator('#period-preset').input_value()=='today'
  rolecheck.locator('#period-preset').select_option('yesterday')
  assert rolecheck.locator('#period-preset').input_value()=='yesterday'
  rolecheck.locator('#period-preset').select_option('today')
