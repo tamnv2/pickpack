@@ -388,6 +388,7 @@ try:
         assert page.locator('#period-preset').input_value()=='today'
         page.locator('#period-preset').select_option('all')
         page.locator('a.nav-main[href*="view=shifts"]').click()
+        page.locator('#period-preset').select_option('all')  # Historical synthetic shifts.
         assert page.locator('.shift-summary,.shift-summary-group').count()==0
         assert page.locator('.shift-scan-toolbar').evaluate("el=>{const a=el.querySelectorAll('.shift-scan-choice'),b=el.querySelector('.shift-scan-entry'),x=a[0].getBoundingClientRect(),y=a[1].getBoundingClientRect(),z=b.getBoundingClientRect();return Math.abs(x.bottom-y.bottom)<3&&Math.abs(y.bottom-z.bottom)<3&&z.left>y.right}")
         assert page.locator('[data-shift-filter]').count()==3
@@ -494,8 +495,7 @@ try:
         second = opened.value
         second.wait_for_url('**/app.html?view=people*', timeout=5000)
         second.wait_for_load_state()
-        assert second.locator('#period-preset').input_value()=='today'
-        second.locator('#period-preset').select_option('all')
+        assert second.locator('#period-preset').input_value()=='all'  # Personnel history defaults to all.
         assert second.locator('.records-label b').inner_text() == '36'
         assert second.locator('.people-table thead th').all_inner_texts()[-4:]==['Ngày nhận việc','Cập nhật bởi','PDA đang dùng','Thao tác']
         assert second.locator('.people-table').evaluate("el=>getComputedStyle(el).tableLayout")=='auto'
@@ -807,6 +807,7 @@ try:
         assert target.locator('#period-preset').input_value()=='today'
         target.locator('#period-preset').select_option('all')
         target.locator('a.nav-main[href*="view=minutes"]').click()
+        target.locator('#period-preset').select_option('all')
         target.locator('.table-panel tbody tr').first.locator('[data-record]').click()
         target.wait_for_function("() => [...document.querySelectorAll('#minute-drawer-gallery img')].length===2 && [...document.querySelectorAll('#minute-drawer-gallery img')].every(img=>img.complete&&img.naturalWidth>0)",timeout=10000)
         assert target.locator('#minute-drawer-gallery img').count()==2
