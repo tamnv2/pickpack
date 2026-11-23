@@ -78,7 +78,21 @@ function tickClock(){
  }
  const next=resolveTheme(state.themeMode);if(next!==state.theme){state.theme=next;render()}
  const overdue=store.shifts.filter(r=>shiftIsOverdue(r)).length;
- if(overdue!==lastOverdueCount){lastOverdueCount=overdue;if(state.view==='dashboard'||state.view==='shifts')render()}
+ if(overdue!==lastOverdueCount){
+  lastOverdueCount=overdue;
+  const alerts=notificationItems(),bell=root.querySelector('.notif'),hasOverdue=datedRows('shifts').some(r=>shiftIsOverdue(r));
+  if(bell){
+   bell.classList.toggle('overdue-bell',hasOverdue);
+   if(alerts.length&&!bell.querySelector('i'))bell.insertAdjacentHTML('beforeend','<i></i>');
+   if(!alerts.length)bell.querySelector('i')?.remove();
+  }
+  if(state.view==='shifts'){
+   const rows=filtered(),trs=root.querySelectorAll('.records-table tbody tr');
+   rows.forEach((r,i)=>{const tr=trs[i];if(!tr)return;tr.classList.toggle('row-overdue',shiftIsOverdue(r));const cell=tr.querySelector('[data-col="state"]');if(cell)cell.innerHTML=tableCell(r,'state','shifts')});
+  }else if(state.view==='dashboard'){
+   const panel=root.querySelector('.alert-panel');if(panel)panel.outerHTML=panelAttention();
+  }
+ }
 }
 
 const ACCENT_KEY='pickpack1291_office_light_accent_v08';
