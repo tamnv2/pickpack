@@ -685,6 +685,7 @@ with sync_playwright() as p:
    assets:[asset('PDA-1'),asset('PDA-2')],minutes:[],pdaDevices:[]};
   localStorage.setItem('pickpack1291_office_records_v094',JSON.stringify(records));
   dispatchEvent(new StorageEvent('storage',{key:'pickpack1291_office_records_v094'}));
+  dispatchEvent(new StorageEvent('storage',{key:'pickpack1291_office_catalogs_v094'}));
  }""")
  daycheck.locator('a.nav-main[href*="view=people"]').click()
  assert daycheck.locator('#period-preset').input_value()=='all'
