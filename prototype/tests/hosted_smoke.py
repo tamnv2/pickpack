@@ -402,7 +402,7 @@ try:
         assert page.evaluate("() => getComputedStyle(document.querySelector('.site-footer')).position")=='static'
         assert not page.locator('button.menu-button').is_visible()
         labels=page.locator('.nav-flat .nav-label').all_inner_texts()
-        assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào/ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên','Quản lý quyền truy cập'],labels
+        assert labels==['Tổng quan vận hành','Quản lý nhân sự','Quét vào / ra ca','Mượn / trả PDA','Quản lý công nhật','Quản lý biên bản','Quản lý CCDC','Quản lý tài nguyên','Quản lý quyền truy cập'],labels
         assert page.locator('.nav-flat .nav-label').evaluate_all("(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2&&el.scrollWidth<=el.clientWidth+2)")
         assert page.locator('.topbar').evaluate("el=>getComputedStyle(el).position")=='sticky'
         assert page.locator('#clock-time').is_visible()
