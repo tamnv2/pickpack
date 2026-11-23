@@ -613,6 +613,7 @@ try:
 
         # Minutes support real image blobs, pasted images and edit-mode uploads.
         second.locator('a.nav-main[href*="view=minutes"]').click()
+        second.locator('#period-preset').select_option('all')  # The fixture incident is dated, not today.
         second.locator('[data-action="add"]').click()
         assert second.locator('#minute-photo').count()==1
         assert [x.get_attribute('name') for x in second.locator('#record-form [name]').all()]==['type','date','note']
