@@ -279,7 +279,7 @@ with sync_playwright() as p:
  app.locator('input#shift-code').fill('90000001')
  app.locator('#shift-scan-form button[type="submit"]').click()
  assert app.locator('.table-panel').last.locator('.records-label b').inner_text()=='43'
- assert 'không ghi nhận vào ca lần hai' in app.locator('.scan-outcome').inner_text()
+ assert 'không ghi nhận vào ca lần hai' in app.locator('.scan-outcome').inner_text(), (app.locator('.scan-outcome').inner_text(), app.evaluate("JSON.parse(localStorage.getItem('pickpack1291_office_records_v094')).shifts.slice(0,2)"))
  app.locator('button[data-scan-mode="exit"]').click()
  assert app.locator('button[data-scan-mode="exit"]').get_attribute('aria-pressed')=='true'
  assert app.locator('[data-scan-shift]').count()==0
