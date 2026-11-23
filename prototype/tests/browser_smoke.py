@@ -625,7 +625,7 @@ with sync_playwright() as p:
  assert app.locator('.device-registry').count()==0
  assert app.locator('#pda-scan-form').count()==1
  assert app.locator('.table-panel table tbody tr').count()==int(app.locator('.table-panel .records-label b').inner_text())
- assert 'Người mượn' in app.locator('.table-panel thead').inner_text()
+ assert app.locator('.table-panel thead th[data-col]').all_inner_texts()[:5]==['Ngày','Ca','Mã nhân viên','Họ và tên','Nhà thầu']
  app.locator('.table-panel').last.locator('table tbody tr').first.locator('[data-record]').click()
  assert app.locator('.detail-drawer').count()==1
  assert app.locator('.detail-drawer button[data-quick]').count()==0
